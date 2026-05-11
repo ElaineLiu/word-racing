@@ -6,8 +6,8 @@ class NavManager {
     constructor(game) {
         this.game = game;
         this.currentPage = 'home';
+        this.navBtns = [];
 
-        // Wait for DOM to be ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.init());
         } else {
@@ -15,90 +15,73 @@ class NavManager {
         }
     }
 
-    /**
-     * 初始化导航
-     */
     init() {
-        // Bind navigation button clicks
-        const navBtns = document.querySelectorAll('.nav-btn');
-        navBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const page = btn.dataset.page;
+        this.navBtns = document.querySelectorAll('.nav-btn');
+        const btns = this.navBtns;
+        for (let i = 0; i < btns.length; i++) {
+            btns[i].addEventListener('click', () => {
+                const page = btns[i].dataset.page;
                 this.switchPage(page);
             });
-        });
+        }
 
-        // Default show home page
         this.switchPage('home');
     }
 
-    /**
-     * Switch page
-     * @param {string} pageName - page name (home/quiz/shop/race)
-     */
     switchPage(pageName) {
-        // 1. Hide all pages
         const pages = document.querySelectorAll('.page');
-        pages.forEach(p => p.classList.remove('active'));
+        for (let i = 0; i < pages.length; i++) {
+            pages[i].classList.remove('active');
+        }
 
-        // 2. Show target page
-        const targetPage = document.getElementById(`page-${pageName}`);
+        const targetPage = document.getElementById('page-' + pageName);
         if (targetPage) {
             targetPage.classList.add('active');
         }
 
-        // 3. Update navigation button states
-        const navBtns = document.querySelectorAll('.nav-btn');
-        navBtns.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.page === pageName);
-        });
-
-        // 4. Handle special page logic
-        if (pageName === 'race') {
-            // Race page: start game loop
-            if (this.game.state !== 'RACING' && this.game.state !== 'COUNTDOWN') {
-                this.game.state = 'RACING';
-                // Don't call continueToRace() here, let user click START RACE
+        const btns = this.navBtns;
+        for (let i = 0; i < btns.length; i++) {
+            const isActive = btns[i].dataset.page === pageName;
+            if (isActive) {
+                btns[i].classList.add('active');
+            } else {
+                btns[i].classList.remove('active');
             }
-            // Ensure game loop is running
-            if (!this.game.animationId) {
-                this.game._startLoop();
-            }
-        } else if (pageName === 'quiz') {
-            // Quiz page: start quiz
-            if (this.game.state !== 'QUIZ') {
-                this.game.state = 'QUIZ';
-                this.game.startNewQuiz();
-            }
-        } else if (pageName === 'shop') {
-            // Shop page: show shop
-            this.game.state = 'SHOP';
         }
 
-        // 5. Update current page
+        // 不在这里操作 game.state —— 状态由 game.js / index.html 控制
+        // 只做页面切换后的 UI 更新
+
         this.currentPage = pageName;
 
-        // 6. Update home page stats
         if (pageName === 'home') {
             this.updateHomeStats();
+        } else if (pageName === 'shop') {
+            // 渲染商店 UI
+            if (window.updateShop) window.updateShop();
+        } else if (pageName === 'race') {
+            // 确保 canvas 尺寸正确（等待浏览器 reflow）
+            requestAnimationFrame(() => {
+                this.game._resizeCanvas();
+            });
         }
 
-        console.log(`[NavManager] Switched to page: ${pageName}`);
+        console.log('[NavManager] Switched to page: ' + pageName);
     }
 
-    /**
-     * Update home page stats
-     */
     updateHomeStats() {
         const homeCoins = document.getElementById('home-coins');
         const homeFuel = document.getElementById('home-fuel');
         const homeNitro = document.getElementById('home-nitro');
+        const homeFuelCoins = document.getElementById('home-fuel-coins');
+        const homeGearCoins = document.getElementById('home-gear-coins');
 
         if (homeCoins) homeCoins.textContent = this.game.coins;
         if (homeFuel) homeFuel.textContent = Math.round(this.game.fuel);
         if (homeNitro) homeNitro.textContent = this.game.nitroCharges;
+        if (homeFuelCoins) homeFuelCoins.textContent = this.game.fuelCoins;
+        if (homeGearCoins) homeGearCoins.textContent = this.game.gearCoins;
     }
 }
 
-// Export
 window.NavManager = NavManager;
