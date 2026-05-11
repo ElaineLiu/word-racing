@@ -158,10 +158,10 @@ class VocabularyQuiz {
                 this.fuelCoinsEarned += 10;
             }
 
-            // Combo bonus: 3 in a row = 5 gear coins
-            if (this.combo >= 3) {
+            // Combo bonus: every 3 consecutive correct answers = 5 gear coins
+            // Do NOT reset combo - allow continuous combo (3, 6, 9...)
+            if (this.combo > 0 && this.combo % 3 === 0) {
                 this.gearCoinsEarned += 5;
-                this.combo = 0;
             }
         } else {
             this.wrongWords.push({
