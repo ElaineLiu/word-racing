@@ -431,12 +431,18 @@
             game.quiz.questionType = 'simple';
             quizTypeSimpleBtn.classList.add('active');
             quizTypeComplexBtn.classList.remove('active');
+            // BugFix: regenerate quiz when type changes
+            game.quiz.generateQuiz(5, 3);
+            showQuizQuestion();
         });
 
         quizTypeComplexBtn.addEventListener('click', () => {
             game.quiz.questionType = 'complex';
             quizTypeComplexBtn.classList.add('active');
             quizTypeSimpleBtn.classList.remove('active');
+            // BugFix: regenerate quiz when type changes
+            game.quiz.generateQuiz(5, 3);
+            showQuizQuestion();
         });
 
     })();

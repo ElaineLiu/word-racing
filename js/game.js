@@ -964,8 +964,8 @@ class Game {
         const coinReward = Math.round(this.quizResults.score * 0.6);
         this.coins += coinReward;
 
-        // Reward: refuel to max
-        this.fuel = this.maxFuel;
+        // BugFix: DO NOT auto-refuel! Player must buy fuel in shop with fuelCoins
+        // this.fuel = this.maxFuel;  // REMOVED: this line made fuel coins useless
 
         // Nitro charges: 1 per correct answer
         const nitroCharges = this.quizResults.correctCount;
