@@ -16,7 +16,8 @@
       "sentence": "The car factory makes 100 cars every day.",
       "sentence_cn": "这家汽车工厂每天生产100辆车。",
       "level": 3,
-      "category": "places"
+      "category": "places",
+      "type": "complex"
     },
     {
       "id": 2,
@@ -27,7 +28,8 @@
       "sentence": "Air pollution is bad for the city race.",
       "sentence_cn": "空气污染对城市比赛不利。",
       "level": 3,
-      "category": "environment"
+      "category": "environment",
+      "type": "complex"
     },
     {
       "id": 3,
@@ -38,7 +40,8 @@
       "sentence": "The storm destroyed the old race track.",
       "sentence_cn": "暴风雨摧毁了旧赛道。",
       "level": 4,
-      "category": "actions"
+      "category": "actions",
+      "type": "complex"
     },
     {
       "id": 4,
@@ -49,7 +52,8 @@
       "sentence": "Drivers wear helmets to protect their heads.",
       "sentence_cn": "车手戴头盔保护头部。",
       "level": 3,
-      "category": "actions"
+      "category": "actions",
+      "type": "complex"
     },
     {
       "id": 5,
@@ -60,7 +64,8 @@
       "sentence": "A clean environment makes the city better.",
       "sentence_cn": "干净的环境让城市更美好。",
       "level": 4,
-      "category": "environment"
+      "category": "environment",
+      "type": "complex"
     },
     {
       "id": 6,
@@ -82,7 +87,8 @@
       "sentence": "There is a lot of traffic on the way to the race.",
       "sentence_cn": "去比赛的路上交通很拥挤。",
       "level": 3,
-      "category": "transport"
+      "category": "transport",
+      "type": "complex"
     },
     {
       "id": 8,

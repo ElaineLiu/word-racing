@@ -27,6 +27,8 @@
                 <div id="quiz-complete" style="display:none;">
                     <h3>Pit Stop Complete!</h3>
                     <div class="result-text" id="quiz-result-accuracy"></div>
+                    <div class="result-text" id="quiz-result-fuel"></div>
+                    <div class="result-text" id="quiz-result-gear"></div>
                     <div class="result-text" id="quiz-result-wrong"></div>
                     <div class="nitro-text" id="quiz-result-nitro"></div>
                     <!-- 圈数选择 -->
@@ -314,7 +316,11 @@
             quizQuestionArea.style.display = 'none';
             quizCompleteArea.style.display = 'block';
 
-            quizResultAccuracy.textContent = `Accuracy: ${results.accuracy}% (${results.correct}/${results.total})`;
+            quizResultAccuracy.textContent = `Accuracy: ${results.accuracy}% (${results.correct}/${results.totalQuestions})`;
+
+            // Display dual currency rewards
+            document.getElementById('quiz-result-fuel').textContent = `Fuel Coins: +${results.fuelCoinsEarned} 🪙`;
+            document.getElementById('quiz-result-gear').textContent = `Gear Coins: +${results.gearCoinsEarned} ⚙️`;
 
             if (results.wrong.length > 0) {
                 quizResultWrong.textContent = 'Wrong: ' + results.wrong.map(w => w.word + '=' + w.meaning).join(', ');

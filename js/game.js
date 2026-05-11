@@ -16,6 +16,9 @@ class Game {
 
         // Player resources
         this.coins = 0;
+        // --- 双货币系统 ---
+        this.fuelCoins = 0;      // 燃油币（橙色图标 🪙）
+        this.gearCoins = 0;      // 装备币（蓝色图标 ⚙️）
         this.maxFuel = 100;
         this.fuel = this.maxFuel;
         this.fuelPerLap = 20;   // 每圈消耗燃油（降低，让比赛更持久）
@@ -24,6 +27,13 @@ class Game {
         this.raceStartTime = 0;
         this.raceTime = 0;
         this.quizResults = null;
+        // --- 改装等级 ---
+        this.upgrades = {
+            engine: 1,  // 引擎等级（1-4）
+            tire: 1,     // 轮胎等级（1-4）
+            body: 1      // 车身等级（1-4）
+        };
+        this.nitroCharges = 0;    // Nitro 次数
 
         // Countdown
         this.countdownTimer = 0;
@@ -896,14 +906,22 @@ class Game {
     onQuizComplete() {
         this.quizResults = this.quiz.getResults();
 
-        // Reward: coins based on accuracy
+        // Dual currency rewards
+        this.fuelCoins += this.quizResults.fuelCoinsEarned;
+        this.gearCoins += this.quizResults.gearCoinsEarned;
+
+        // Legacy coins (keep for compatibility)
         const coinReward = Math.round(this.quizResults.score * 0.6);
         this.coins += coinReward;
 
         // Reward: refuel to max
         this.fuel = this.maxFuel;
 
-        this.car.addNitro(this.quizResults.nitroCharges);
+        // Nitro charges: 1 per correct answer
+        const nitroCharges = this.quizResults.correctCount;
+        this.car.addNitro(nitroCharges);
+        this.nitroCharges += nitroCharges;
+
         this.totalScore = this.quizResults.score;
 
         // 不自动开始比赛，等待用户操作

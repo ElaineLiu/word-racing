@@ -11,6 +11,9 @@ class VocabularyQuiz {
         this.totalAnswered = 0;
         this.correctCount = 0;
         this.wrongWords = [];
+        this.fuelCoinsEarned = 0;
+        this.gearCoinsEarned = 0;
+        this.combo = 0; // consecutive correct answers
         this.loaded = false;
     }
 
@@ -53,9 +56,32 @@ class VocabularyQuiz {
         const eligible = this.words.filter(w => w.level <= maxLevel);
         if (eligible.length < 4) return [];
 
-        // Shuffle and pick 'count' words
-        const shuffled = [...eligible].sort(() => Math.random() - 0.5);
-        const selected = shuffled.slice(0, Math.min(count, shuffled.length));
+        // Separate simple and complex words
+        const simpleWords = eligible.filter(w => w.type !== 'complex');
+        const complexWords = eligible.filter(w => w.type === 'complex');
+
+        // Pick at least 2 complex questions (if available)
+        let selected = [];
+        const complexCount = Math.min(2, complexWords.length);
+        if (complexCount > 0) {
+            const shuffledComplex = [...complexWords].sort(() => Math.random() - 0.5);
+            selected.push(...shuffledComplex.slice(0, complexCount));
+        }
+
+        // Fill the rest with simple questions
+        const remaining = count - selected.length;
+        if (remaining > 0 && simpleWords.length > 0) {
+            const shuffledSimple = [...simpleWords].sort(() => Math.random() - 0.5);
+            selected.push(...shuffledSimple.slice(0, Math.min(remaining, shuffledSimple.length)));
+        }
+
+        // If still not enough, fill with any available words
+        if (selected.length < count) {
+            const usedIds = new Set(selected.map(w => w.id));
+            const extra = eligible.filter(w => !usedIds.has(w.id));
+            const shuffledExtra = [...extra].sort(() => Math.random() - 0.5);
+            selected.push(...shuffledExtra.slice(0, count - selected.length));
+        }
 
         this.currentQuiz = selected.map(word => {
             // Generate 3 distractors (different meanings)
@@ -77,6 +103,7 @@ class VocabularyQuiz {
                 options: options,
                 correctIndex: correctIndex,
                 level: word.level,
+                type: word.type === 'complex' ? 'complex' : 'simple',
                 answered: false,
                 correct: false
             };
@@ -87,6 +114,9 @@ class VocabularyQuiz {
         this.totalAnswered = 0;
         this.correctCount = 0;
         this.wrongWords = [];
+        this.fuelCoinsEarned = 0;
+        this.gearCoinsEarned = 0;
+        this.combo = 0;
 
         return this.currentQuiz;
     }
@@ -119,11 +149,26 @@ class VocabularyQuiz {
         if (question.correct) {
             this.correctCount++;
             this.score += 50;
+            this.combo++;
+
+            // Reward based on question type
+            if (question.type === 'complex') {
+                this.gearCoinsEarned += 20;
+            } else {
+                this.fuelCoinsEarned += 10;
+            }
+
+            // Combo bonus: 3 in a row = 5 gear coins
+            if (this.combo >= 3) {
+                this.gearCoinsEarned += 5;
+                this.combo = 0;
+            }
         } else {
             this.wrongWords.push({
                 word: question.word,
                 meaning: question.correctMeaning
             });
+            this.combo = 0; // Reset combo on wrong answer
         }
 
         // Move to next question after a short delay
@@ -146,11 +191,13 @@ class VocabularyQuiz {
      */
     getResults() {
         return {
-            total: this.currentQuiz.length,
-            correct: this.correctCount,
-            wrong: this.wrongWords,
             score: this.score,
-            nitroCharges: this.correctCount, // 1 nitro per correct answer
+            correctCount: this.correctCount,
+            totalQuestions: this.currentQuiz.length,
+            fuelCoinsEarned: this.fuelCoinsEarned,
+            gearCoinsEarned: this.gearCoinsEarned,
+            nitroCharges: this.correctCount, // backward compatibility
+            wrong: this.wrongWords,
             accuracy: this.totalAnswered > 0
                 ? Math.round((this.correctCount / this.totalAnswered) * 100)
                 : 0
