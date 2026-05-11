@@ -996,6 +996,14 @@ class Game {
     }
 
     _showResults() {
+        // BugFix: Deduct fuel when race completes (real-time based on distance)
+        // Same logic as exitRace(): lapsDone * fuelPerLap + partialFuel
+        const progress = this.car.lastProgress || 0;
+        const lapsDone = Math.max(0, this.car.lap);
+        const partialFuel = this.fuelPerLap * Math.max(0, progress);
+        const totalFuelUsed = lapsDone * this.fuelPerLap + partialFuel;
+        this.fuel = Math.max(0, this.fuel - totalFuelUsed);
+
         this.totalScore = this.raceScore + (this.quizResults ? this.quizResults.score : 0);
         // 保存最快圈速到排行榜
         if (this.car.bestLapTime < Infinity) {
