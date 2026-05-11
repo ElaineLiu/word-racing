@@ -1,0 +1,26 @@
+# Enforce consistent line endings
+
+# Source code and text files
+* text=auto
+
+# Explicitly declare text files
+*.md text
+*.txt text
+*.html text
+*.css text
+*.js text
+*.json text
+
+# Declare binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mp3 binary
+*.wav binary
+*.ogg binary
+
+# Maintain exact line endings for these files
+*.sh text eol=lf
+*.bat text eol=crlf
