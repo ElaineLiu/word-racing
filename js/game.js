@@ -269,21 +269,19 @@ class Game {
         const W = this.canvas.width;
         const H = this.canvas.height;
 
+        // Check if canvas page is active
+        const racePage = document.getElementById('page-race');
+        if (!racePage || !racePage.classList.contains('active')) {
+            // Canvas page not active, don't render
+            ctx.clearRect(0, 0, W, H);
+            return;
+        }
+
         ctx.clearRect(0, 0, W, H);
         ctx.save();
         ctx.scale(scale, scale);
 
         switch (this.state) {
-            case 'MENU':
-                this._renderMenu(ctx, scale);
-                break;
-            case 'QUIZ':
-                this._renderTrackAndCars(ctx, scale);
-                this._renderQuizOverlay(ctx, scale);
-                break;
-            case 'SHOP':
-                this._renderShop(ctx, scale);
-                break;
             case 'COUNTDOWN':
                 this._renderTrackAndCars(ctx, scale);
                 this._renderCountdown(ctx, scale);
