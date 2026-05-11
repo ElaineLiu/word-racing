@@ -1,0 +1,33 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 临时文件
+*.log
+*.tmp
+*.bak
+*.backup
+
+# 系统文件
+Thumbs.db
+Desktop.ini
+
+# 本地配置文件
+.env
+.config
+
+# 构建输出
+dist/
+build/
+.cache/

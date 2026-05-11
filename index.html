@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Word Racing - Back words, drive fast!</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Quiz Overlay (HTML UI layer) -->
+        <div id="quiz-overlay">
+            <div id="quiz-panel">
+                <!-- Quiz Question -->
+                <div id="quiz-question-area">
+                    <div id="quiz-progress"></div>
+                    <div id="quiz-word"></div>
+                    <div id="quiz-meaning-en"></div>
+                    <div id="quiz-sentence"></div>
+                    <div id="quiz-options"></div>
+                    <div id="quiz-nitro-hint">Correct answer = Nitro boost!</div>
+                </div>
+
+                <!-- Quiz Complete -->
+                <div id="quiz-complete" style="display:none;">
+                    <h3>Pit Stop Complete!</h3>
+                    <div class="result-text" id="quiz-result-accuracy"></div>
+                    <div class="result-text" id="quiz-result-wrong"></div>
+                    <div class="nitro-text" id="quiz-result-nitro"></div>
+                    <!-- 圈数选择 -->
+                    <div id="quiz-lap-select" style="margin:12px 0;"></div>
+                    <button id="quiz-start-btn">START RACE</button>
+                    <button id="quiz-shop-btn" style="margin-left:12px;background:#444;">GO TO SHOP</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Touch Controls (visible on iPad/tablet) -->
+        <div id="touch-controls">
+            <div class="touch-btn-group">
+                <button class="touch-btn" data-action="left">&#9664;</button>
+                <button class="touch-btn" data-action="down">&#9660;</button>
+            </div>
+            <div class="touch-btn-group">
+                <button class="touch-btn" data-action="up">&#9650;</button>
+                <button class="touch-btn" data-action="right">&#9654;</button>
+                <button class="touch-btn touch-btn-nitro" data-action="nitro">N2O</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts (order matters) -->
+    <script src="js/quiz.js"></script>
+    <script src="js/track.js"></script>
+    <script src="js/car.js"></script>
+    <script src="js/game.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        window.addEventListener('error', function(e) {
+            var msg = 'JS ERROR: ' + (e.message || 'unknown') + ' at ' + (e.filename || '') + ':' + (e.lineno || '');
+            document.body.style.background = '#300';
+            var d = document.createElement('div');
+            d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:12px;z-index:99999;font-size:14px;';
+            d.textContent = msg;
+            (document.body || document.documentElement).appendChild(d);
+        });
+
+        const canvas = document.getElementById('gameCanvas');
+        const quizOverlay = document.getElementById('quiz-overlay');
+        const quizQuestionArea = document.getElementById('quiz-question-area');
+        const quizCompleteArea = document.getElementById('quiz-complete');
+        const quizProgress = document.getElementById('quiz-progress');
+        const quizWord = document.getElementById('quiz-word');
+        const quizMeaningEn = document.getElementById('quiz-meaning-en');
+        const quizSentence = document.getElementById('quiz-sentence');
+        const quizOptions = document.getElementById('quiz-options');
+        const quizLapSelect = document.getElementById('quiz-lap-select');
+        const quizResultAccuracy = document.getElementById('quiz-result-accuracy');
+        const quizResultWrong = document.getElementById('quiz-result-wrong');
+        const quizResultNitro = document.getElementById('quiz-result-nitro');
+        const quizStartBtn = document.getElementById('quiz-start-btn');
+        const quizShopBtn = document.getElementById('quiz-shop-btn');
+        const touchControls = document.getElementById('touch-controls');
+
+        const game = new Game(canvas);
+        let isTouchDevice = false;
+
+        game.init().then(() => {
+            setupTouchDetection();
+            setupCanvasClick();
+        }).catch(err => {
+            const d = document.createElement('div');
+            d.style.cssText = 'color:#fff;background:#c00;padding:16px;font-size:14px;position:fixed;top:0;left:0;right:0;z-index:99999;';
+            d.textContent = 'INIT ERROR: ' + err.message + ' | ' + (err.stack || '');
+            document.body.appendChild(d);
+        });
+
+        function setupTouchDetection() {
+            isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            if (isTouchDevice) {
+                setupTouchControls();
+            }
+        }
+
+        function setupTouchControls() {
+            const buttons = touchControls.querySelectorAll('.touch-btn');
+            const inputState = { up: false, down: false, left: false, right: false, nitro: false };
+
+            buttons.forEach(btn => {
+                const action = btn.dataset.action;
+                const start = (e) => {
+                    e.preventDefault();
+                    inputState[action] = true;
+                    btn.classList.add('pressed');
+                    game.setTouchInput(inputState);
+                };
+                const end = (e) => {
+                    e.preventDefault();
+                    inputState[action] = false;
+                    btn.classList.remove('pressed');
+                    game.setTouchInput(inputState);
+                };
+
+                btn.addEventListener('touchstart', start, { passive: false });
+                btn.addEventListener('touchend', end, { passive: false });
+                btn.addEventListener('touchcancel', end, { passive: false });
+                btn.addEventListener('mousedown', start);
+                btn.addEventListener('mouseup', end);
+                btn.addEventListener('mouseleave', end);
+            });
+
+            touchControls.classList.add('active');
+        }
+
+        // --- Unified canvas click handler for all states ---
+        function setupCanvasClick() {
+            function getCanvasXY(e) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = 920 / rect.width;
+                const scaleY = 620 / rect.height;
+                return {
+                    x: (e.clientX - rect.left) * scaleX,
+                    y: (e.clientY - rect.top) * scaleY
+                };
+            }
+
+            function handleClick(x, y) {
+                const state = game.state;
+
+                if (state === 'MENU') {
+                    // Lap count selector: buttons at (380+(i-1)*52, 182, 40, 36)
+                    for (let i = 1; i <= 5; i++) {
+                        const bx = 380 + (i - 1) * 52;
+                        const by = 182;
+                        if (x >= bx && x <= bx + 40 && y >= by && y <= by + 36) {
+                            game.setLapCount(i);
+                            return;
+                        }
+                    }
+                    // START button: (330, 370, 260, 60)
+                    if (x >= 330 && x <= 590 && y >= 370 && y <= 430) {
+                        startQuiz();
+                        return;
+                    }
+                    // GO TO SHOP button: (370, 510, 180, 36)
+                    if (x >= 370 && x <= 550 && y >= 510 && y <= 546) {
+                        game.state = 'SHOP';
+                        return;
+                    }
+                } else if (state === 'SHOP') {
+                    // Delegate to game.handleShopClick()
+                    const newState = game.handleShopClick(x, y);
+                    if (newState === 'QUIZ') {
+                        quizOverlay.classList.add('active');
+                        quizQuestionArea.style.display = 'block';
+                        quizCompleteArea.style.display = 'none';
+                        showQuizQuestion();
+                    }
+                    return;
+                } else if (state === 'RACING') {
+                    // EXIT RACE button
+                    const exitBtn = game._exitBtnRect;
+                    if (exitBtn && x >= exitBtn.x && x <= exitBtn.x + exitBtn.w && y >= exitBtn.y && y <= exitBtn.y + exitBtn.h) {
+                        const newState = game.exitRace();
+                        if (newState === 'QUIZ') {
+                            quizOverlay.classList.add('active');
+                            quizQuestionArea.style.display = 'block';
+                            quizCompleteArea.style.display = 'none';
+                            showQuizQuestion();
+                        }
+                    }
+                    return;
+                } else if (state === 'RESULTS') {
+                    // Continue button
+                    const bx = (920 - 460) / 2;
+                    const by = (620 - 440) / 2;
+                    const btnX = bx + 80;
+                    const btnY = by + 440 - 55;
+                    const btnW = 460 - 160;
+                    const btnH = 42;
+                    if (x >= btnX && x <= btnX + btnW && y >= btnY && y <= btnY + btnH) {
+                        const newState = game.onResultsContinue();
+                        if (newState === 'QUIZ') {
+                            quizOverlay.classList.add('active');
+                            quizQuestionArea.style.display = 'block';
+                            quizCompleteArea.style.display = 'none';
+                            showQuizQuestion();
+                        }
+                    }
+                }
+            }
+
+            canvas.addEventListener('click', (e) => {
+                handleClick(getCanvasXY(e).x, getCanvasXY(e).y);
+            });
+
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const pos = getCanvasXY(touch);
+                handleClick(pos.x, pos.y);
+            }, { passive: false });
+        }
+
+        // --- Keyboard: ESC to exit race, Enter for actions ---
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && game.state === 'RACING') {
+                const newState = game.exitRace();
+                if (newState === 'QUIZ') {
+                    quizOverlay.classList.add('active');
+                    quizQuestionArea.style.display = 'block';
+                    quizCompleteArea.style.display = 'none';
+                    showQuizQuestion();
+                }
+                return;
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (game.state === 'MENU') {
+                    startQuiz();
+                } else if (game.state === 'QUIZ' && quizCompleteArea.style.display !== 'none') {
+                    game.continueToRace();
+                    quizOverlay.classList.remove('active');
+                } else if (game.state === 'SHOP' && game.fuel > 0) {
+                    game.continueToRace();
+                } else if (game.state === 'RESULTS') {
+                    const newState = game.onResultsContinue();
+                    if (newState === 'QUIZ') {
+                        quizOverlay.classList.add('active');
+                        quizQuestionArea.style.display = 'block';
+                        quizCompleteArea.style.display = 'none';
+                        showQuizQuestion();
+                    }
+                }
+            }
+        });
+
+        // --- Quiz Flow ---
+        function startQuiz() {
+            const questions = game.startNewQuiz();
+            quizOverlay.classList.add('active');
+            quizQuestionArea.style.display = 'block';
+            quizCompleteArea.style.display = 'none';
+            showQuizQuestion();
+        }
+
+        function showQuizQuestion() {
+            const q = game.quiz.getCurrentQuestion();
+            if (!q) {
+                finishQuiz();
+                return;
+            }
+
+            const current = Math.min(game.quiz.currentIndex, game.quiz.currentQuiz.length - 1);
+            const total = game.quiz.currentQuiz.length;
+
+            quizProgress.textContent = `Question ${current + 1} of ${total} | Correct: ${game.quiz.correctCount}`;
+            quizWord.textContent = q.word;
+            quizMeaningEn.textContent = q.meaningEn ? q.meaningEn : '';
+            quizSentence.textContent = q.sentence ? `"${q.sentence}"` : '';
+
+            quizOptions.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option';
+                btn.textContent = opt;
+                btn.addEventListener('click', () => handleQuizAnswer(idx));
+                quizOptions.appendChild(btn);
+            });
+        }
+
+        function handleQuizAnswer(idx) {
+            const result = game.quiz.submitAnswer(idx);
+            if (!result) return;
+
+            const buttons = quizOptions.querySelectorAll('.quiz-option');
+            buttons.forEach((btn, i) => {
+                btn.classList.add('disabled');
+                if (i === result.correctIndex) btn.classList.add('correct');
+                if (i === idx && !result.correct) btn.classList.add('wrong');
+            });
+
+            setTimeout(() => {
+                showQuizQuestion();
+            }, 900);
+        }
+
+        function finishQuiz() {
+            const results = game.quiz.getResults();
+            quizQuestionArea.style.display = 'none';
+            quizCompleteArea.style.display = 'block';
+
+            quizResultAccuracy.textContent = `Accuracy: ${results.accuracy}% (${results.correct}/${results.total})`;
+
+            if (results.wrong.length > 0) {
+                quizResultWrong.textContent = 'Wrong: ' + results.wrong.map(w => w.word + '=' + w.meaning).join(', ');
+            } else {
+                quizResultWrong.textContent = 'Perfect! All correct!';
+            }
+
+            if (results.nitroCharges > 0) {
+                quizResultNitro.textContent = `N2O Nitro x${results.nitroCharges} Ready!`;
+            } else {
+                quizResultNitro.textContent = 'No nitro this time. Try harder next race!';
+            }
+
+            // Render lap count selector in quiz-complete panel
+            renderLapSelector();
+        }
+
+        // Render lap count selector (1-5) in quiz-complete panel
+        function renderLapSelector() {
+            quizLapSelect.innerHTML = '';
+            const label = document.createElement('span');
+            label.textContent = 'Laps: ';
+            label.style.marginRight = '8px';
+            quizLapSelect.appendChild(label);
+
+            for (let i = 1; i <= 5; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.style.cssText = 'margin:0 3px;padding:4px 12px;border-radius:6px;cursor:pointer;font-weight:bold;';
+                if (i === game.selectedLaps) {
+                    btn.style.background = '#FFD700';
+                    btn.style.color = '#1B5E20';
+                } else {
+                    btn.style.background = 'rgba(255,255,255,0.15)';
+                    btn.style.color = '#FFF';
+                }
+                btn.addEventListener('click', () => {
+                    game.setLapCount(i);
+                    renderLapSelector();
+                });
+                quizLapSelect.appendChild(btn);
+            }
+        }
+
+        // "Start Race" button in quiz complete panel
+        quizStartBtn.addEventListener('click', () => {
+            game.continueToRace();
+            quizOverlay.classList.remove('active');
+        });
+
+        // "Go to Shop" button in quiz complete panel
+        quizShopBtn.addEventListener('click', () => {
+            game.state = 'SHOP';
+            quizOverlay.classList.remove('active');
+        });
+
+    })();
+    </script>
+</body>
+</html>

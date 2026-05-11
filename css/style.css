@@ -1,0 +1,317 @@
+/* Word Racing Game Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #1B5E20;
+    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+#game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#gameCanvas {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 4px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+
+/* ---- HTML Overlay: Quiz Panel ---- */
+#quiz-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    pointer-events: none;
+}
+
+#quiz-overlay.active {
+    display: flex;
+    pointer-events: auto;
+}
+
+#quiz-panel {
+    background: #FFF;
+    border-radius: 20px;
+    padding: 32px 36px;
+    width: 420px;
+    max-width: 92vw;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+    position: relative;
+    text-align: center;
+}
+
+#quiz-progress {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 12px;
+}
+
+#quiz-word {
+    font-size: 36px;
+    font-weight: 700;
+    color: #1B5E20;
+    margin-bottom: 4px;
+}
+
+#quiz-meaning-en {
+    font-size: 15px;
+    color: #888;
+    margin-bottom: 16px;
+}
+
+#quiz-sentence {
+    font-size: 14px;
+    color: #555;
+    background: #F5F5F5;
+    border-radius: 10px;
+    padding: 10px 16px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+    font-style: italic;
+}
+
+#quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.quiz-option {
+    background: #F5F5F5;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 18px;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.quiz-option:hover {
+    background: #E8F5E9;
+    border-color: #4CAF50;
+}
+
+.quiz-option.correct {
+    background: #C8E6C9 !important;
+    border-color: #4CAF50 !important;
+    color: #1B5E20;
+    font-weight: 700;
+}
+
+.quiz-option.wrong {
+    background: #FFCDD2 !important;
+    border-color: #F44336 !important;
+    color: #C62828;
+}
+
+.quiz-option.disabled {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+#quiz-nitro-hint {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #888;
+}
+
+#quiz-complete {
+    display: none;
+}
+
+#quiz-complete h3 {
+    font-size: 26px;
+    color: #1B5E20;
+    margin-bottom: 12px;
+}
+
+#quiz-complete .result-text {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+#quiz-complete .nitro-text {
+    font-size: 18px;
+    color: #FF6D00;
+    font-weight: 700;
+    margin: 12px 0 20px;
+}
+
+#quiz-start-btn {
+    background: #4CAF50;
+    color: #FFF;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 36px;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#quiz-start-btn:hover {
+    background: #388E3C;
+    transform: scale(1.03);
+}
+
+/* ---- HTML Overlay: Coin Popup ---- */
+#coin-popup-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    pointer-events: none;
+}
+
+#coin-popup-overlay.active {
+    display: flex;
+    pointer-events: auto;
+}
+
+#coin-popup-panel {
+    background: #FFF;
+    border-radius: 20px;
+    padding: 28px 32px;
+    width: 380px;
+    max-width: 90vw;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+    text-align: center;
+}
+
+#coin-popup-title {
+    font-size: 16px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+#coin-popup-word {
+    font-size: 32px;
+    font-weight: 700;
+    color: #FF6D00;
+    margin-bottom: 16px;
+}
+
+#coin-popup-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.coin-opt-btn {
+    background: #FFF8E1;
+    border: 2px solid #FFD54F;
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 17px;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.coin-opt-btn:hover {
+    background: #FFECB3;
+}
+
+/* ---- Touch Controls ---- */
+#touch-controls {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 180px;
+    pointer-events: none;
+    z-index: 20;
+}
+
+#touch-controls.active {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 16px 16px;
+    pointer-events: none;
+}
+
+.touch-btn-group {
+    display: flex;
+    gap: 10px;
+    pointer-events: auto;
+}
+
+.touch-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: rgba(255,255,255,0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.touch-btn:active, .touch-btn.pressed {
+    background: rgba(255,255,255,0.35);
+    border-color: rgba(255,255,255,0.7);
+    color: #FFF;
+}
+
+.touch-btn-nitro {
+    width: 72px;
+    height: 72px;
+    border-color: rgba(255,109,0,0.5);
+    background: rgba(255,109,0,0.2);
+    color: rgba(255,109,0,0.8);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.touch-btn-nitro:active, .touch-btn-nitro.pressed {
+    background: rgba(255,109,0,0.45);
+    border-color: rgba(255,109,0,0.8);
+    color: #FF6D00;
+}
+
+/* ---- Desktop: hide touch controls, show keyboard hint ---- */
+@media (hover: hover) and (pointer: fine) {
+    #touch-controls {
+        display: none !important;
+    }
+}
+
+/* ---- Touch devices: show touch controls ---- */
+@media (hover: none) and (pointer: coarse) {
+    #touch-controls.active {
+        display: flex !important;
+    }
+}
