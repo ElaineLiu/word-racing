@@ -35,6 +35,36 @@ html, body {
     box-shadow: 0 4px 24px rgba(0,0,0,0.4);
 }
 
+/* ---- Question Type Selector ---- */
+#quiz-type-selector {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.quiz-type-btn {
+    padding: 8px 16px;
+    border: 2px solid #FFF;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFF;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+    font-size: 14px;
+}
+
+.quiz-type-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.quiz-type-btn.active {
+    background: #FFD700;
+    color: #1B5E20;
+    border-color: #FFD700;
+}
+
 /* ---- HTML Overlay: Quiz Panel ---- */
 #quiz-overlay {
     position: absolute;

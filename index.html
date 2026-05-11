@@ -215,7 +215,10 @@
                 } else if (state === 'SHOP') {
                     // Delegate to game.handleShopClick()
                     const newState = game.handleShopClick(x, y);
+                    // BugFix: re-generate quiz when returning from shop
+                    // Otherwise, currentIndex is at end, showQuizQuestion() will call finishQuiz() immediately
                     if (newState === 'QUIZ') {
+                        game.startNewQuiz();
                         quizOverlay.classList.add('active');
                         quizQuestionArea.style.display = 'block';
                         quizCompleteArea.style.display = 'none';
