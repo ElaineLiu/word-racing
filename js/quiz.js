@@ -14,6 +14,7 @@ class VocabularyQuiz {
         this.fuelCoinsEarned = 0;
         this.gearCoinsEarned = 0;
         this.combo = 0; // consecutive correct answers
+        this.questionType = 'simple'; // 'simple' or 'complex'
         this.loaded = false;
     }
 
@@ -56,26 +57,22 @@ class VocabularyQuiz {
         const eligible = this.words.filter(w => w.level <= maxLevel);
         if (eligible.length < 4) return [];
 
-        // Separate simple and complex words
-        const simpleWords = eligible.filter(w => w.type !== 'complex');
-        const complexWords = eligible.filter(w => w.type === 'complex');
-
-        // Pick at least 2 complex questions (if available)
         let selected = [];
-        const complexCount = Math.min(2, complexWords.length);
-        if (complexCount > 0) {
-            const shuffledComplex = [...complexWords].sort(() => Math.random() - 0.5);
-            selected.push(...shuffledComplex.slice(0, complexCount));
+
+        // Filter by question type
+        if (this.questionType === 'complex') {
+            // Only pick complex questions
+            const complexWords = eligible.filter(w => w.type === 'complex');
+            const shuffled = [...complexWords].sort(() => Math.random() - 0.5);
+            selected = shuffled.slice(0, Math.min(count, shuffled.length));
+        } else {
+            // Only pick simple questions (default)
+            const simpleWords = eligible.filter(w => w.type !== 'complex');
+            const shuffled = [...simpleWords].sort(() => Math.random() - 0.5);
+            selected = shuffled.slice(0, Math.min(count, shuffled.length));
         }
 
-        // Fill the rest with simple questions
-        const remaining = count - selected.length;
-        if (remaining > 0 && simpleWords.length > 0) {
-            const shuffledSimple = [...simpleWords].sort(() => Math.random() - 0.5);
-            selected.push(...shuffledSimple.slice(0, Math.min(remaining, shuffledSimple.length)));
-        }
-
-        // If still not enough, fill with any available words
+        // If not enough words of the selected type, fill with any available words
         if (selected.length < count) {
             const usedIds = new Set(selected.map(w => w.id));
             const extra = eligible.filter(w => !usedIds.has(w.id));

@@ -5,6 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Word Racing - Back words, drive fast!</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Question Type Selector */
+        #quiz-type-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .quiz-type-btn {
+            padding: 8px 16px;
+            border: 2px solid #FFF;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #FFF;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .quiz-type-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .quiz-type-btn.active {
+            background: #FFD700;
+            color: #1B5E20;
+            border-color: #FFD700;
+        }
+    </style>
 </head>
 <body>
     <div id="game-container">
@@ -13,6 +44,12 @@
         <!-- Quiz Overlay (HTML UI layer) -->
         <div id="quiz-overlay">
             <div id="quiz-panel">
+                <!-- Question Type Selector -->
+                <div id="quiz-type-selector">
+                    <button id="quiz-type-simple" class="quiz-type-btn active">简单题</button>
+                    <button id="quiz-type-complex" class="quiz-type-btn">复杂题</button>
+                </div>
+
                 <!-- Quiz Question -->
                 <div id="quiz-question-area">
                     <div id="quiz-progress"></div>
@@ -86,6 +123,8 @@
         const quizResultNitro = document.getElementById('quiz-result-nitro');
         const quizStartBtn = document.getElementById('quiz-start-btn');
         const quizShopBtn = document.getElementById('quiz-shop-btn');
+        const quizTypeSimpleBtn = document.getElementById('quiz-type-simple');
+        const quizTypeComplexBtn = document.getElementById('quiz-type-complex');
         const touchControls = document.getElementById('touch-controls');
 
         const game = new Game(canvas);
@@ -375,6 +414,19 @@
         quizShopBtn.addEventListener('click', () => {
             game.state = 'SHOP';
             quizOverlay.classList.remove('active');
+        });
+
+        // Question type selector
+        quizTypeSimpleBtn.addEventListener('click', () => {
+            game.quiz.questionType = 'simple';
+            quizTypeSimpleBtn.classList.add('active');
+            quizTypeComplexBtn.classList.remove('active');
+        });
+
+        quizTypeComplexBtn.addEventListener('click', () => {
+            game.quiz.questionType = 'complex';
+            quizTypeComplexBtn.classList.add('active');
+            quizTypeSimpleBtn.classList.remove('active');
         });
 
     })();
