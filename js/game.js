@@ -20,7 +20,7 @@ class Game {
         this.fuelCoins = 0;      // 燃油币（橙色图标 🪙）
         this.gearCoins = 0;      // 装备币（蓝色图标 ⚙️）
         this.maxFuel = 100;
-        this.fuel = this.maxFuel;
+        this.fuel = 0;           // BugFix: initial fuel = 0, MUST buy in shop
         this.fuelPerLap = 20;   // 每圈消耗燃油（降低，让比赛更持久）
         this.raceScore = 0;
         this.totalScore = 0;
