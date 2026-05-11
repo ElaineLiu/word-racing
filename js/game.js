@@ -737,10 +737,13 @@ class Game {
     // ==================== SHOP Panel ====================
     // 商品定义（纯数据，点击逻辑在 handleShopClick 中）
     _shopItems = [
-        { id: 'fuel20', label: 'Fuel +20', cost: 15, desc: 'Refuel 20 units' },
-        { id: 'fuel50', label: 'Fuel +50', cost: 30, desc: 'Refuel 50 units' },
-        { id: 'nitro1', label: 'Nitro x1', cost: 20, desc: '1 Nitro boost' },
-        { id: 'nitro3', label: 'Nitro x3', cost: 50, desc: '3 Nitro boosts' }
+        { id: 'fuel20', label: 'Fuel +20', cost: 15, desc: 'Refuel 20 units', currency: 'fuel' },
+        { id: 'fuel50', label: 'Fuel +50', cost: 30, desc: 'Refuel 50 units', currency: 'fuel' },
+        { id: 'nitro1', label: 'Nitro x1', cost: 20, desc: '1 Nitro boost', currency: 'gear' },
+        { id: 'nitro3', label: 'Nitro x3', cost: 50, desc: '3 Nitro boosts', currency: 'gear' },
+        { id: 'engine1', label: 'Engine Lv.2', cost: 100, desc: 'Upgrade engine (speed +10%)', currency: 'gear', upgrade: 'engine' },
+        { id: 'tire1', label: 'Tire Lv.2', cost: 80, desc: 'Upgrade tire (grip +10%)', currency: 'gear', upgrade: 'tire' },
+        { id: 'body1', label: 'Body Lv.2', cost: 120, desc: 'Upgrade body (weight -5%)', currency: 'gear', upgrade: 'body' }
     ]
 
     _renderShop(ctx, scale) {
@@ -757,10 +760,10 @@ class Game {
         ctx.textAlign = 'center';
         ctx.fillText('PIT SHOP', bx + bw / 2, by + 40);
 
-        // 资源显示
+        // 资源显示（双货币）
         ctx.fillStyle = '#333';
         ctx.font = '16px Arial';
-        ctx.fillText(`Coins: ${this.coins}  |  Fuel: ${Math.round(this.fuel)}/${this.maxFuel}  |  Nitro: ${this.car.nitroCharges}`, bx + bw / 2, by + 70);
+        ctx.fillText(`Fuel Coins: ${this.fuelCoins} 🪙  |  Gear Coins: ${this.gearCoins} ⚙️  |  Fuel: ${Math.round(this.fuel)}/${this.maxFuel}  |  Nitro: ${this.car.nitroCharges}`, bx + bw / 2, by + 70);
 
         // --- 商品列表 + 记录按钮位置供点击检测 ---
         this._shopButtons = [];
@@ -784,8 +787,19 @@ class Game {
             const btnX = bx + bw - 160, btnY = iy + 12, btnW = 110, btnH = 40;
             this._shopButtons.push({ id: item.id, x: btnX, y: btnY, w: btnW, h: btnH });
 
-            const canBuy = (item.id.startsWith('fuel') && this.coins >= item.cost && this.fuel < this.maxFuel) ||
-                          (item.id.startsWith('nitro') && this.coins >= item.cost);
+            // Check if can buy based on currency and upgrade level
+            let canBuy = false;
+            if (item.currency === 'fuel') {
+                canBuy = this.fuelCoins >= item.cost && this.fuel < this.maxFuel;
+            } else if (item.currency === 'gear') {
+                if (item.upgrade) {
+                    // Upgrade item - check if already at max level (4)
+                    canBuy = this.gearCoins >= item.cost && this.upgrades[item.upgrade] < 4;
+                } else {
+                    // Nitro items
+                    canBuy = this.gearCoins >= item.cost;
+                }
+            }
             ctx.fillStyle = canBuy ? 'rgba(76,175,80,0.15)' : 'rgba(0,0,0,0.05)';
             ctx.strokeStyle = canBuy ? '#4CAF50' : '#AAA';
             ctx.lineWidth = 1.5;
@@ -796,7 +810,8 @@ class Game {
             ctx.fillStyle = canBuy ? '#4CAF50' : '#AAA';
             ctx.font = 'bold 14px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText(`Buy ${item.cost}¢`, btnX + btnW / 2, btnY + 25);
+            const currencyIcon = item.currency === 'fuel' ? '🪙' : '⚙️';
+            ctx.fillText(`Buy ${item.cost}${currencyIcon}`, btnX + btnW / 2, btnY + 25);
         });
 
         // "BACK TO QUIZ" 按钮
@@ -845,43 +860,64 @@ class Game {
      * 执行 SHOP 按钮对应的操作
      */
     _executeShopAction(id) {
-        switch (id) {
-            case 'fuel20':
-                if (this.coins >= 15 && this.fuel < this.maxFuel) {
-                    this.coins -= 15;
-                    this.fuel = Math.min(this.maxFuel, this.fuel + 20);
-                }
-                break;
-            case 'fuel50':
-                if (this.coins >= 30 && this.fuel < this.maxFuel) {
-                    this.coins -= 30;
-                    this.fuel = Math.min(this.maxFuel, this.fuel + 50);
-                }
-                break;
-            case 'nitro1':
-                if (this.coins >= 20) {
-                    this.coins -= 20;
-                    this.car.addNitro(1);
-                }
-                break;
-            case 'nitro3':
-                if (this.coins >= 50) {
-                    this.coins -= 50;
-                    this.car.addNitro(3);
-                }
-                break;
-            case 'back_quiz':
-                this.state = 'QUIZ';
-                return 'QUIZ';
-            case 'start_race':
-                if (this.fuel > 0) {
-                    this.totalLaps = this.selectedLaps;
-                    this.state = 'COUNTDOWN';
-                    this.countdownTimer = 240;
-                    return 'COUNTDOWN';
-                }
-                break;
+        // Find item in _shopItems
+        const item = this._shopItems.find(it => it.id === id);
+        if (!item) {
+            // Handle non-item actions
+            switch (id) {
+                case 'back_quiz':
+                    this.state = 'QUIZ';
+                    return 'QUIZ';
+                case 'start_race':
+                    if (this.fuel > 0) {
+                        this.totalLaps = this.selectedLaps;
+                        this.state = 'COUNTDOWN';
+                        this.countdownTimer = 240;
+                        return 'COUNTDOWN';
+                    }
+                    break;
+            }
+            return this.state;
         }
+
+        // Check if can afford based on currency
+        let canAfford = false;
+        if (item.currency === 'fuel') {
+            canAfford = this.fuelCoins >= item.cost && this.fuel < this.maxFuel;
+        } else if (item.currency === 'gear') {
+            canAfford = this.gearCoins >= item.cost;
+            // For upgrades, check if already at max level
+            if (canAfford && item.upgrade) {
+                canAfford = this.upgrades[item.upgrade] < 4;
+            }
+        }
+
+        if (!canAfford) {
+            console.warn(`Cannot afford ${item.label} or item maxed out`);
+            return this.state;
+        }
+
+        // Deduct currency
+        if (item.currency === 'fuel') {
+            this.fuelCoins -= item.cost;
+        } else if (item.currency === 'gear') {
+            this.gearCoins -= item.cost;
+        }
+
+        // Apply effect
+        if (id.startsWith('fuel')) {
+            const amount = id === 'fuel20' ? 20 : 50;
+            this.fuel = Math.min(this.maxFuel, this.fuel + amount);
+        } else if (id.startsWith('nitro')) {
+            const amount = id === 'nitro1' ? 1 : 3;
+            this.car.addNitro(amount);
+            this.nitroCharges += amount;
+        } else if (item.upgrade) {
+            // Upgrade item
+            this.upgrades[item.upgrade] = Math.min(4, this.upgrades[item.upgrade] + 1);
+            console.log(`Upgraded ${item.upgrade} to level ${this.upgrades[item.upgrade]}`);
+        }
+
         return this.state;
     }
 
