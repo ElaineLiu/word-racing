@@ -417,12 +417,19 @@ class Game {
         ctx.font = 'bold 24px Arial';
         ctx.fillText('START', 460, 402);
 
-        // Resource display on menu
-        ctx.fillStyle = '#FFD700';
+        // Dual currency display on menu
         ctx.font = '15px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(`Coins: ${this.coins}`, 460, 468);
-        this._renderFuelBar(ctx, 350, 482, 220, 18);
+
+        // Fuel Coins (orange)
+        ctx.fillStyle = '#FF6B35';
+        ctx.fillText(`Fuel Coins: ${this.fuelCoins} 🪙`, 460, 465);
+
+        // Gear Coins (blue)
+        ctx.fillStyle = '#4A90D9';
+        ctx.fillText(`Gear Coins: ${this.gearCoins} ⚙️`, 460, 488);
+
+        this._renderFuelBar(ctx, 350, 502, 220, 18);
 
         // "GO TO SHOP" button on menu
         ctx.fillStyle = 'rgba(255,255,255,0.1)';
@@ -592,14 +599,21 @@ class Game {
         // Nitro indicator (bottom-right)
         this._renderNitroHUD(ctx, scale, padding);
 
-        // Coins display (above nitro)
+        // Dual currency display (top-right, below score)
         ctx.fillStyle = 'rgba(0,0,0,0.65)';
-        this._roundRect(ctx, 770, 465, 138, 30, 8);
+        this._roundRect(ctx, 770, 110, 138, 50, 8);
         ctx.fill();
-        ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 14px Arial';
+
+        ctx.font = '12px Arial';
         ctx.textAlign = 'right';
-        ctx.fillText(`Coins: ${this.coins}`, 896, 485);
+
+        // Fuel Coins (orange)
+        ctx.fillStyle = '#FF6B35';
+        ctx.fillText(`Fuel: ${this.fuelCoins} 🪙`, 896, 128);
+
+        // Gear Coins (blue)
+        ctx.fillStyle = '#4A90D9';
+        ctx.fillText(`Gear: ${this.gearCoins} ⚙️`, 896, 146);
 
         // EXIT 按钮（右上角）
         this._exitBtnRect = { x: 770, y: 420, w: 138, h: 32 };
