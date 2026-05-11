@@ -970,10 +970,10 @@ class Game {
         // BugFix: DO NOT auto-refuel! Player must buy fuel in shop with fuelCoins
         // this.fuel = this.maxFuel;  // REMOVED: this line made fuel coins useless
 
-        // Nitro charges: 1 per correct answer
-        const nitroCharges = this.quizResults.correctCount;
-        this.car.addNitro(nitroCharges);
-        this.nitroCharges += nitroCharges;
+        // BugFix: DO NOT auto-add nitro! Must buy in shop with gear coins
+        // Nitro can ONLY be purchased in shop with gear coins
+        // this.car.addNitro(nitroCharges);  // REMOVED
+        // this.nitroCharges += nitroCharges;  // REMOVED
 
         this.totalScore = this.quizResults.score;
 
