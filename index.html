@@ -352,6 +352,10 @@
 
         function finishQuiz() {
             const results = game.quiz.getResults();
+
+            // CRITICAL: Transfer coins from quiz to game (BugFix: coins not synced to shop)
+            game.onQuizComplete();
+
             quizQuestionArea.style.display = 'none';
             quizCompleteArea.style.display = 'block';
 
@@ -375,6 +379,12 @@
 
             // Render lap count selector in quiz-complete panel
             renderLapSelector();
+
+            // BugFix: Force user to go to SHOP after quiz (must buy fuel/upgrades)
+            // Hide "Start Race" button, only show "Go to Shop" button
+            quizStartBtn.style.display = 'none';
+            quizShopBtn.style.display = 'inline-block';
+            quizShopBtn.textContent = '🛒 GO TO SHOP (Buy Fuel & Upgrades)';
         }
 
         // Render lap count selector (1-5) in quiz-complete panel
