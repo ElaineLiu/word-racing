@@ -239,6 +239,9 @@ class Game {
         this.car.input = this._getCarInput();
         this.car.update(this.track, this.totalLaps);
 
+        // BugFix: sync nitro charges (car.nitroCharges changes when nitro is used)
+        this.nitroCharges = this.car.nitroCharges;
+
         this.raceTime = Date.now() - this.raceStartTime;
 
         // 燃油不在每圈扣除，改为比赛结束时统一结算（在 _showResults / exitRace 中）
