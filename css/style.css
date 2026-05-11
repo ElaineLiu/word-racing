@@ -45,10 +45,10 @@ html, body {
 
 .quiz-type-btn {
     padding: 8px 16px;
-    border: 2px solid #FFF;
+    border: 2px solid #DDD;
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #FFF;
+    background: #F5F5F5;
+    color: #333;
     cursor: pointer;
     font-weight: bold;
     transition: all 0.3s;
@@ -56,7 +56,7 @@ html, body {
 }
 
 .quiz-type-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: #E0E0E0;
 }
 
 .quiz-type-btn.active {
@@ -344,4 +344,256 @@ html, body {
     #touch-controls.active {
         display: flex !important;
     }
+}
+
+/* ==================== Multi-Page Navigation ==================== */
+/* Page base style */
+.page {
+    display: none;
+    position: fixed;
+    top: 50px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
+}
+
+.page.active {
+    display: block;
+}
+
+/* Top navigation bar */
+#top-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    z-index: 1000;
+    border-bottom: 2px solid #FFD700;
+}
+
+.nav-btn {
+    padding: 8px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    color: #FFF;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 215, 0, 0.2);
+}
+
+.nav-btn.active {
+    background: #FFD700;
+    color: #1B5E20;
+    font-weight: bold;
+}
+
+/* ==================== Home Page ==================== */
+#page-home {
+    background: linear-gradient(135deg, #1B5E20, #0D4715);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#page-home.active {
+    display: flex;
+}
+
+.home-content {
+    text-align: center;
+    max-width: 600px;
+    padding: 20px;
+}
+
+.home-content h1 {
+    font-size: 48px;
+    color: #FFD700;
+    margin-bottom: 10px;
+}
+
+.home-content p {
+    font-size: 18px;
+    margin-bottom: 30px;
+    opacity: 0.8;
+}
+
+#home-stats {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.stat-item {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+#home-leaderboard {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    border-radius: 8px;
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+#home-lap-select {
+    margin: 20px 0;
+}
+
+#home-start-btn {
+    padding: 12px 24px;
+    font-size: 18px;
+    cursor: pointer;
+    background: #FFD700;
+    color: #1B5E20;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+#home-start-btn:hover {
+    background: #FFC107;
+    transform: scale(1.05);
+}
+
+/* ==================== Quiz Page ==================== */
+#page-quiz {
+    background: rgba(0, 0, 0, 0.95);
+}
+
+#page-quiz.active {
+    display: block;
+}
+
+#quiz-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ==================== Shop Page ==================== */
+#page-shop {
+    background: rgba(0, 0, 0, 0.95);
+}
+
+#page-shop.active {
+    display: block;
+}
+
+#shop-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+#shop-stats {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+#shop-items {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.shop-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.shop-item button {
+    padding: 8px 16px;
+    background: #4CAF50;
+    border: none;
+    border-radius: 6px;
+    color: #FFF;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.shop-item button:hover:not(:disabled) {
+    background: #388E3C;
+}
+
+.shop-item button:disabled {
+    background: #666;
+    cursor: not-allowed;
+}
+
+#shop-actions {
+    margin-top: 20px;
+    text-align: center;
+}
+
+#shop-actions button {
+    padding: 10px 20px;
+    margin: 0 6px;
+    cursor: pointer;
+    border-radius: 6px;
+    border: none;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+#shop-back-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFF;
+}
+
+#shop-back-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#shop-race-btn {
+    background: #FFD700;
+    color: #1B5E20;
+}
+
+#shop-race-btn:hover {
+    background: #FFC107;
+}
+
+/* ==================== Race Page ==================== */
+#page-race {
+    background: #000;
+}
+
+#page-race.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#gameCanvas {
+    border: 2px solid #FFD700;
+    border-radius: 8px;
 }

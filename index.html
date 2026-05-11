@@ -2,81 +2,99 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Word Racing - Back words, drive fast!</title>
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        /* Question Type Selector */
-        #quiz-type-selector {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .quiz-type-btn {
-            padding: 8px 16px;
-            border: 2px solid #FFF;
-            border-radius: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #FFF;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-            font-size: 14px;
-        }
-
-        .quiz-type-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .quiz-type-btn.active {
-            background: #FFD700;
-            color: #1B5E20;
-            border-color: #FFD700;
-        }
-    </style>
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
+    <!-- Top Navigation -->
+    <nav id="top-nav">
+        <button class="nav-btn active" data-page="home">首页</button>
+        <button class="nav-btn" data-page="quiz">答题</button>
+        <button class="nav-btn" data-page="shop">商店</button>
+        <button class="nav-btn" data-page="race">比赛</button>
+    </nav>
 
-        <!-- Quiz Overlay (HTML UI layer) -->
-        <div id="quiz-overlay">
-            <div id="quiz-panel">
-                <!-- Question Type Selector -->
-                <div id="quiz-type-selector">
-                    <button id="quiz-type-simple" class="quiz-type-btn active">简单题</button>
-                    <button id="quiz-type-complex" class="quiz-type-btn">复杂题</button>
-                </div>
+    <!-- Page 1: Home -->
+    <div id="page-home" class="page active">
+        <div class="home-content">
+            <h1>WORD RACING</h1>
+            <p>Back words, drive fast!</p>
+            <div id="home-stats">
+                <div class="stat-item">金币: <span id="home-coins">0</span></div>
+                <div class="stat-item">燃油: <span id="home-fuel">100</span>/100</div>
+                <div class="stat-item">Nitro: <span id="home-nitro">0</span></div>
+                <div class="stat-item">燃油币: <span id="home-fuel-coins">0</span> 🪙</div>
+                <div class="stat-item">装备币: <span id="home-gear-coins">0</span> ⚙️</div>
+            </div>
+            <div id="home-leaderboard">
+                <!-- Leaderboard will be rendered here -->
+            </div>
+            <div id="home-lap-select" style="margin:20px 0;">
+                <!-- Lap count selector -->
+            </div>
+            <button id="home-start-btn" style="padding:12px 24px;font-size:18px;cursor:pointer;">开始答题</button>
+        </div>
+    </div>
 
-                <!-- Quiz Question -->
-                <div id="quiz-question-area">
-                    <div id="quiz-progress"></div>
-                    <div id="quiz-word"></div>
-                    <div id="quiz-meaning-en"></div>
-                    <div id="quiz-sentence"></div>
-                    <div id="quiz-options"></div>
-                    <div id="quiz-nitro-hint">Correct answer = Nitro boost!</div>
-                </div>
+    <!-- Page 2: Quiz -->
+    <div id="page-quiz" class="page">
+        <div id="quiz-container">
+            <!-- Quiz Type Selector -->
+            <div id="quiz-type-selector">
+                <button id="quiz-type-simple" class="quiz-type-btn active">简单题</button>
+                <button id="quiz-type-complex" class="quiz-type-btn">复杂题</button>
+            </div>
 
-                <!-- Quiz Complete -->
-                <div id="quiz-complete" style="display:none;">
-                    <h3>Pit Stop Complete!</h3>
-                    <div class="result-text" id="quiz-result-accuracy"></div>
-                    <div class="result-text" id="quiz-result-fuel"></div>
-                    <div class="result-text" id="quiz-result-gear"></div>
-                    <div class="result-text" id="quiz-result-wrong"></div>
-                    <div class="nitro-text" id="quiz-result-nitro"></div>
-                    <!-- 圈数选择 -->
-                    <div id="quiz-lap-select" style="margin:12px 0;"></div>
-                    <button id="quiz-start-btn">START RACE</button>
-                    <button id="quiz-shop-btn" style="margin-left:12px;background:#444;">GO TO SHOP</button>
-                </div>
+            <!-- Quiz Question -->
+            <div id="quiz-question-area">
+                <div id="quiz-progress"></div>
+                <div id="quiz-word"></div>
+                <div id="quiz-meaning-en"></div>
+                <div id="quiz-sentence"></div>
+                <div id="quiz-options"></div>
+                <div id="quiz-nitro-hint">Correct answer = Nitro boost!</div>
+            </div>
+
+            <!-- Quiz Complete -->
+            <div id="quiz-complete" style="display:none;">
+                <h3>Pit Stop Complete!</h3>
+                <div class="result-text" id="quiz-result-accuracy"></div>
+                <div class="result-text" id="quiz-result-fuel"></div>
+                <div class="result-text" id="quiz-result-gear"></div>
+                <div class="result-text" id="quiz-result-wrong"></div>
+                <div class="nitro-text" id="quiz-result-nitro"></div>
+                <!-- Lap count selector -->
+                <div id="quiz-lap-select" style="margin:12px 0;"></div>
+                <button id="quiz-start-btn">START RACE</button>
+                <button id="quiz-shop-btn" style="margin-left:12px;background:#444;">GO TO SHOP</button>
             </div>
         </div>
+    </div>
 
-        <!-- Touch Controls (visible on iPad/tablet) -->
+    <!-- Page 3: Shop -->
+    <div id="page-shop" class="page">
+        <div id="shop-container">
+            <h2>Pit Shop</h2>
+            <div id="shop-stats">
+                <div>燃油币: <span id="shop-fuel-coins">0</span> 🪙</div>
+                <div>装备币: <span id="shop-gear-coins">0</span> ⚙️</div>
+                <div>燃油: <span id="shop-fuel">100</span>/100</div>
+                <div>Nitro: <span id="shop-nitro">0</span></div>
+            </div>
+            <div id="shop-items">
+                <!-- Shop items will be rendered here -->
+            </div>
+            <div id="shop-actions" style="margin-top:20px;">
+                <button id="shop-back-btn">返回首页</button>
+                <button id="shop-race-btn" style="margin-left:12px;">开始比赛</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 4: Race -->
+    <div id="page-race" class="page">
+        <canvas id="gameCanvas"></canvas>
         <div id="touch-controls">
             <div class="touch-btn-group">
                 <button class="touch-btn" data-action="left">&#9664;</button>
@@ -95,6 +113,7 @@
     <script src="js/track.js"></script>
     <script src="js/car.js"></script>
     <script src="js/game.js"></script>
+    <script src="js/nav.js"></script>
     <script>
     (function() {
         'use strict';
@@ -109,30 +128,15 @@
         });
 
         const canvas = document.getElementById('gameCanvas');
-        const quizOverlay = document.getElementById('quiz-overlay');
-        const quizQuestionArea = document.getElementById('quiz-question-area');
-        const quizCompleteArea = document.getElementById('quiz-complete');
-        const quizProgress = document.getElementById('quiz-progress');
-        const quizWord = document.getElementById('quiz-word');
-        const quizMeaningEn = document.getElementById('quiz-meaning-en');
-        const quizSentence = document.getElementById('quiz-sentence');
-        const quizOptions = document.getElementById('quiz-options');
-        const quizLapSelect = document.getElementById('quiz-lap-select');
-        const quizResultAccuracy = document.getElementById('quiz-result-accuracy');
-        const quizResultWrong = document.getElementById('quiz-result-wrong');
-        const quizResultNitro = document.getElementById('quiz-result-nitro');
-        const quizStartBtn = document.getElementById('quiz-start-btn');
-        const quizShopBtn = document.getElementById('quiz-shop-btn');
-        const quizTypeSimpleBtn = document.getElementById('quiz-type-simple');
-        const quizTypeComplexBtn = document.getElementById('quiz-type-complex');
-        const touchControls = document.getElementById('touch-controls');
-
         const game = new Game(canvas);
+        const nav = new NavManager(game);
+        window.game = game;
+
         let isTouchDevice = false;
 
         game.init().then(() => {
             setupTouchDetection();
-            setupCanvasClick();
+            nav.updateHomeStats();
         }).catch(err => {
             const d = document.createElement('div');
             d.style.cssText = 'color:#fff;background:#c00;padding:16px;font-size:14px;position:fixed;top:0;left:0;right:0;z-index:99999;';
@@ -148,6 +152,7 @@
         }
 
         function setupTouchControls() {
+            const touchControls = document.getElementById('touch-controls');
             const buttons = touchControls.querySelectorAll('.touch-btn');
             const inputState = { up: false, down: false, left: false, right: false, nitro: false };
 
@@ -177,147 +182,25 @@
             touchControls.classList.add('active');
         }
 
-        // --- Unified canvas click handler for all states ---
-        function setupCanvasClick() {
-            function getCanvasXY(e) {
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = 920 / rect.width;
-                const scaleY = 620 / rect.height;
-                return {
-                    x: (e.clientX - rect.left) * scaleX,
-                    y: (e.clientY - rect.top) * scaleY
-                };
-            }
-
-            function handleClick(x, y) {
-                const state = game.state;
-
-                if (state === 'MENU') {
-                    // Lap count selector: buttons at (380+(i-1)*52, 182, 40, 36)
-                    for (let i = 1; i <= 5; i++) {
-                        const bx = 380 + (i - 1) * 52;
-                        const by = 182;
-                        if (x >= bx && x <= bx + 40 && y >= by && y <= by + 36) {
-                            game.setLapCount(i);
-                            return;
-                        }
-                    }
-                    // START button: (330, 370, 260, 60)
-                    if (x >= 330 && x <= 590 && y >= 370 && y <= 430) {
-                        startQuiz();
-                        return;
-                    }
-                    // GO TO SHOP button: (370, 510, 180, 36)
-                    if (x >= 370 && x <= 550 && y >= 510 && y <= 546) {
-                        game.state = 'SHOP';
-                        return;
-                    }
-                } else if (state === 'SHOP') {
-                    // Delegate to game.handleShopClick()
-                    const newState = game.handleShopClick(x, y);
-                    // BugFix: re-generate quiz when returning from shop
-                    // Otherwise, currentIndex is at end, showQuizQuestion() will call finishQuiz() immediately
-                    if (newState === 'QUIZ') {
-                        game.startNewQuiz();
-                        quizOverlay.classList.add('active');
-                        quizQuestionArea.style.display = 'block';
-                        quizCompleteArea.style.display = 'none';
-                        showQuizQuestion();
-                    }
-                    return;
-                } else if (state === 'RACING') {
-                    // EXIT RACE button
-                    const exitBtn = game._exitBtnRect;
-                    if (exitBtn && x >= exitBtn.x && x <= exitBtn.x + exitBtn.w && y >= exitBtn.y && y <= exitBtn.y + exitBtn.h) {
-                        const newState = game.exitRace();
-                        if (newState === 'QUIZ') {
-                            quizOverlay.classList.add('active');
-                            quizQuestionArea.style.display = 'block';
-                            quizCompleteArea.style.display = 'none';
-                            showQuizQuestion();
-                        }
-                    }
-                    return;
-                } else if (state === 'RESULTS') {
-                    // Continue button
-                    const bx = (920 - 460) / 2;
-                    const by = (620 - 440) / 2;
-                    const btnX = bx + 80;
-                    const btnY = by + 440 - 55;
-                    const btnW = 460 - 160;
-                    const btnH = 42;
-                    if (x >= btnX && x <= btnX + btnW && y >= btnY && y <= btnY + btnH) {
-                        const newState = game.onResultsContinue();
-                        if (newState === 'QUIZ') {
-                            quizOverlay.classList.add('active');
-                            quizQuestionArea.style.display = 'block';
-                            quizCompleteArea.style.display = 'none';
-                            showQuizQuestion();
-                        }
-                    }
-                }
-            }
-
-            canvas.addEventListener('click', (e) => {
-                handleClick(getCanvasXY(e).x, getCanvasXY(e).y);
-            });
-
-            canvas.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                const touch = e.touches[0];
-                const pos = getCanvasXY(touch);
-                handleClick(pos.x, pos.y);
-            }, { passive: false });
-        }
-
-        // --- Keyboard: ESC to exit race, Enter for actions ---
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && game.state === 'RACING') {
-                const newState = game.exitRace();
-                if (newState === 'QUIZ') {
-                    quizOverlay.classList.add('active');
-                    quizQuestionArea.style.display = 'block';
-                    quizCompleteArea.style.display = 'none';
-                    showQuizQuestion();
-                }
-                return;
-            }
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (game.state === 'MENU') {
-                    startQuiz();
-                } else if (game.state === 'QUIZ' && quizCompleteArea.style.display !== 'none') {
-                    game.continueToRace();
-                    quizOverlay.classList.remove('active');
-                } else if (game.state === 'SHOP' && game.fuel > 0) {
-                    game.continueToRace();
-                } else if (game.state === 'RESULTS') {
-                    const newState = game.onResultsContinue();
-                    if (newState === 'QUIZ') {
-                        quizOverlay.classList.add('active');
-                        quizQuestionArea.style.display = 'block';
-                        quizCompleteArea.style.display = 'none';
-                        showQuizQuestion();
-                    }
-                }
-            }
-        });
-
-        // --- Quiz Flow ---
-        function startQuiz() {
+        // Quiz functions
+        window.startQuiz = function() {
             const questions = game.startNewQuiz();
-            quizOverlay.classList.add('active');
-            quizQuestionArea.style.display = 'block';
-            quizCompleteArea.style.display = 'none';
+            nav.switchPage('quiz');
             showQuizQuestion();
-        }
+        };
 
-        function showQuizQuestion() {
+        window.showQuizQuestion = function() {
             const q = game.quiz.getCurrentQuestion();
             if (!q) {
                 finishQuiz();
                 return;
             }
+
+            const quizProgress = document.getElementById('quiz-progress');
+            const quizWord = document.getElementById('quiz-word');
+            const quizMeaningEn = document.getElementById('quiz-meaning-en');
+            const quizSentence = document.getElementById('quiz-sentence');
+            const quizOptions = document.getElementById('quiz-options');
 
             const current = Math.min(game.quiz.currentIndex, game.quiz.currentQuiz.length - 1);
             const total = game.quiz.currentQuiz.length;
@@ -335,12 +218,13 @@
                 btn.addEventListener('click', () => handleQuizAnswer(idx));
                 quizOptions.appendChild(btn);
             });
-        }
+        };
 
-        function handleQuizAnswer(idx) {
+        window.handleQuizAnswer = function(idx) {
             const result = game.quiz.submitAnswer(idx);
             if (!result) return;
 
+            const quizOptions = document.getElementById('quiz-options');
             const buttons = quizOptions.querySelectorAll('.quiz-option');
             buttons.forEach((btn, i) => {
                 btn.classList.add('disabled');
@@ -351,22 +235,27 @@
             setTimeout(() => {
                 showQuizQuestion();
             }, 900);
-        }
+        };
 
-        function finishQuiz() {
+        window.finishQuiz = function() {
             const results = game.quiz.getResults();
+            const quizQuestionArea = document.getElementById('quiz-question-area');
+            const quizCompleteArea = document.getElementById('quiz-complete');
 
-            // CRITICAL: Transfer coins from quiz to game (BugFix: coins not synced to shop)
             game.onQuizComplete();
 
             quizQuestionArea.style.display = 'none';
             quizCompleteArea.style.display = 'block';
 
-            quizResultAccuracy.textContent = `Accuracy: ${results.accuracy}% (${results.correct}/${results.totalQuestions})`;
+            const quizResultAccuracy = document.getElementById('quiz-result-accuracy');
+            const quizResultFuel = document.getElementById('quiz-result-fuel');
+            const quizResultGear = document.getElementById('quiz-result-gear');
+            const quizResultWrong = document.getElementById('quiz-result-wrong');
+            const quizResultNitro = document.getElementById('quiz-result-nitro');
 
-            // Display dual currency rewards
-            document.getElementById('quiz-result-fuel').textContent = `Fuel Coins: +${results.fuelCoinsEarned} 🪙`;
-            document.getElementById('quiz-result-gear').textContent = `Gear Coins: +${results.gearCoinsEarned} ⚙️`;
+            quizResultAccuracy.textContent = `Accuracy: ${results.accuracy}% (${results.correctCount}/${results.totalQuestions})`;
+            quizResultFuel.textContent = `Fuel Coins: +${results.fuelCoinsEarned} 🪙`;
+            quizResultGear.textContent = `Gear Coins: +${results.gearCoinsEarned} ⚙️`;
 
             if (results.wrong.length > 0) {
                 quizResultWrong.textContent = 'Wrong: ' + results.wrong.map(w => w.word + '=' + w.meaning).join(', ');
@@ -380,18 +269,11 @@
                 quizResultNitro.textContent = 'No nitro this time. Try harder next race!';
             }
 
-            // Render lap count selector in quiz-complete panel
             renderLapSelector();
+        };
 
-            // BugFix: Force user to go to SHOP after quiz (must buy fuel/upgrades)
-            // Hide "Start Race" button, only show "Go to Shop" button
-            quizStartBtn.style.display = 'none';
-            quizShopBtn.style.display = 'inline-block';
-            quizShopBtn.textContent = '🛒 GO TO SHOP (Buy Fuel & Upgrades)';
-        }
-
-        // Render lap count selector (1-5) in quiz-complete panel
         function renderLapSelector() {
+            const quizLapSelect = document.getElementById('quiz-lap-select');
             quizLapSelect.innerHTML = '';
             const label = document.createElement('span');
             label.textContent = 'Laps: ';
@@ -417,24 +299,14 @@
             }
         }
 
-        // "Start Race" button in quiz complete panel
-        quizStartBtn.addEventListener('click', () => {
-            game.continueToRace();
-            quizOverlay.classList.remove('active');
-        });
+        // Quiz type selector
+        const quizTypeSimpleBtn = document.getElementById('quiz-type-simple');
+        const quizTypeComplexBtn = document.getElementById('quiz-type-complex');
 
-        // "Go to Shop" button in quiz complete panel
-        quizShopBtn.addEventListener('click', () => {
-            game.state = 'SHOP';
-            quizOverlay.classList.remove('active');
-        });
-
-        // Question type selector
         quizTypeSimpleBtn.addEventListener('click', () => {
             game.quiz.questionType = 'simple';
             quizTypeSimpleBtn.classList.add('active');
             quizTypeComplexBtn.classList.remove('active');
-            // BugFix: regenerate quiz when type changes
             game.quiz.generateQuiz(5, 3);
             showQuizQuestion();
         });
@@ -443,11 +315,107 @@
             game.quiz.questionType = 'complex';
             quizTypeComplexBtn.classList.add('active');
             quizTypeSimpleBtn.classList.remove('active');
-            // BugFix: regenerate quiz when type changes
             game.quiz.generateQuiz(5, 3);
             showQuizQuestion();
         });
 
+        // Quiz complete panel buttons
+        const quizStartBtn = document.getElementById('quiz-start-btn');
+        const quizShopBtn = document.getElementById('quiz-shop-btn');
+
+        quizStartBtn.addEventListener('click', () => {
+            game.continueToRace();
+            nav.switchPage('race');
+        });
+
+        quizShopBtn.addEventListener('click', () => {
+            nav.switchPage('shop');
+        });
+
+        // Home page button
+        const homeStartBtn = document.getElementById('home-start-btn');
+        homeStartBtn.addEventListener('click', () => {
+            window.startQuiz();
+        });
+
+        // Shop page
+        function renderShop() {
+            const shopItems = document.getElementById('shop-items');
+            shopItems.innerHTML = '';
+
+            game._shopItems.forEach((item, i) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'shop-item';
+                itemDiv.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:15px;margin-bottom:10px;background:rgba(255,255,255,0.05);border-radius:8px;';
+
+                const info = document.createElement('div');
+                info.innerHTML = `<strong>${item.label}</strong> - ${item.desc} (${item.cost} ${item.currency === 'fuel' ? '🪙' : '⚙️'})`;
+                itemDiv.appendChild(info);
+
+                const buyBtn = document.createElement('button');
+                buyBtn.textContent = 'Buy';
+                buyBtn.style.cssText = 'padding:8px 16px;background:#4CAF50;border:none;border-radius:6px;color:#FFF;cursor:pointer;font-weight:bold;';
+
+                const canBuy = item.currency === 'fuel'
+                    ? (game.fuelCoins >= item.cost && game.fuel < game.maxFuel)
+                    : (game.gearCoins >= item.cost);
+
+                if (!canBuy) {
+                    buyBtn.disabled = true;
+                    buyBtn.style.background = '#666';
+                    buyBtn.style.cursor = 'not-allowed';
+                }
+
+                buyBtn.addEventListener('click', () => {
+                    game._executeShopAction(item.id);
+                    renderShop();
+                    nav.updateHomeStats();
+                });
+
+                itemDiv.appendChild(buyBtn);
+                shopItems.appendChild(itemDiv);
+            });
+        }
+
+        // Shop buttons
+        const shopBackBtn = document.getElementById('shop-back-btn');
+        const shopRaceBtn = document.getElementById('shop-race-btn');
+
+        shopBackBtn.addEventListener('click', () => {
+            nav.switchPage('home');
+        });
+
+        shopRaceBtn.addEventListener('click', () => {
+            if (game.fuel > 0) {
+                game.continueToRace();
+                nav.switchPage('race');
+            } else {
+                alert('Need fuel! Go to quiz to earn fuel coins.');
+            }
+        });
+
+        // Keyboard handler
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && game.state === 'RACING') {
+                game.exitRace();
+                nav.switchPage('home');
+            }
+        });
+
+        // Update shop when page changes
+        window.updateShop = function() {
+            const shopFuelCoins = document.getElementById('shop-fuel-coins');
+            const shopGearCoins = document.getElementById('shop-gear-coins');
+            const shopFuel = document.getElementById('shop-fuel');
+            const shopNitro = document.getElementById('shop-nitro');
+
+            if (shopFuelCoins) shopFuelCoins.textContent = game.fuelCoins;
+            if (shopGearCoins) shopGearCoins.textContent = game.gearCoins;
+            if (shopFuel) shopFuel.textContent = Math.round(game.fuel);
+            if (shopNitro) shopNitro.textContent = game.nitroCharges;
+
+            renderShop();
+        };
     })();
     </script>
 </body>
