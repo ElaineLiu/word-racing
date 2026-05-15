@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed - Phase 1.1 & 1.2 Complete
+- **Config Extraction**: Created `config/game-config.js` with all game constants
+  - PHYSICS: car movement, friction, nitro, upgrades
+  - ECONOMY: fuel, coins, shop items, rewards
+  - TRACK: waypoints, width, samples
+  - DISPLAY: canvas, minimap, countdown, particles
+  - QUIZ: question settings, distractor scoring
+  - GAME: state names, limits, boundaries
+  - CAR: visual properties
+
+- **Module System**: Converted all JS files to ES6 modules
+  - `js/main.js`: Single entry point, replaces inline script
+  - All classes now use `export` instead of `window.*`
+  - `index.html` loads only `main.js` with `type="module"`
+
+- Files converted:
+  - `js/track.js` → imports TRACK, DISPLAY config
+  - `js/car.js` → imports PHYSICS, UPGRADES, DISPLAY, GAME, CAR config
+  - `js/question-factory.js` → exports DistractorEngine, QuestionFactory
+  - `js/quiz.js` → imports QuestionFactory, QUIZ config
+  - `js/game.js` → imports Track, Car, Quiz, ECONOMY, DISPLAY, GAME, UPGRADES config
+  - `js/nav.js` → imports GAME config
+
+### Changed - Refactoring Branch
+- Created `feature/refactor` branch for Phase 1 refactoring
+- Main branch contains testing infrastructure as safety net
+
 ### Added - Refactoring Infrastructure
 - **REFACTORING-PLAN.md** - Complete 5-phase refactoring roadmap with code samples
 - **Memory system** - Saved refactoring status for session continuity

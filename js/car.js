@@ -1,28 +1,45 @@
 /**
  * Car - 赛车物理与操控模块
  * 支持键盘和触控操作，含氮气加速系统
+ *
+ * Phase 1.2 - Converted to ES6 module, uses config
  */
-class Car {
+import { PHYSICS, UPGRADES, DISPLAY, CAR as CAR_CONFIG, GAME } from '../config/game-config.js';
+
+export class Car {
     constructor(x, y, angle) {
         this.x = x;
         this.y = y;
         this.angle = angle;
 
         this.speed = 0;
-        this.maxSpeed = 4.0;
-        this.acceleration = 0.08;
-        this.brakeForce = 0.15;
-        this.friction = 0.988;
-        this.offTrackFriction = 0.96;
-        this.turnSpeed = 0.045;
+        this.maxSpeed = PHYSICS.BASE_MAX_SPEED;
+        this.acceleration = PHYSICS.BASE_ACCELERATION;
+        this.brakeForce = PHYSICS.BASE_BRAKE_FORCE;
+        this.friction = PHYSICS.BASE_FRICTION;
+        this.offTrackFriction = PHYSICS.BASE_OFF_TRACK_FRICTION;
+        this.turnSpeed = PHYSICS.BASE_TURN_SPEED;
 
         // Nitro system
         this.nitroCharges = 0;
         this.nitroActive = false;
         this.nitroTimer = 0;
-        this.nitroDuration = 180; // frames (~3 seconds at 60fps)
-        this.nitroMaxSpeed = 8;
-        this.nitroAccel = 0.2;
+        this.nitroDuration = PHYSICS.NITRO_DURATION;
+        this.nitroMaxSpeed = PHYSICS.NITRO_MAX_SPEED;
+        this.nitroAccel = PHYSICS.NITRO_ACCEL;
+
+        // Base physics values (for upgrade calculations)
+        this._baseMaxSpeed = PHYSICS.BASE_MAX_SPEED;
+        this._baseAcceleration = PHYSICS.BASE_ACCELERATION;
+        this._baseBrakeForce = PHYSICS.BASE_BRAKE_FORCE;
+        this._baseFriction = PHYSICS.BASE_FRICTION;
+        this._baseOffTrackFriction = PHYSICS.BASE_OFF_TRACK_FRICTION;
+        this._baseTurnSpeed = PHYSICS.BASE_TURN_SPEED;
+        this._baseNitroMaxSpeed = PHYSICS.NITRO_MAX_SPEED;
+        this._baseNitroAccel = PHYSICS.NITRO_ACCEL;
+
+        // Upgrade levels
+        this.upgradeLevels = { engine: 1, tire: 1, body: 1 };
 
         // Lap tracking
         this.lastProgress = 0;
@@ -33,9 +50,9 @@ class Car {
         this.finished = false;
 
         // Visual
-        this.color = '#E53935';
-        this.width = 34;
-        this.height = 18;
+        this.color = CAR_CONFIG.COLOR_BODY;
+        this.width = CAR_CONFIG.WIDTH;
+        this.height = CAR_CONFIG.HEIGHT;
 
         // Skid marks
         this.skidMarks = [];
@@ -45,6 +62,10 @@ class Car {
 
         // Input state
         this.input = { up: false, down: false, left: false, right: false, nitro: false };
+
+        // Off-track rescue timer
+        this.offTrackTimer = 0;
+        this.offTrackRescueThreshold = PHYSICS.OFF_TRACK_RESCUE_THRESHOLD;
     }
 
     /**
@@ -65,6 +86,36 @@ class Car {
         this.finished = false;
         this.skidMarks = [];
         this.particles = [];
+        this.offTrackTimer = 0;
+        this.applyUpgrades(this.upgradeLevels);
+    }
+
+    /**
+     * Apply upgrade levels to car physics.
+     * Called when upgrades change or car resets.
+     * @param {object} upgrades - { engine: 1-4, tire: 1-4, body: 1-4 }
+     */
+    applyUpgrades(upgrades) {
+        this.upgradeLevels = { ...upgrades };
+
+        const engineLv = upgrades.engine || UPGRADES.MIN_LEVEL;
+        const tireLv = upgrades.tire || UPGRADES.MIN_LEVEL;
+        const bodyLv = upgrades.body || UPGRADES.MIN_LEVEL;
+
+        // Engine: speed bonus per level
+        const engineMult = 1 + (engineLv - 1) * UPGRADES.ENGINE_SPEED_BONUS;
+        this.maxSpeed = this._baseMaxSpeed * engineMult;
+        this.nitroMaxSpeed = this._baseNitroMaxSpeed * engineMult;
+        this.nitroAccel = this._baseNitroAccel * engineMult;
+
+        // Tire: grip bonus per level (turn speed = cornering ability)
+        const tireMult = 1 + (tireLv - 1) * UPGRADES.TIRE_GRIP_BONUS;
+        this.turnSpeed = this._baseTurnSpeed * tireMult;
+
+        // Body: weight bonus per level (acceleration + brake force)
+        const bodyMult = 1 + (bodyLv - 1) * UPGRADES.BODY_WEIGHT_BONUS;
+        this.acceleration = this._baseAcceleration * bodyMult;
+        this.brakeForce = this._baseBrakeForce * bodyMult;
     }
 
     /**
@@ -78,7 +129,7 @@ class Car {
      * Activate nitro boost
      */
     activateNitro() {
-        if (this.nitroCharges > 0 && !this.nitroActive && this.speed > 0.5) {
+        if (this.nitroCharges > 0 && !this.nitroActive && this.speed > PHYSICS.NITRO_MIN_SPEED) {
             this.nitroActive = true;
             this.nitroTimer = this.nitroDuration;
             this.nitroCharges--;
@@ -114,11 +165,11 @@ class Car {
         // Braking
         if (this.input.down) {
             this.speed -= this.brakeForce;
-            if (this.speed < -1.5) this.speed = -1.5; // Allow slight reverse
+            if (this.speed < PHYSICS.REVERSE_MAX_SPEED) this.speed = PHYSICS.REVERSE_MAX_SPEED;
         }
 
         // Steering: more responsive at low speeds
-        const turnFactor = Math.min(Math.abs(this.speed) / 1.2, 1);
+        const turnFactor = Math.min(Math.abs(this.speed) / PHYSICS.TURN_FACTOR_DIVISOR, 1);
         if (this.input.left) {
             this.angle -= this.turnSpeed * turnFactor;
         }
@@ -133,37 +184,43 @@ class Car {
 
         // 松开方向键时强摩擦——快速停止，增强操控感
         if (!this.input.up && !this.input.down) {
-            this.speed *= 0.72;
+            this.speed *= PHYSICS.IDLE_FRICTION;
         }
 
         // Very slow speeds: stop completely
-        if (Math.abs(this.speed) < 0.05) this.speed = 0;
+        if (Math.abs(this.speed) < PHYSICS.STOP_THRESHOLD) this.speed = 0;
 
         // Move car
         this.x += Math.cos(this.angle) * this.speed;
         this.y += Math.sin(this.angle) * this.speed;
 
-        // Off-track: slow down + hard boundary clamp
+        // Off-track handling: track how long car has been off-track
         if (!onTrack) {
-            this.speed *= 0.75; // heavy friction off-track
-            // Hard clamp: keep car within reasonable bounds
-            const maxDist = track.trackWidth / 2 + 20;
-            const dist = track.getNearestDistance(this.x, this.y);
-            if (dist > maxDist) {
-                // Teleport car back to track edge
-                const info = track.getTrackNormal(this.x, this.y);
-                this.x = info.nearestPoint.x + info.x * (track.trackWidth / 2 - 5);
-                this.y = info.nearestPoint.y + info.y * (track.trackWidth / 2 - 5);
-                this.speed = 0;
+            this.offTrackTimer++;
+            this.speed *= PHYSICS.OFF_TRACK_EXTRA_FRICTION;
+
+            // Progressive rescue: if off-track for too long, auto-rescue
+            if (this.offTrackTimer > this.offTrackRescueThreshold) {
+                this._rescueToTrack(track);
+            } else {
+                // Immediate clamp: if too far from track, teleport back
+                const maxDist = track.trackWidth / 2 + PHYSICS.OFF_TRACK_MAX_DISTANCE;
+                const dist = track.getNearestDistance(this.x, this.y);
+                if (dist > maxDist) {
+                    this._rescueToTrack(track);
+                }
             }
+        } else {
+            // On track - reset the off-track timer
+            this.offTrackTimer = 0;
         }
 
         // Boundary clamping (keep car in game world)
-        this.x = Math.max(20, Math.min(900, this.x));
-        this.y = Math.max(20, Math.min(600, this.y));
+        this.x = Math.max(GAME.WORLD_MIN_X, Math.min(GAME.WORLD_MAX_X, this.x));
+        this.y = Math.max(GAME.WORLD_MIN_Y, Math.min(GAME.WORLD_MAX_Y, this.y));
 
         // Add skid marks when turning at speed
-        if ((this.input.left || this.input.right) && Math.abs(this.speed) > 2.5) {
+        if ((this.input.left || this.input.right) && Math.abs(this.speed) > DISPLAY.SKID_MIN_SPEED) {
             this.skidMarks.push({
                 x: this.x, y: this.y, angle: this.angle, alpha: 0.4
             });
@@ -171,14 +228,14 @@ class Car {
 
         // Fade old skid marks
         for (let i = this.skidMarks.length - 1; i >= 0; i--) {
-            this.skidMarks[i].alpha -= 0.003;
+            this.skidMarks[i].alpha -= DISPLAY.SKID_FADE_RATE;
             if (this.skidMarks[i].alpha <= 0) {
                 this.skidMarks.splice(i, 1);
             }
         }
         // Limit total skid marks
-        if (this.skidMarks.length > 100) {
-            this.skidMarks.splice(0, this.skidMarks.length - 100);
+        if (this.skidMarks.length > DISPLAY.MAX_SKID_MARKS) {
+            this.skidMarks.splice(0, this.skidMarks.length - DISPLAY.MAX_SKID_MARKS);
         }
 
         // Add nitro particles
@@ -190,7 +247,7 @@ class Car {
                     vx: -Math.cos(this.angle) * (1 + Math.random()) + (Math.random() - 0.5),
                     vy: -Math.sin(this.angle) * (1 + Math.random()) + (Math.random() - 0.5),
                     life: 20 + Math.random() * 15,
-                    maxLife: 35,
+                    maxLife: DISPLAY.PARTICLE_MAX_LIFE,
                     size: 3 + Math.random() * 4
                 });
             }
@@ -227,6 +284,25 @@ class Car {
             }
         }
         this.lastProgress = progress;
+    }
+
+    /**
+     * Rescue car back to track
+     * @param {Track} track - the track object
+     */
+    _rescueToTrack(track) {
+        const info = track.getTrackNormal(this.x, this.y);
+        // Place car on track surface (just inside the track edge)
+        this.x = info.nearestPoint.x + info.x * (track.trackWidth / 2 - 8);
+        this.y = info.nearestPoint.y + info.y * (track.trackWidth / 2 - 8);
+        // Face the car in the direction of the track
+        const idx = track.points.indexOf(info.nearestPoint);
+        if (idx >= 0 && idx < track.points.length - 1) {
+            const next = track.points[idx + 1];
+            this.angle = Math.atan2(next.y - info.nearestPoint.y, next.x - info.nearestPoint.x);
+        }
+        this.speed = 0;
+        this.offTrackTimer = 0;
     }
 
     /**
@@ -363,7 +439,7 @@ class Car {
      * Get speed in km/h (display value)
      */
     getDisplaySpeed() {
-        return Math.round(Math.abs(this.speed) * 50); // Scale for display
+        return Math.round(Math.abs(this.speed) * DISPLAY.SPEED_DISPLAY_MULTIPLIER);
     }
 
     /**

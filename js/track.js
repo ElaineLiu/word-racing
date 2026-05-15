@@ -2,37 +2,21 @@
  * Track - 赛道定义与渲染模块
  * 使用 Catmull-Rom 样条生成平滑赛道
  * 支持碰撞检测、进度计算
+ *
+ * Phase 1.2 - Converted to ES6 module
  */
-class Track {
+import { TRACK, DISPLAY } from '../config/game-config.js';
+
+export class Track {
     constructor() {
         this.points = [];       // Smooth track center points
-        this.trackWidth = 76;   // Track width in game pixels
+        this.trackWidth = TRACK.WIDTH;   // Track width in game pixels
         this.startPos = { x: 0, y: 0, angle: 0 };
 
         // Define control waypoints for the circuit
-        this.waypoints = [
-            { x: 180, y: 180 },  // Start/finish area
-            { x: 350, y: 160 },
-            { x: 520, y: 155 },
-            { x: 660, y: 170 },
-            { x: 740, y: 220 },  // Turn 1
-            { x: 770, y: 300 },
-            { x: 760, y: 380 },  // Turn 1 exit
-            { x: 720, y: 430 },  // Turn 2 entry
-            { x: 640, y: 465 },  // Turn 2 apex
-            { x: 540, y: 475 },  // Back straight
-            { x: 420, y: 470 },
-            { x: 340, y: 455 },  // Hairpin entry
-            { x: 290, y: 430 },
-            { x: 270, y: 390 },  // Hairpin apex
-            { x: 280, y: 350 },  // Hairpin exit
-            { x: 310, y: 320 },  // S-curve entry
-            { x: 270, y: 285 },  // S-curve mid 1
-            { x: 220, y: 270 },  // S-curve mid 2
-            { x: 175, y: 250 },  // S-curve exit
-        ];
+        this.waypoints = TRACK.WAYPOINTS.map(wp => ({ ...wp }));
 
-        this._generateSmoothCurve(200);
+        this._generateSmoothCurve(TRACK.SAMPLES_PER_SEGMENT);
         this._calculateStartPos();
     }
 
@@ -172,40 +156,44 @@ class Track {
     render(ctx, scale = 1) {
         const w = this.trackWidth;
 
-        // Draw grass background (fill entire canvas in current transform)
-        ctx.fillStyle = '#4CAF50';
-        ctx.fillRect(0, 0, 920, 620);
+        // Draw night ground background
+        ctx.fillStyle = '#0B1622';
+        ctx.fillRect(0, 0, DISPLAY.CANVAS_WIDTH, DISPLAY.CANVAS_HEIGHT);
 
-        // Draw grass texture (subtle stripes)
-        ctx.strokeStyle = '#43A047';
+        // Draw subtle grid texture (telemetry-style)
+        ctx.strokeStyle = 'rgba(255,255,255,0.025)';
         ctx.lineWidth = 1;
-        for (let y = 0; y < 620; y += 20) {
+        for (let y = 0; y < DISPLAY.CANVAS_HEIGHT; y += 24) {
             ctx.beginPath();
             ctx.moveTo(0, y);
-            ctx.lineTo(920, y);
+            ctx.lineTo(DISPLAY.CANVAS_WIDTH, y);
+            ctx.stroke();
+        }
+        for (let x = 0; x < DISPLAY.CANVAS_WIDTH; x += 24) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, DISPLAY.CANVAS_HEIGHT);
             ctx.stroke();
         }
 
-        // Draw track shadow
+        // Draw track glow/shadow (ambient glow beneath track)
         ctx.save();
-        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-        ctx.lineWidth = w + 8 / scale;
+        ctx.strokeStyle = 'rgba(0,176,255,0.08)';
+        ctx.lineWidth = w + 14 / scale;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.beginPath();
         for (let i = 0; i < this.points.length; i++) {
             const p = this.points[i];
-            const sx = p.x + 3 / scale;
-            const sy = p.y + 3 / scale;
-            if (i === 0) ctx.moveTo(sx, sy);
-            else ctx.lineTo(sx, sy);
+            if (i === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
         }
         ctx.closePath();
         ctx.stroke();
         ctx.restore();
 
         // Draw track edge (white border)
-        ctx.strokeStyle = '#FFFFFF';
+        ctx.strokeStyle = '#E8E8E8';
         ctx.lineWidth = w + 6 / scale;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -221,9 +209,23 @@ class Track {
         // Draw track edge kerbs (red-white stripes at corners)
         this._drawKerbs(ctx, scale, w);
 
-        // Draw main track surface
-        ctx.strokeStyle = '#555555';
+        // Draw main track surface (dark asphalt)
+        ctx.strokeStyle = '#2D2D2D';
         ctx.lineWidth = w;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        for (let i = 0; i < this.points.length; i++) {
+            const p = this.points[i];
+            if (i === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+
+        // Draw track inner detail (slightly lighter asphalt center)
+        ctx.strokeStyle = '#333333';
+        ctx.lineWidth = w * 0.6;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.beginPath();
@@ -237,8 +239,8 @@ class Track {
 
         // Draw center line (dashed)
         ctx.save();
-        ctx.setLineDash([12, 12]);
-        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+        ctx.setLineDash([14, 14]);
+        ctx.strokeStyle = 'rgba(255,255,255,0.18)';
         ctx.lineWidth = 2 / scale;
         ctx.beginPath();
         for (let i = 0; i < this.points.length; i++) {

@@ -2,26 +2,33 @@
  * Game - 游戏主控制器
  * 状态机: MENU -> QUIZ <-> SHOP <-> (COUNTDOWN -> RACING -> RESULTS) -> QUIZ
  * 三面板: QUIZ / SHOP / RACING 可手动切换（RACING中只能EXIT回QUIZ）
+ *
+ * Phase 1.2 - Converted to ES6 module, uses config
  */
-class Game {
+import { Track } from './track.js';
+import { Car } from './car.js';
+import { VocabularyQuiz } from './quiz.js';
+import { ECONOMY, DISPLAY, GAME, UPGRADES } from '../config/game-config.js';
+
+export class Game {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.scale = 1;
 
         // Game state
-        this.state = 'MENU'; // MENU, QUIZ, SHOP, COUNTDOWN, RACING, RESULTS
-        this.selectedLaps = 1;  // 用户设置的圈数 1-5
-        this.totalLaps = 1;     // 当前比赛总圈数（由 selectedLaps 赋值）
+        this.state = GAME.STATES.MENU;
+        this.selectedLaps = GAME.MIN_LAPS;
+        this.totalLaps = GAME.MIN_LAPS;
 
         // Player resources
         this.coins = 0;
         // --- 双货币系统 ---
         this.fuelCoins = 0;      // 燃油币（橙色图标 🪙）
         this.gearCoins = 0;      // 装备币（蓝色图标 ⚙️）
-        this.maxFuel = 100;
-        this.fuel = 0;           // BugFix: initial fuel = 0, MUST buy in shop
-        this.fuelPerLap = 20;   // 每圈消耗燃油（降低，让比赛更持久）
+        this.maxFuel = ECONOMY.MAX_FUEL;
+        this.fuel = ECONOMY.INITIAL_FUEL;
+        this.fuelPerLap = ECONOMY.FUEL_PER_LAP;
         this.raceScore = 0;
         this.totalScore = 0;
         this.raceStartTime = 0;
@@ -29,11 +36,11 @@ class Game {
         this.quizResults = null;
         // --- 改装等级 ---
         this.upgrades = {
-            engine: 1,  // 引擎等级（1-4）
-            tire: 1,     // 轮胎等级（1-4）
-            body: 1      // 车身等级（1-4）
+            engine: UPGRADES.MIN_LEVEL,
+            tire: UPGRADES.MIN_LEVEL,
+            body: UPGRADES.MIN_LEVEL
         };
-        this.nitroCharges = 0;    // Nitro 次数
+        this.nitroCharges = 0;
 
         // Countdown
         this.countdownTimer = 0;
@@ -50,6 +57,10 @@ class Game {
         // Leaderboard (从 localStorage 加载)
         this.leaderboard = this._loadLeaderboard();
 
+        // Callbacks (set by index.html)
+        this.onExitRace = null;
+        this.onResultsContinueCb = null;
+
         // Subsystems
         this.track = new Track();
         this.car = new Car(
@@ -58,6 +69,10 @@ class Game {
             this.track.startPos.angle
         );
         this.quiz = new VocabularyQuiz();
+        this.car.applyUpgrades(this.upgrades);
+
+        // Shop items from config
+        this._shopItems = ECONOMY.SHOP_ITEMS.map(item => ({ ...item }));
     }
 
     // ==================== Leaderboard ====================
@@ -72,7 +87,7 @@ class Game {
 
     _saveLeaderboard() {
         try {
-            localStorage.setItem('wr_leaderboard', JSON.stringify(this.leaderboard.slice(0, 20)));
+            localStorage.setItem('wr_leaderboard', JSON.stringify(this.leaderboard.slice(0, GAME.MAX_LEADERBOARD_ENTRIES)));
         } catch (e) {}
     }
 
@@ -85,11 +100,11 @@ class Game {
         this.leaderboard.push({
             time: lapTime,
             lapCount: lapCount,
-            date: new Date().toLocaleDateString('zh-CN')
+            date: new Date().toLocaleDateString('en-US')
         });
         // 按时间升序排列，保留前20条
         this.leaderboard.sort((a, b) => a.time - b.time);
-        if (this.leaderboard.length > 20) this.leaderboard = this.leaderboard.slice(0, 20);
+        if (this.leaderboard.length > GAME.MAX_LEADERBOARD_ENTRIES) this.leaderboard = this.leaderboard.slice(0, GAME.MAX_LEADERBOARD_ENTRIES);
         this._saveLeaderboard();
     }
 
@@ -105,7 +120,7 @@ class Game {
      * 设置比赛圈数（1-5）
      */
     setLapCount(n) {
-        this.selectedLaps = Math.max(1, Math.min(5, n));
+        this.selectedLaps = Math.max(GAME.MIN_LAPS, Math.min(GAME.MAX_LAPS, n));
     }
 
     // ==================== Initialize ====================
@@ -154,6 +169,31 @@ class Game {
         }, true);
         document.addEventListener('keyup', (e) => {
             this.keys[e.key] = false;
+        });
+
+        // Canvas click handler
+        this.canvas.addEventListener('click', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const cx = (e.clientX - rect.left) / this.scale;
+            const cy = (e.clientY - rect.top) / this.scale;
+
+            if (this.state === 'RESULTS') {
+                const newState = this.handleResultsClick(cx, cy);
+                if (newState !== this.state) {
+                    this.state = newState;
+                }
+            } else if (this.state === 'RACING') {
+                // Check if EXIT RACE button was clicked
+                if (this._exitBtnRect) {
+                    const btn = this._exitBtnRect;
+                    if (cx >= btn.x && cx <= btn.x + btn.w && cy >= btn.y && cy <= btn.y + btn.h) {
+                        this.exitRace();
+                        if (typeof this.onExitRace === 'function') {
+                            this.onExitRace();
+                        }
+                    }
+                }
+            }
         });
     }
 
@@ -362,98 +402,17 @@ class Game {
         ctx.restore();
     }
 
-    _renderMenu(ctx, scale) {
-        ctx.fillStyle = '#1B5E20';
-        ctx.fillRect(0, 0, 920, 620);
-
-        ctx.fillStyle = 'rgba(255,255,255,0.05)';
-        for (let i = 0; i < 8; i++) {
-            ctx.beginPath();
-            ctx.arc(100 + i * 120, 100 + Math.sin(i) * 50, 60, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 56px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('WORD RACING', 460, 120);
-
-        ctx.fillStyle = '#FFF';
-        ctx.font = '18px Arial';
-        ctx.fillText('Back words, drive fast!', 460, 160);
-
-        // --- Lap count selector (1-5) ---
-        ctx.fillStyle = '#FFF';
-        ctx.font = '16px Arial';
-        ctx.fillText('Select Laps:', 300, 200);
-        for (let i = 1; i <= 5; i++) {
-            const bx = 380 + (i - 1) * 52;
-            const by = 182;
-            const isSelected = (i === this.selectedLaps);
-            ctx.fillStyle = isSelected ? '#FFD700' : 'rgba(255,255,255,0.15)';
-            ctx.strokeStyle = isSelected ? '#FFD700' : '#FFF';
-            ctx.lineWidth = 2;
-            this._roundRect(ctx, bx, by, 40, 36, 8);
-            ctx.fill();
-            ctx.stroke();
-            ctx.fillStyle = isSelected ? '#1B5E20' : '#FFF';
-            ctx.font = 'bold 18px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(String(i), bx + 20, by + 22);
-        }
-
-        // --- Leaderboard (top 5) ---
-        this._renderLeaderboard(ctx);
-
-        // Start button
-        ctx.fillStyle = 'rgba(255,215,0,0.15)';
-        ctx.strokeStyle = '#FFD700';
-        ctx.lineWidth = 2;
-        this._roundRect(ctx, 330, 370, 260, 60, 12);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 24px Arial';
-        ctx.fillText('START', 460, 402);
-
-        // Dual currency display on menu
-        ctx.font = '15px Arial';
-        ctx.textAlign = 'center';
-
-        // Fuel Coins (orange)
-        ctx.fillStyle = '#FF6B35';
-        ctx.fillText(`Fuel Coins: ${this.fuelCoins} 🪙`, 460, 465);
-
-        // Gear Coins (blue)
-        ctx.fillStyle = '#4A90D9';
-        ctx.fillText(`Gear Coins: ${this.gearCoins} ⚙️`, 460, 488);
-
-        this._renderFuelBar(ctx, 350, 502, 220, 18);
-
-        // "GO TO SHOP" button on menu
-        ctx.fillStyle = 'rgba(255,255,255,0.1)';
-        ctx.strokeStyle = '#FFD700';
-        ctx.lineWidth = 1.5;
-        this._roundRect(ctx, 370, 510, 180, 36, 8);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 15px Arial';
-        ctx.fillText('GO TO SHOP', 460, 532);
-
-        ctx.fillStyle = 'rgba(255,255,255,0.6)';
-        ctx.font = '13px Arial';
-        ctx.fillText('Arrow keys / WASD | Space = nitro', 460, 570);
-    }
 
     // 排行榜渲染（MENU 界面右侧）
     _renderLeaderboard(ctx) {
         const lx = 600, ly = 185, lw = 280, lh = 240;
-        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.fillStyle = 'rgba(13,17,23,0.7)';
         this._roundRect(ctx, lx, ly, lw, lh, 10);
         ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1;
+        this._roundRect(ctx, lx, ly, lw, lh, 10);
+        ctx.stroke();
 
         ctx.fillStyle = '#FFD700';
         ctx.font = 'bold 16px Arial';
@@ -462,7 +421,7 @@ class Game {
 
         const top = this.getLeaderboard(5);
         if (top.length === 0) {
-            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.fillStyle = 'rgba(255,255,255,0.35)';
             ctx.font = '13px Arial';
             ctx.fillText('No records yet', lx + lw / 2, ly + 60);
             return;
@@ -470,7 +429,7 @@ class Game {
 
         top.forEach((entry, i) => {
             const ry = ly + 50 + i * 34;
-            ctx.fillStyle = i === 0 ? '#FFD700' : 'rgba(255,255,255,0.8)';
+            ctx.fillStyle = i === 0 ? '#FFD700' : 'rgba(255,255,255,0.7)';
             ctx.font = i === 0 ? 'bold 14px Arial' : '13px Arial';
             ctx.textAlign = 'left';
             const lapStr = `${entry.lapCount}-lap`;
@@ -479,50 +438,41 @@ class Game {
     }
 
     _renderFuelBar(ctx, x, y, w, h) {
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.fillRect(x, y, w, h);
-        const ratio = this.fuel / this.maxFuel;
-        const color = ratio > 0.5 ? '#4CAF50' : ratio > 0.25 ? '#FF9800' : '#F44336';
-        ctx.fillStyle = color;
-        ctx.fillRect(x, y, w * ratio, h);
-        ctx.strokeStyle = '#FFF';
+        // Background
+        ctx.fillStyle = 'rgba(13,17,23,0.85)';
+        this._roundRect(ctx, x, y, w, h, 4);
+        ctx.fill();
+
+        // Border
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
         ctx.lineWidth = 1;
-        ctx.strokeRect(x, y, w, h);
-        ctx.fillStyle = '#FFF';
-        ctx.font = '11px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(`Fuel: ${Math.round(this.fuel)} / ${this.maxFuel}`, x + w / 2, y + h - 5);
-    }
+        this._roundRect(ctx, x, y, w, h, 4);
+        ctx.stroke();
 
-    _renderQuizOverlay(ctx, scale) {
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.fillRect(0, 0, 920, 620);
-
-        if (this.quiz.currentQuiz.length > 0) {
-            const current = Math.min(this.quiz.currentIndex, this.quiz.currentQuiz.length - 1);
-            const total = this.quiz.currentQuiz.length;
-            const correct = this.quiz.correctCount;
-
-            ctx.fillStyle = 'rgba(255,255,255,0.2)';
-            this._roundRect(ctx, 260, 30, 400, 8, 4);
+        // Fill
+        const ratio = Math.max(0, Math.min(1, this.fuel / this.maxFuel));
+        const color = ratio > 0.5 ? '#00C853' : ratio > 0.25 ? '#FF6D00' : '#E10600';
+        if (ratio > 0) {
+            ctx.fillStyle = color;
+            this._roundRect(ctx, x + 1, y + 1, (w - 2) * ratio, h - 2, 3);
             ctx.fill();
-            ctx.fillStyle = '#4CAF50';
-            this._roundRect(ctx, 260, 30, 400 * (current + 1) / total, 8, 4);
-            ctx.fill();
-
-            ctx.fillStyle = '#FFF';
-            ctx.font = '16px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(`${current + 1} / ${total}  |  Correct: ${correct}`, 460, 65);
         }
+
+        // Label
+        ctx.fillStyle = '#FFF';
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`FUEL  ${Math.round(this.fuel)} / ${this.maxFuel}`, x + w / 2, y + h / 2 + 0.5);
     }
+
 
     _renderCountdown(ctx, scale) {
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
         ctx.fillRect(0, 0, 920, 620);
 
-        ctx.fillStyle = this.countdownText === 'GO!' ? '#4CAF50' : '#FFD700';
-        ctx.font = `bold ${this.countdownText === 'GO!' ? 80 : 100}px Arial`;
+        ctx.fillStyle = this.countdownText === 'GO!' ? '#00C853' : '#FFD700';
+        ctx.font = `bold ${this.countdownText === 'GO!' ? 90 : 110}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(this.countdownText, 460, 310);
@@ -531,141 +481,164 @@ class Game {
     _renderHUD(ctx, scale) {
         const padding = 12;
 
-        // Speed gauge (bottom-left)
-        ctx.fillStyle = 'rgba(0,0,0,0.65)';
-        this._roundRect(ctx, padding, 520, 140, 80, 10);
-        ctx.fill();
-
-        ctx.fillStyle = '#FFF';
-        ctx.font = 'bold 36px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(this.car.getDisplaySpeed(), 82, 555);
-
-        ctx.fillStyle = 'rgba(255,255,255,0.6)';
-        ctx.font = '12px Arial';
-        ctx.fillText('km/h', 82, 585);
-
-        // Lap counter (top-left)
-        ctx.fillStyle = 'rgba(0,0,0,0.65)';
-        this._roundRect(ctx, padding, padding, 130, 50, 10);
-        ctx.fill();
-
-        ctx.fillStyle = '#FFF';
-        ctx.font = '14px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText('LAP', padding + 15, padding + 22);
-        ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 22px Arial';
-        ctx.fillText(`${Math.min(this.car.lap + 1, this.totalLaps)} / ${this.totalLaps}`, padding + 15, padding + 44);
-
-        // Timer (top-center)
-        ctx.fillStyle = 'rgba(0,0,0,0.65)';
-        this._roundRect(ctx, 375, padding, 170, 50, 10);
-        ctx.fill();
-
-        ctx.fillStyle = '#FFF';
-        ctx.font = '14px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('TIME', 460, padding + 22);
-        ctx.fillStyle = '#FFF';
-        ctx.font = 'bold 22px Arial';
-        ctx.fillText(this._formatTime(this.raceTime), 460, padding + 44);
-
-        // Best lap (below timer)
-        if (this.car.bestLapTime < Infinity) {
-            ctx.fillStyle = 'rgba(0,0,0,0.65)';
-            this._roundRect(ctx, 395, padding + 55, 130, 28, 8);
+        // --- Helper: draw a HUD panel ---
+        const drawPanel = (x, y, w, h, label, value, valueColor = '#FFF') => {
+            ctx.fillStyle = 'rgba(13,17,23,0.82)';
+            this._roundRect(ctx, x, y, w, h, 8);
             ctx.fill();
-            ctx.fillStyle = '#4CAF50';
-            ctx.font = '13px Arial';
-            ctx.fillText('Best: ' + this._formatTime(this.car.bestLapTime), 460, padding + 74);
+            ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+            ctx.lineWidth = 1;
+            this._roundRect(ctx, x, y, w, h, 8);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.font = '11px Arial';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText(label, x + 10, y + 6);
+            ctx.fillStyle = valueColor;
+            ctx.font = 'bold 20px Arial';
+            ctx.textBaseline = 'top';
+            ctx.fillText(value, x + 10, y + 22);
+        };
+
+        // --- LAP (top-left) ---
+        drawPanel(padding, padding, 110, 48, 'LAP',
+            `${Math.min(this.car.lap + 1, this.totalLaps)} / ${this.totalLaps}`, '#FFD700');
+
+        // --- TIME (top-center) ---
+        drawPanel(375, padding, 170, 48, 'TIME',
+            this._formatTime(this.raceTime), '#FFF');
+
+        // Best lap (small, below timer)
+        if (this.car.bestLapTime < Infinity) {
+            ctx.fillStyle = 'rgba(0,200,83,0.8)';
+            ctx.font = '11px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText('BEST  ' + this._formatTime(this.car.bestLapTime), 460, padding + 54);
         }
 
-        // Fuel bar (top-right, below score)
-        this._renderFuelBar(ctx, 770, padding + 65, 138, 20);
+        // --- SCORE (top-right) ---
+        drawPanel(798, padding, 110, 48, 'SCORE',
+            String(this.raceScore), '#FFD700');
 
-        // Score (top-right)
-        ctx.fillStyle = 'rgba(0,0,0,0.65)';
-        this._roundRect(ctx, 770, padding, 138, 50, 10);
+        // --- FUEL BAR (top-right, below score) ---
+        this._renderFuelBar(ctx, 798, padding + 54, 110, 18);
+
+        // --- SPEED (bottom-left) ---
+        const speedY = 512;
+        const speedW = 130;
+        const speedH = 88;
+        ctx.fillStyle = 'rgba(13,17,23,0.82)';
+        this._roundRect(ctx, padding, speedY, speedW, speedH, 10);
         ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1;
+        this._roundRect(ctx, padding, speedY, speedW, speedH, 10);
+        ctx.stroke();
 
+        const displaySpeed = this.car.getDisplaySpeed();
         ctx.fillStyle = '#FFF';
-        ctx.font = '14px Arial';
-        ctx.textAlign = 'right';
-        ctx.fillText('SCORE', 896, padding + 22);
-        ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 22px Arial';
-        ctx.fillText(String(this.raceScore), 896, padding + 44);
+        ctx.font = 'bold 40px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(displaySpeed, padding + speedW / 2, speedY + 36);
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.font = '12px Arial';
+        ctx.fillText('km/h', padding + speedW / 2, speedY + 64);
 
-        // Nitro indicator (bottom-right)
+        // Speed bar
+        const speedRatio = Math.min(displaySpeed / 200, 1);
+        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.fillRect(padding + 10, speedY + speedH - 10, speedW - 20, 4);
+        const speedBarColor = displaySpeed > 150 ? '#FF6D00' : displaySpeed > 80 ? '#00B0FF' : '#00C853';
+        ctx.fillStyle = speedBarColor;
+        ctx.fillRect(padding + 10, speedY + speedH - 10, (speedW - 20) * speedRatio, 4);
+
+        // --- NITRO (bottom-right) ---
         this._renderNitroHUD(ctx, scale, padding);
 
-        // Dual currency display (top-right, below score)
-        ctx.fillStyle = 'rgba(0,0,0,0.65)';
-        this._roundRect(ctx, 770, 110, 138, 50, 8);
+        // --- EXIT RACE (top-left, below lap) ---
+        this._exitBtnRect = { x: padding, y: padding + 54, w: 110, h: 28 };
+        ctx.fillStyle = 'rgba(225,6,0,0.7)';
+        this._roundRect(ctx, this._exitBtnRect.x, this._exitBtnRect.y, this._exitBtnRect.w, this._exitBtnRect.h, 6);
         ctx.fill();
-
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'right';
-
-        // Fuel Coins (orange)
-        ctx.fillStyle = '#FF6B35';
-        ctx.fillText(`Fuel: ${this.fuelCoins} 🪙`, 896, 128);
-
-        // Gear Coins (blue)
-        ctx.fillStyle = '#4A90D9';
-        ctx.fillText(`Gear: ${this.gearCoins} ⚙️`, 896, 146);
-
-        // EXIT 按钮（右上角）
-        this._exitBtnRect = { x: 770, y: 420, w: 138, h: 32 };
-        ctx.fillStyle = 'rgba(220,53,69,0.7)';
-        ctx.strokeStyle = '#DC3545';
-        ctx.lineWidth = 1.5;
-        this._roundRect(ctx, this._exitBtnRect.x, this._exitBtnRect.y, this._exitBtnRect.w, this._exitBtnRect.h, 8);
-        ctx.fill();
+        ctx.strokeStyle = 'rgba(225,6,0,0.9)';
+        ctx.lineWidth = 1;
+        this._roundRect(ctx, this._exitBtnRect.x, this._exitBtnRect.y, this._exitBtnRect.w, this._exitBtnRect.h, 6);
         ctx.stroke();
         ctx.fillStyle = '#FFF';
-        ctx.font = 'bold 14px Arial';
+        ctx.font = 'bold 11px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('EXIT RACE', this._exitBtnRect.x + this._exitBtnRect.w / 2, this._exitBtnRect.y + 20);
+        ctx.textBaseline = 'middle';
+        ctx.fillText('EXIT RACE', this._exitBtnRect.x + this._exitBtnRect.w / 2, this._exitBtnRect.y + this._exitBtnRect.h / 2 + 0.5);
     }
 
     _renderNitroHUD(ctx, scale, padding) {
         const nitro = this.car.getNitroStatus();
-        const x = 770;
-        const y = 520;
-        const w = 138;
-        const h = 80;
+        const x = 798;
+        const y = 512;
+        const w = 110;
+        const h = 88;
 
-        ctx.fillStyle = 'rgba(0,0,0,0.65)';
+        // Panel background
+        ctx.fillStyle = 'rgba(13,17,23,0.82)';
         this._roundRect(ctx, x, y, w, h, 10);
         ctx.fill();
 
-        ctx.fillStyle = '#FFF';
-        ctx.font = '14px Arial';
-        ctx.textAlign = 'right';
-        ctx.fillText('NITRO', x + w - 12, y + 22);
+        // Panel border (glow when nitro available)
+        ctx.strokeStyle = nitro.charges > 0 ? 'rgba(255,109,0,0.35)' : 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1;
+        this._roundRect(ctx, x, y, w, h, 10);
+        ctx.stroke();
 
-        for (let i = 0; i < Math.min(nitro.charges, 5); i++) {
-            ctx.fillStyle = '#FF6D00';
-            ctx.beginPath();
-            ctx.arc(x + w - 20 - i * 22, y + 50, 8, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        if (nitro.active) {
-            ctx.fillStyle = 'rgba(255,109,0,0.3)';
-            this._roundRect(ctx, x + 12, y + 38, w - 100, 12, 6);
-            ctx.fill();
-            ctx.fillStyle = '#FF6D00';
-            this._roundRect(ctx, x + 12, y + 38, (w - 100) * nitro.progress, 12, 6);
-            ctx.fill();
-        }
-
-        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        // Label
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
         ctx.font = '11px Arial';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'top';
+        ctx.fillText('NITRO', x + w - 10, y + 6);
+
+        // Charge dots (max 5)
+        const maxDots = 5;
+        for (let i = 0; i < maxDots; i++) {
+            const dotX = x + w - 14 - i * 18;
+            const dotY = y + 30;
+            if (i < nitro.charges) {
+                ctx.fillStyle = '#FF6D00';
+                ctx.beginPath();
+                ctx.arc(dotX, dotY, 6, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.fillStyle = 'rgba(255,255,255,0.08)';
+                ctx.beginPath();
+                ctx.arc(dotX, dotY, 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Active progress bar
+        if (nitro.active) {
+            ctx.fillStyle = 'rgba(255,109,0,0.15)';
+            this._roundRect(ctx, x + 10, y + 50, w - 20, 10, 5);
+            ctx.fill();
+            ctx.fillStyle = '#FF6D00';
+            this._roundRect(ctx, x + 10, y + 50, (w - 20) * nitro.progress, 10, 5);
+            ctx.fill();
+
+            // Strong glow border when active
+            ctx.strokeStyle = 'rgba(255,109,0,0.6)';
+            ctx.lineWidth = 1.5;
+            this._roundRect(ctx, x, y, w, h, 10);
+            ctx.stroke();
+        }
+
+        // Key hint
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ctx.font = '10px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('SPACE', x + w / 2, y + h - 5);
+        ctx.textBaseline = 'top';
+        ctx.fillText('SPACE', x + w / 2, y + h - 16);
     }
 
     _renderFloatingTexts(ctx, scale) {
@@ -686,24 +659,41 @@ class Game {
     }
 
     _renderResults(ctx, scale) {
-        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        // Dark overlay
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
         ctx.fillRect(0, 0, 920, 620);
 
         const bw = 460, bh = 440;
         const bx = (920 - bw) / 2, by = (620 - bh) / 2;
 
-        ctx.fillStyle = '#FFF';
+        // Panel background
+        ctx.fillStyle = '#161B22';
         this._roundRect(ctx, bx, by, bw, bh, 16);
         ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1;
+        this._roundRect(ctx, bx, by, bw, bh, 16);
+        ctx.stroke();
 
-        ctx.fillStyle = '#1B5E20';
+        // Title
+        ctx.fillStyle = '#FFD700';
         ctx.font = 'bold 30px Arial';
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.fillText('RACE COMPLETE!', 460, by + 45);
 
-        ctx.fillStyle = '#FFD700';
+        // Subtitle
+        ctx.fillStyle = '#00C853';
         ctx.font = 'bold 22px Arial';
-        ctx.fillText('1st Place!', 460, by + 85);
+        ctx.fillText('1st Place!', 460, by + 82);
+
+        // Divider line
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(bx + 30, by + 100);
+        ctx.lineTo(bx + bw - 30, by + 100);
+        ctx.stroke();
 
         const stats = [
             { label: 'Race Time', value: this._formatTime(this.raceTime) },
@@ -716,11 +706,12 @@ class Game {
 
         stats.forEach((stat, i) => {
             const sy = by + 120 + i * 36;
-            ctx.fillStyle = '#666';
+            ctx.fillStyle = 'rgba(255,255,255,0.45)';
             ctx.font = '15px Arial';
             ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
             ctx.fillText(stat.label, bx + 40, sy);
-            ctx.fillStyle = '#333';
+            ctx.fillStyle = '#FFF';
             ctx.font = 'bold 16px Arial';
             ctx.textAlign = 'right';
             ctx.fillText(stat.value, bx + bw - 40, sy);
@@ -728,144 +719,61 @@ class Game {
 
         // Wrong words review
         if (this.quizResults && this.quizResults.wrong.length > 0) {
-            ctx.fillStyle = '#FF9800';
-            ctx.font = '13px Arial';
+            ctx.fillStyle = '#FF6D00';
+            ctx.font = '12px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('Review: ' + this.quizResults.wrong.map(w => w.word + '(' + w.meaning + ')').join(', '), 460, by + bh - 70);
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Review: ' + this.quizResults.wrong.map(w => w.word + '(' + w.meaning + ')').join(', '), 460, by + bh - 72);
         }
 
         // Continue button
-        ctx.fillStyle = 'rgba(76,175,80,0.15)';
-        ctx.strokeStyle = '#4CAF50';
-        ctx.lineWidth = 2;
+        const btnText = this.fuel <= 0 ? 'NEED FUEL! QUIZ NOW!' : 'CONTINUE';
+        const btnColor = this.fuel <= 0 ? '#FF6D00' : '#00C853';
+        ctx.fillStyle = this._hexToRgba(btnColor, 0.12);
+        ctx.strokeStyle = btnColor;
+        ctx.lineWidth = 1.5;
         this._roundRect(ctx, bx + 80, by + bh - 55, bw - 160, 42, 10);
         ctx.fill();
         ctx.stroke();
 
-        ctx.fillStyle = '#4CAF50';
-        ctx.font = 'bold 20px Arial';
+        ctx.fillStyle = btnColor;
+        ctx.font = 'bold 18px Arial';
         ctx.textAlign = 'center';
-        const btnText = this.fuel <= 0 ? 'NEED FUEL! QUIZ NOW!' : 'CONTINUE';
-        ctx.fillText(btnText, 460, by + bh - 28);
+        ctx.textBaseline = 'middle';
+        ctx.fillText(btnText, 460, by + bh - 34);
+
+        // Store button position for click detection
+        this._resultsButtons = [{
+            id: 'continue',
+            x: bx + 80,
+            y: by + bh - 55,
+            w: bw - 160,
+            h: 42
+        }];
+    }
+
+    _hexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
     }
 
     // ==================== SHOP Panel ====================
-    // 商品定义（纯数据，点击逻辑在 handleShopClick 中）
-    _shopItems = [
-        { id: 'fuel20', label: 'Fuel +20', cost: 15, desc: 'Refuel 20 units', currency: 'fuel' },
-        { id: 'fuel50', label: 'Fuel +50', cost: 30, desc: 'Refuel 50 units', currency: 'fuel' },
-        { id: 'nitro1', label: 'Nitro x1', cost: 20, desc: '1 Nitro boost', currency: 'gear' },
-        { id: 'nitro3', label: 'Nitro x3', cost: 50, desc: '3 Nitro boosts', currency: 'gear' },
-        { id: 'engine1', label: 'Engine Lv.2', cost: 100, desc: 'Upgrade engine (speed +10%)', currency: 'gear', upgrade: 'engine' },
-        { id: 'tire1', label: 'Tire Lv.2', cost: 80, desc: 'Upgrade tire (grip +10%)', currency: 'gear', upgrade: 'tire' },
-        { id: 'body1', label: 'Body Lv.2', cost: 120, desc: 'Upgrade body (weight -5%)', currency: 'gear', upgrade: 'body' }
-    ]
+    // Shop items are loaded from config in constructor
 
-    _renderShop(ctx, scale) {
-        ctx.fillStyle = 'rgba(0,0,0,0.85)';
-        ctx.fillRect(0, 0, 920, 620);
-
-        const bx = 160, by = 80, bw = 600, bh = 480;
-        ctx.fillStyle = '#FFF';
-        this._roundRect(ctx, bx, by, bw, bh, 16);
-        ctx.fill();
-
-        ctx.fillStyle = '#1B5E20';
-        ctx.font = 'bold 28px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('PIT SHOP', bx + bw / 2, by + 40);
-
-        // 资源显示（双货币）
-        ctx.fillStyle = '#333';
-        ctx.font = '16px Arial';
-        ctx.fillText(`Fuel Coins: ${this.fuelCoins} 🪙  |  Gear Coins: ${this.gearCoins} ⚙️  |  Fuel: ${Math.round(this.fuel)}/${this.maxFuel}  |  Nitro: ${this.car.nitroCharges}`, bx + bw / 2, by + 70);
-
-        // --- 商品列表 + 记录按钮位置供点击检测 ---
-        this._shopButtons = [];
-
-        this._shopItems.forEach((item, i) => {
-            const iy = by + 110 + i * 80;
-            ctx.fillStyle = 'rgba(0,0,0,0.05)';
-            this._roundRect(ctx, bx + 30, iy, bw - 60, 65, 10);
-            ctx.fill();
-
-            ctx.fillStyle = '#333';
-            ctx.font = 'bold 18px Arial';
-            ctx.textAlign = 'left';
-            ctx.fillText(item.label, bx + 50, iy + 26);
-
-            ctx.fillStyle = '#666';
-            ctx.font = '13px Arial';
-            ctx.fillText(item.desc, bx + 50, iy + 48);
-
-            // Buy 按钮位置（供点击检测）
-            const btnX = bx + bw - 160, btnY = iy + 12, btnW = 110, btnH = 40;
-            this._shopButtons.push({ id: item.id, x: btnX, y: btnY, w: btnW, h: btnH });
-
-            // Check if can buy based on currency and upgrade level
-            let canBuy = false;
-            if (item.currency === 'fuel') {
-                canBuy = this.fuelCoins >= item.cost && this.fuel < this.maxFuel;
-            } else if (item.currency === 'gear') {
-                if (item.upgrade) {
-                    // Upgrade item - check if already at max level (4)
-                    canBuy = this.gearCoins >= item.cost && this.upgrades[item.upgrade] < 4;
-                } else {
-                    // Nitro items
-                    canBuy = this.gearCoins >= item.cost;
-                }
-            }
-            ctx.fillStyle = canBuy ? 'rgba(76,175,80,0.15)' : 'rgba(0,0,0,0.05)';
-            ctx.strokeStyle = canBuy ? '#4CAF50' : '#AAA';
-            ctx.lineWidth = 1.5;
-            this._roundRect(ctx, btnX, btnY, btnW, btnH, 8);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.fillStyle = canBuy ? '#4CAF50' : '#AAA';
-            ctx.font = 'bold 14px Arial';
-            ctx.textAlign = 'center';
-            const currencyIcon = item.currency === 'fuel' ? '🪙' : '⚙️';
-            ctx.fillText(`Buy ${item.cost}${currencyIcon}`, btnX + btnW / 2, btnY + 25);
-        });
-
-        // "BACK TO QUIZ" 按钮
-        const backX = bx + 140, backY = by + bh - 60, backW = 160, backH = 40;
-        this._shopButtons.push({ id: 'back_quiz', x: backX, y: backY, w: backW, h: backH });
-        ctx.fillStyle = 'rgba(0,0,0,0.08)';
-        ctx.strokeStyle = '#FFD700';
-        ctx.lineWidth = 1.5;
-        this._roundRect(ctx, backX, backY, backW, backH, 8);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#1B5E20';
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('BACK TO QUIZ', backX + backW / 2, backY + 25);
-
-        // "START RACE" 按钮
-        const raceX = bx + 320, raceY = by + bh - 60, raceW = 160, raceH = 40;
-        this._shopButtons.push({ id: 'start_race', x: raceX, y: raceY, w: raceW, h: raceH });
-        ctx.fillStyle = this.fuel > 0 ? 'rgba(255,215,0,0.15)' : 'rgba(0,0,0,0.05)';
-        ctx.strokeStyle = this.fuel > 0 ? '#FFD700' : '#AAA';
-        ctx.lineWidth = 1.5;
-        this._roundRect(ctx, raceX, raceY, raceW, raceH, 8);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = this.fuel > 0 ? '#FFD700' : '#AAA';
-        ctx.font = 'bold 16px Arial';
-        ctx.fillText('START RACE', raceX + raceW / 2, raceY + 25);
-    }
 
     /**
-     * 处理 SHOP 面板上的点击事件
+     * 处理 RESULTS 面板上的点击事件
      * @returns {string} 新状态（可能不变）
      */
-    handleShopClick(cx, cy) {
-        if (!this._shopButtons) return this.state;
-        for (const btn of this._shopButtons) {
+    handleResultsClick(cx, cy) {
+        if (!this._resultsButtons) return this.state;
+        for (const btn of this._resultsButtons) {
             if (cx >= btn.x && cx <= btn.x + btn.w && cy >= btn.y && cy <= btn.y + btn.h) {
-                return this._executeShopAction(btn.id);
+                if (btn.id === 'continue') {
+                    return this.onResultsContinue();
+                }
             }
         }
         return this.state;
@@ -887,7 +795,7 @@ class Game {
                     if (this.fuel > 0) {
                         this.totalLaps = this.selectedLaps;
                         this.state = 'COUNTDOWN';
-                        this.countdownTimer = 240;
+                        this.countdownTimer = DISPLAY.COUNTDOWN_FRAMES;
                         return 'COUNTDOWN';
                     }
                     break;
@@ -903,7 +811,7 @@ class Game {
             canAfford = this.gearCoins >= item.cost;
             // For upgrades, check if already at max level
             if (canAfford && item.upgrade) {
-                canAfford = this.upgrades[item.upgrade] < 4;
+                canAfford = this.upgrades[item.upgrade] < UPGRADES.MAX_LEVEL;
             }
         }
 
@@ -929,7 +837,8 @@ class Game {
             this.nitroCharges += amount;
         } else if (item.upgrade) {
             // Upgrade item
-            this.upgrades[item.upgrade] = Math.min(4, this.upgrades[item.upgrade] + 1);
+            this.upgrades[item.upgrade] = Math.min(UPGRADES.MAX_LEVEL, this.upgrades[item.upgrade] + 1);
+            this.car.applyUpgrades(this.upgrades);
             console.log(`Upgraded ${item.upgrade} to level ${this.upgrades[item.upgrade]}`);
         }
 
@@ -947,6 +856,8 @@ class Game {
         this._lastLap = 0;
 
         this.state = 'QUIZ';
+        // Default to basic mode when starting from home/results
+        this.quiz.quizMode = 'basic';
         return this.quiz.generateQuiz(5, 3);
     }
 
@@ -1046,6 +957,10 @@ class Game {
     onResultsContinue() {
         // 比完一圈必须重新答题（燃油不继承，重新答题后补给）
         this.startNewQuiz();
+        // 触发回调，切换到首页（答题面板在首页）
+        if (typeof this.onResultsContinueCb === 'function') {
+            this.onResultsContinueCb();
+        }
         return 'QUIZ';
     }
 

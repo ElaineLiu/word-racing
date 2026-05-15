@@ -1,8 +1,12 @@
 /**
  * NavManager - 多页面导航管理器
  * 职责：页面切换、状态保持、导航按钮高亮
+ *
+ * Phase 1.2 - Converted to ES6 module
  */
-class NavManager {
+import { GAME } from '../config/game-config.js';
+
+export class NavManager {
     constructor(game) {
         this.game = game;
         this.currentPage = 'home';
@@ -29,6 +33,17 @@ class NavManager {
     }
 
     switchPage(pageName) {
+        // 切换到比赛页面前检查
+        if (pageName === 'race') {
+            if (this.game.fuel <= 0) {
+                alert('Insufficient fuel! Buy fuel in the shop first.');
+                pageName = 'home';
+            } else if (![GAME.STATES.COUNTDOWN, GAME.STATES.RACING, GAME.STATES.RESULTS].includes(this.game.state)) {
+                // 比赛未开始，初始化比赛状态
+                this.game.continueToRace();
+            }
+        }
+
         const pages = document.querySelectorAll('.page');
         for (let i = 0; i < pages.length; i++) {
             pages[i].classList.remove('active');
@@ -84,4 +99,5 @@ class NavManager {
     }
 }
 
-window.NavManager = NavManager;
+// Module export (ES6)
+// window.NavManager is set in main.js for backward compatibility

@@ -93,7 +93,9 @@ npm run test:car     # Run car tests only
 
 **Goal:** Establish clean architecture without breaking existing functionality.
 
-### 1.1 Config Extraction
+### 1.1 Config Extraction ✅ COMPLETE
+
+**Created:** `config/game-config.js`
 
 **Create:** `config/game-config.js`
 
@@ -163,7 +165,7 @@ export const DISPLAY = {
 
 ---
 
-### 1.2 Module System (ES6)
+### 1.2 Module System (ES6) ✅ COMPLETE
 
 **Goal:** Convert from `window.Car = Car` to `export class Car`
 
