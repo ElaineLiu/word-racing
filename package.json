@@ -1,0 +1,25 @@
+{
+  "name": "word-racing",
+  "version": "2.1.0",
+  "description": "F1-themed English vocabulary game for kids",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:car": "vitest run tests/car.test.js",
+    "test:track": "vitest run tests/track.test.js",
+    "test:quiz": "vitest run tests/quiz.test.js",
+    "test:game": "vitest run tests/game.test.js",
+    "serve": "npx serve .",
+    "start": "npx serve ."
+  },
+  "devDependencies": {
+    "vitest": "^1.6.0",
+    "jsdom": "^24.0.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "serve": "^14.2.0"
+  },
+  "keywords": ["game", "education", "vocabulary", "f1", "racing"],
+  "license": "MIT"
+}
