@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-
-const Track = await import('../js/track.js').then(m => m.Track || window.Track);
+import { Track } from '../js/track.js';
+import { TRACK } from '../config/game-config.js';
 
 describe('Track', () => {
   let track;
@@ -15,12 +15,12 @@ describe('Track', () => {
   });
 
   describe('initialization', () => {
-    it('should have trackWidth of 76 pixels', () => {
-      expect(track.trackWidth).toBe(76);
+    it('should have trackWidth from config', () => {
+      expect(track.trackWidth).toBe(TRACK.WIDTH);
     });
 
-    it('should have 18 waypoints', () => {
-      expect(track.waypoints.length).toBe(18);
+    it('should have waypoints from config', () => {
+      expect(track.waypoints.length).toBe(TRACK.WAYPOINTS.length);
     });
 
     it('should generate smooth curve points', () => {
@@ -43,15 +43,15 @@ describe('Track', () => {
       expect(Math.abs(firstPoint.y - firstWp.y)).toBeLessThan(1);
     });
 
-    it('should produce approximately 3600 points (18 waypoints * 200 samples)', () => {
-      expect(track.points.length).toBeCloseTo(3600, -2); // within 100
+    it('should produce correct number of points (waypoints * samples)', () => {
+      const expectedPoints = TRACK.WAYPOINTS.length * TRACK.SAMPLES_PER_SEGMENT;
+      expect(track.points.length).toBe(expectedPoints);
     });
 
     it('should create a closed loop (first and last points should connect)', () => {
       const first = track.points[0];
       const last = track.points[track.points.length - 1];
       // Last point should loop back to connect with first
-      const nextFirst = track.points[1];
       expect(last).toBeDefined();
     });
   });

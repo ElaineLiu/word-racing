@@ -3,12 +3,8 @@
  * Tests the core physics formulas from car.js
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { MockCanvas } from './setup.js';
-
-// We need to import the Car class
-// Since it uses window.global, we set that up first
-const Car = await import('../js/car.js').then(m => m.Car || window.Car);
+import { describe, it, expect, beforeEach } from 'vitest';
+import { Car } from '../js/car.js';
 
 describe('Car', () => {
   let car;
@@ -92,15 +88,21 @@ describe('Car', () => {
     });
 
     it('should accelerate faster with nitro', () => {
-      car.nitroActive = true;
-      car.input.up = true;
-      const initialSpeed = car.speed;
-      car.update(mockTrack);
+      const carWithNitro = new Car(100, 100, 0);
+      carWithNitro.nitroActive = true;
+      carWithNitro.nitroTimer = 180; // Need timer for nitro to stay active
+      carWithNitro.input.up = true;
+      carWithNitro.update(mockTrack);
+
       const normalCar = new Car(100, 100, 0);
       normalCar.input.up = true;
       normalCar.update(mockTrack);
+
       // Nitro car should accelerate faster (0.2 vs 0.08)
-      expect(car.speed).toBeGreaterThan(normalCar.speed);
+      // Normal: 0.08 * 0.988 ≈ 0.079
+      // Nitro: 0.2 * 0.988 ≈ 0.197
+      expect(carWithNitro.speed).toBeGreaterThan(normalCar.speed);
+      expect(carWithNitro.speed).toBeGreaterThan(0.15); // Nitro should be ~0.197
     });
 
     it('should have nitroMaxSpeed of 8.0', () => {

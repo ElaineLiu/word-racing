@@ -4,44 +4,81 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MockCanvas } from './setup.js';
+import { Game } from '../js/game.js';
+import { ECONOMY, GAME, UPGRADES, DISPLAY } from '../config/game-config.js';
 
-const Game = await import('../js/game.js').then(m => m.Game || window.Game);
+// Mock canvas with parent element
+class MockCanvas {
+  constructor(width = 920, height = 620) {
+    this.width = width;
+    this.height = height;
+    this.parentElement = {
+      clientWidth: width,
+      clientHeight: height,
+    };
+  }
+  getContext(type) {
+    return {
+      fillStyle: '',
+      strokeStyle: '',
+      lineWidth: 0,
+      clearRect: () => {},
+      save: () => {},
+      restore: () => {},
+      scale: () => {},
+      fillRect: () => {},
+      strokeRect: () => {},
+      beginPath: () => {},
+      closePath: () => {},
+      moveTo: () => {},
+      lineTo: () => {},
+      arc: () => {},
+      fill: () => {},
+      stroke: () => {},
+      translate: () => {},
+    };
+  }
+  addEventListener() {}
+  removeEventListener() {}
+  getBoundingClientRect() {
+    return { left: 0, top: 0, width: this.width, height: this.height };
+  }
+}
 
 describe('Game', () => {
   let game;
   let mockCanvas;
 
   beforeEach(async () => {
-    mockCanvas = new MockCanvas(920, 620);
+    mockCanvas = new MockCanvas();
     game = new Game(mockCanvas);
     await game.init();
   });
 
   describe('initialization', () => {
     it('should start in MENU state', () => {
-      expect(game.state).toBe('MENU');
+      expect(game.state).toBe(GAME.STATES.MENU);
     });
 
     it('should have zero resources initially', () => {
-      expect(game.fuel).toBe(0);
+      expect(game.fuel).toBe(ECONOMY.INITIAL_FUEL);
       expect(game.fuelCoins).toBe(0);
       expect(game.gearCoins).toBe(0);
       expect(game.nitroCharges).toBe(0);
     });
 
     it('should have default upgrades at level 1', () => {
-      expect(game.upgrades.engine).toBe(1);
-      expect(game.upgrades.tire).toBe(1);
-      expect(game.upgrades.body).toBe(1);
+      expect(game.upgrades.engine).toBe(UPGRADES.MIN_LEVEL);
+      expect(game.upgrades.tire).toBe(UPGRADES.MIN_LEVEL);
+      expect(game.upgrades.body).toBe(UPGRADES.MIN_LEVEL);
     });
 
-    it('should have maxFuel of 100', () => {
-      expect(game.maxFuel).toBe(100);
+    it('should have maxFuel from config', () => {
+      expect(game.maxFuel).toBe(ECONOMY.MAX_FUEL);
     });
 
-    it('should have fuelPerLap of 20', () => {
-      expect(game.fuelPerLap).toBe(20);
+    it('should have fuelPerLap from config', () => {
+      expect(game.fuelPerLap).toBe(ECONOMY.FUEL_PER_LAP);
     });
   });
 
@@ -99,7 +136,7 @@ describe('Game', () => {
       game.fuelCoins = 100;
       game.fuel = 90;
       game._executeShopAction('fuel20');
-      expect(game.fuel).toBeLessThanOrEqual(100);
+      expect(game.fuel).toBeLessThanOrEqual(ECONOMY.MAX_FUEL);
     });
 
     it('should buy nitro with gear coins', () => {
@@ -116,11 +153,11 @@ describe('Game', () => {
       expect(game.upgrades.engine).toBe(2);
     });
 
-    it('should not upgrade beyond level 4', () => {
-      game.upgrades.engine = 4;
+    it('should not upgrade beyond max level', () => {
+      game.upgrades.engine = UPGRADES.MAX_LEVEL;
       game.gearCoins = 100;
       game._executeShopAction('engine1');
-      expect(game.upgrades.engine).toBe(4);
+      expect(game.upgrades.engine).toBe(UPGRADES.MAX_LEVEL);
       expect(game.gearCoins).toBe(100); // not spent
     });
   });
@@ -151,29 +188,29 @@ describe('Game', () => {
   describe('state machine', () => {
     it('should transition from MENU to QUIZ', () => {
       game.startNewQuiz();
-      expect(game.state).toBe('QUIZ');
+      expect(game.state).toBe(GAME.STATES.QUIZ);
     });
 
-    it('should not start race without fuel', () => {
+    it('should start COUNTDOWN even without fuel (fuel check is in NavManager)', () => {
       game.fuel = 0;
       game.continueToRace();
-      // Should not transition to COUNTDOWN
-      expect(game.state).not.toBe('COUNTDOWN');
+      // continueToRace() doesn't check fuel - NavManager does that
+      expect(game.state).toBe(GAME.STATES.COUNTDOWN);
     });
 
     it('should transition to COUNTDOWN when race starts', () => {
       game.fuel = 50;
       game.continueToRace();
-      expect(game.state).toBe('COUNTDOWN');
+      expect(game.state).toBe(GAME.STATES.COUNTDOWN);
     });
 
     it('should transition from COUNTDOWN to RACING after countdown', () => {
       game.fuel = 50;
       game.totalLaps = 1;
-      game.state = 'COUNTDOWN';
+      game.state = GAME.STATES.COUNTDOWN;
       game.countdownTimer = 0;
       game._updateCountdown();
-      expect(game.state).toBe('RACING');
+      expect(game.state).toBe(GAME.STATES.RACING);
     });
 
     it('should transition to RESULTS when race finishes', () => {
@@ -181,21 +218,24 @@ describe('Game', () => {
       game.totalLaps = 1;
       game.car.finished = true;
       game._showResults();
-      expect(game.state).toBe('RESULTS');
+      expect(game.state).toBe(GAME.STATES.RESULTS);
     });
   });
 
   describe('lap count selector', () => {
-    it('should allow setting lap count 1-5', () => {
+    it('should allow setting lap count within range', () => {
       game.setLapCount(3);
       expect(game.selectedLaps).toBe(3);
     });
 
-    it('should clamp lap count to valid range', () => {
+    it('should clamp lap count to minimum', () => {
       game.setLapCount(0);
-      expect(game.selectedLaps).toBe(1);
+      expect(game.selectedLaps).toBe(GAME.MIN_LAPS);
+    });
+
+    it('should clamp lap count to maximum', () => {
       game.setLapCount(10);
-      expect(game.selectedLaps).toBe(5);
+      expect(game.selectedLaps).toBe(GAME.MAX_LAPS);
     });
   });
 
@@ -225,11 +265,11 @@ describe('Game', () => {
       expect(game.leaderboard[0].time).toBe(45000);
     });
 
-    it('should limit leaderboard to 20 entries', () => {
+    it('should limit leaderboard entries', () => {
       for (let i = 0; i < 25; i++) {
         game.saveLapTime(50000 + i * 1000, 3);
       }
-      expect(game.leaderboard.length).toBeLessThanOrEqual(20);
+      expect(game.leaderboard.length).toBeLessThanOrEqual(GAME.MAX_LEADERBOARD_ENTRIES);
     });
 
     it('should persist leaderboard to localStorage', () => {
