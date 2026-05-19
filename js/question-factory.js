@@ -275,13 +275,12 @@ export class QuestionFactory {
 
         const question = QuestionFactory.createQuestion(word, chosenMode, level, eligibleWords, useChinese);
         if (question) {
-            // Override to LAP_REVIEW mode for reward tracking
+            // Keep original mode for rendering, mark as review for rewards
             const reviewDef = getMode('LAP_REVIEW');
-            question.mode = 'LAP_REVIEW';
-            question.modeLabel = reviewDef.label;
-            question.modeIcon = reviewDef.icon;
-            question.reward = { ...reviewDef.reward };
+            question.originalMode = chosenMode;  // Preserve for rendering
             question.isReview = true;
+            question.modeLabel = '[Review] ' + question.modeLabel;
+            question.reward = { ...reviewDef.reward };
         }
         return question;
     }

@@ -325,3 +325,121 @@ describe('ShopView', () => {
     expect(handler).toHaveBeenCalledWith({ view: 'home' });
   });
 });
+
+describe('QuizView - Review Questions', () => {
+  let dom;
+  let document;
+  let eventBus;
+  let mockGame;
+
+  beforeEach(() => {
+    const html = `
+      <div id="page-quiz">
+        <div id="quiz-question-area" style="display:block;"></div>
+        <div id="quiz-complete" style="display:none;"></div>
+        <div id="quiz-progress"></div>
+        <div id="quiz-word"></div>
+        <div id="quiz-meaning-en"></div>
+        <div id="quiz-sentence"></div>
+        <div id="quiz-options"></div>
+      </div>
+    `;
+    dom = new JSDOM(`<!DOCTYPE html><html><body>${html}</body></html>`);
+    document = dom.window.document;
+    global.document = document;
+    global.window = dom.window;
+    eventBus = new EventBus();
+    mockGame = createMockGame();
+  });
+
+  it('should render review question using original mode (STRATEGY)', () => {
+    const view = new QuizView(eventBus, mockGame);
+    view.mount();
+
+    // Simulate a review question with STRATEGY as original mode
+    const reviewQuestion = {
+      mode: 'PIT_BOARD', // This would be LAP_REVIEW in real scenario, but we test with different
+      originalMode: 'STRATEGY',
+      isReview: true,
+      modeLabel: '[Review] 义→词',
+      prompt: '方向', // Chinese meaning
+      promptSub: '',
+      sentence: 'The driver changed the ______ at the corner.',
+      options: ['accident', 'deliver', 'however', 'direction'],
+      correctIndex: 3,
+      correctWord: 'direction'
+    };
+
+    mockGame.quiz.getCurrentQuestion = vi.fn(() => reviewQuestion);
+    mockGame.quiz.currentIndex = 0;
+    mockGame.quiz.currentQuiz = [reviewQuestion];
+    mockGame.quiz.correctCount = 0;
+    mockGame.quiz.quizMode = 'basic';
+
+    view.showQuestion();
+
+    // Should show Chinese meaning as prompt, NOT the answer word
+    const wordEl = document.getElementById('quiz-word');
+    expect(wordEl.textContent).toBe('方向');
+    expect(wordEl.textContent).not.toContain('direction');
+    expect(wordEl.textContent).not.toContain('Review: direction');
+  });
+
+  it('should render review question using original mode (PIT_BOARD)', () => {
+    const view = new QuizView(eventBus, mockGame);
+    view.mount();
+
+    // Simulate a review question with PIT_BOARD as original mode
+    const reviewQuestion = {
+      mode: 'PIT_BOARD',
+      originalMode: 'PIT_BOARD',
+      isReview: true,
+      modeLabel: '[Review] 词→义',
+      prompt: 'direction',
+      promptSub: '/dəˈrekʃn/',
+      sentence: 'The driver changed the direction at the corner.',
+      options: ['事故', '递送', '然而', '方向'],
+      correctIndex: 3,
+      correctWord: 'direction'
+    };
+
+    mockGame.quiz.getCurrentQuestion = vi.fn(() => reviewQuestion);
+    mockGame.quiz.currentIndex = 0;
+    mockGame.quiz.currentQuiz = [reviewQuestion];
+    mockGame.quiz.correctCount = 0;
+    mockGame.quiz.quizMode = 'basic';
+
+    view.showQuestion();
+
+    // Should show the word, prompt user to select meaning
+    const wordEl = document.getElementById('quiz-word');
+    expect(wordEl.textContent).toBe('direction');
+  });
+
+  it('should show [Review] label in progress', () => {
+    const view = new QuizView(eventBus, mockGame);
+    view.mount();
+
+    const reviewQuestion = {
+      mode: 'STRATEGY',
+      originalMode: 'STRATEGY',
+      isReview: true,
+      modeLabel: '[Review] 义→词',
+      prompt: '方向',
+      options: ['accident', 'deliver', 'however', 'direction'],
+      correctIndex: 3,
+      correctWord: 'direction'
+    };
+
+    mockGame.quiz.getCurrentQuestion = vi.fn(() => reviewQuestion);
+    mockGame.quiz.currentIndex = 0;
+    mockGame.quiz.currentQuiz = [reviewQuestion];
+    mockGame.quiz.correctCount = 0;
+    mockGame.quiz.quizMode = 'basic';
+
+    view.showQuestion();
+
+    const progressEl = document.getElementById('quiz-progress');
+    expect(progressEl.textContent).toContain('[Review]');
+  });
+});

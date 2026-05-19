@@ -55,7 +55,9 @@ export class QuizView extends BaseView {
   }
 
   #renderQuestionContent(q, isChallenge) {
-    const showSentence = !isChallenge || q.mode === 'PIT_BOARD';
+    // For review questions, use the original mode for rendering
+    const renderMode = q.isReview ? q.originalMode : q.mode;
+    const showSentence = !isChallenge || renderMode === 'PIT_BOARD';
 
     // Clear fields
     this.setText('#quiz-word', '');
@@ -65,7 +67,7 @@ export class QuizView extends BaseView {
     const sentenceEl = this.$('#quiz-sentence');
     if (sentenceEl) sentenceEl.style.fontStyle = '';
 
-    switch (q.mode) {
+    switch (renderMode) {
       case 'PIT_BOARD':
         this.setText('#quiz-word', q.correctWord || '');
         this.setText('#quiz-meaning-en', q.promptSub || '');
@@ -96,15 +98,6 @@ export class QuizView extends BaseView {
       case 'QUALIFYING':
         this.setText('#quiz-word', q.prompt || '');
         this.setText('#quiz-meaning-en', q.promptCn || q.promptSub || '');
-        break;
-
-      case 'LAP_REVIEW':
-        this.setText('#quiz-word', q.correctWord ? `Review: ${q.correctWord}` : 'Review');
-        this.setText('#quiz-meaning-en', q.promptSub || q.meaningEn || '');
-        if (showSentence && q.sentence) {
-          this.setText('#quiz-sentence', `"${q.sentence}"`);
-          if (sentenceEl) sentenceEl.style.fontStyle = 'italic';
-        }
         break;
 
       default:

@@ -136,9 +136,11 @@ document.addEventListener('DOMContentLoaded', () => {
     quizSentence.style.fontStyle = '';
 
     const isChallenge = game.quiz.quizMode === 'challenge';
-    const showSentence = !isChallenge || q.mode === 'PIT_BOARD';
+    // For review questions, use the original mode for rendering
+    const renderMode = q.isReview ? q.originalMode : q.mode;
+    const showSentence = !isChallenge || renderMode === 'PIT_BOARD';
 
-    switch (q.mode) {
+    switch (renderMode) {
       case 'PIT_BOARD':
         quizWord.textContent = q.correctWord || '';
         quizMeaningEn.textContent = q.promptSub || '';
@@ -169,14 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'QUALIFYING':
         quizWord.textContent = q.prompt || '';
         quizMeaningEn.textContent = q.promptCn || q.promptSub || '';
-        break;
-      case 'LAP_REVIEW':
-        quizWord.textContent = (q.correctWord ? 'Review: ' + q.correctWord : 'Review');
-        quizMeaningEn.textContent = q.promptSub || q.meaningEn || '';
-        if (showSentence && q.sentence) {
-          quizSentence.textContent = `"${q.sentence}"`;
-          quizSentence.style.fontStyle = 'italic';
-        }
         break;
       default:
         quizWord.textContent = q.correctWord || q.word || q.prompt || '';
