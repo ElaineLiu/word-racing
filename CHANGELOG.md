@@ -7,7 +7,92 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed - Phase 1.1 & 1.2 Complete
+### Added - Phase 1 MVP: Quiz Improvement
+- **"I Don't Know" Button**: Added button for words the user doesn't recognize
+  - Shows learning panel with word, phonetic, meaning, and example sentence
+  - Word is added to wrong words for later review
+- **Wrong Answer Learning**: After wrong answer, shows learning panel
+  - Must click "Got it, continue" to proceed
+  - Wrong word is added to end of quiz for re-testing
+- **Retry Mechanism**: Wrong words appear again in same quiz session
+  - Marked with "🔄 RETRY" label
+  - Must answer correctly to complete quiz
+
+### Added - Dynamic Wordset System
+- **Wordset Loader**: Created `quiz/wordset-loader.js`
+  - Support for multiple vocabulary sets
+  - Dynamic loading and switching
+  - Caching and localStorage persistence
+- **Wordset Config**: Created `data/wordsets-config.json`
+  - Shanghai Grade 6 (default)
+  - F1 Racing vocabulary
+  - Reading A-Z Level H & I
+- **Updated VocabularyQuiz**: Now supports wordset switching
+  - `switchWordSet(id)` method
+  - `getAvailableWordSets()` method
+
+### Changed - Phase 5 Complete (Robustness Layer)
+- **Input Validation**: Created `core/validators.js`
+  - Type validators (isNumber, isString, isArray, etc.)
+  - Range validators (inRange, isValidLevel)
+  - Game-specific validators (isValidLapCount, isValidFuel, etc.)
+  - Sanitization for game state
+- **Storage Migration**: Created `core/storage.js`
+  - Versioned localStorage with automatic migration
+  - Current version: 2
+  - Export/import for backup
+- **Error Boundaries**: Created `core/error-handler.js`
+  - GameError class with severity levels (LOW, MEDIUM, HIGH, FATAL)
+  - Error wrapping for sync/async functions
+  - Graceful degradation with user notifications
+- **Debug Panel**: Created `debug/debug-panel.js`
+  - FPS counter
+  - State inspector (car position, resources, upgrades)
+  - Physics overlay (F4)
+  - Toggle with F3
+
+### Changed - Phase 4 Complete (Data-Driven Design)
+- **Question Mode Registry**: Created `quiz/mode-registry.js`
+  - Quiz modes are now data-driven, add new modes via config
+  - Updated `js/question-factory.js` to use registry
+- **Upgrade System**: Created `systems/upgrade-system.js`
+  - Upgrade effects are configurable and extensible
+  - Supports multiple effect types per upgrade
+- **Track Data**: Created `data/tracks.json`
+  - Tracks are now stored as JSON data
+  - Supports multiple tracks (oval, figure8)
+
+### Changed - Phase 3 Complete (View Layer Separation)
+- **View System**: Created modular view architecture
+  - `views/base-view.js` - Abstract base class with lifecycle
+  - `views/home-view.js` - Home page with stats, leaderboard
+  - `views/quiz-view.js` - Quiz questions and results
+  - `views/shop-view.js` - Shop items and purchases
+  - `views/race-view.js` - Race canvas and touch controls
+  - `views/view-manager.js` - View coordination and navigation
+- **New Entry Point**: Created `js/main-v2.js` using ViewManager
+
+### Changed - Phase 2 Complete (Split God Class)
+- **RenderSystem**: Created `rendering/render-system.js`
+  - All canvas rendering extracted from Game class
+  - HUD, countdown, results, minimap, floating text
+- **ShopSystem**: Created `systems/shop-system.js`
+  - Purchase validation and execution
+  - Currency handling and upgrade logic
+- **QuizEngine**: Created `systems/quiz-engine.js`
+  - Quiz flow coordination
+  - Event-driven updates
+- **GameEngine**: Created `core/game-engine.js`
+  - Thin coordinator that delegates to subsystems
+  - Event-driven architecture
+
+### Changed - Phase 1 Complete (Foundation)
+- **EventBus**: Created `core/event-bus.js`
+  - Central publish/subscribe system
+  - Loose coupling between subsystems
+- **GameState**: Created `core/game-state.js`
+  - Single source of truth for game data
+  - Automatic persistence to localStorage
 - **Config Extraction**: Created `config/game-config.js` with all game constants
   - PHYSICS: car movement, friction, nitro, upgrades
   - ECONOMY: fuel, coins, shop items, rewards

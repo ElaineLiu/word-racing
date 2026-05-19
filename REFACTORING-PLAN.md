@@ -1,8 +1,8 @@
 # Word Racing Refactoring Plan
 
 > Created: 2026-05-15
-> Status: Phase 0 Complete (Testing Infrastructure)
-> Next: Phase 1.1 - Config Extraction
+> Status: Phase 5 Complete (Robustness Layer)
+> Next: Browser Testing & Integration
 
 ## Current Architecture Assessment
 
@@ -196,9 +196,9 @@ main.js              (entry point, initializes everything)
 
 ---
 
-### 1.3 EventBus
+### 1.3 EventBus ✅ COMPLETE
 
-**Create:** `core/event-bus.js`
+**Created:** `core/event-bus.js`
 
 ```js
 export class EventBus {
@@ -244,9 +244,9 @@ export const Events = {
 
 ---
 
-### 1.4 GameState (Single Source of Truth)
+### 1.4 GameState (Single Source of Truth) ✅ COMPLETE
 
-**Create:** `core/game-state.js`
+**Created:** `core/game-state.js`
 
 ```js
 import { EventBus, Events } from './event-bus.js';
@@ -327,24 +327,24 @@ export class GameState {
 
 **Goal:** Break `Game` into focused subsystems.
 
-### 2.1 Extract RenderSystem
-- Create `rendering/render-system.js`
-- Move all `_render*` methods from `game.js`
-- Tests: `npm test`
+### 2.1 Extract RenderSystem ✅ COMPLETE
+- Created `rendering/render-system.js`
+- Moved all `_render*` methods from `game.js`
+- Tests: `npm test` ✅
 
-### 2.2 Extract ShopSystem
-- Create `systems/shop-system.js`
-- Move `_shopItems` and `_executeShopAction`
-- Tests: `npm test`
+### 2.2 Extract ShopSystem ✅ COMPLETE
+- Created `systems/shop-system.js`
+- Moved `_shopItems` and `_executeShopAction`
+- Tests: `npm test` ✅
 
-### 2.3 Extract QuizEngine
-- Create `systems/quiz-engine.js`
-- Move quiz state machine logic
-- Tests: `npm test`
+### 2.3 Extract QuizEngine ✅ COMPLETE
+- Created `systems/quiz-engine.js`
+- Moved quiz state machine logic
+- Tests: `npm test` ✅
 
-### 2.4 Slim GameEngine
-- `game.js` becomes thin coordinator
-- Tests: `npm test`
+### 2.4 Slim GameEngine ✅ COMPLETE
+- Created `core/game-engine.js` as thin coordinator
+- Tests: `npm test` ✅
 
 ---
 
@@ -352,17 +352,21 @@ export class GameState {
 
 **Goal:** Clean UI components with event-driven updates.
 
-### 3.1 Base View Class
-- Create `views/base-view.js`
+### 3.1 Base View Class ✅ COMPLETE
+- Created `views/base-view.js` with lifecycle methods
 
-### 3.2 Concrete Views
-- `views/home-view.js`
-- `views/shop-view.js`
-- `views/quiz-view.js`
-- `views/race-view.js`
+### 3.2 Concrete Views ✅ COMPLETE
+- Created `views/home-view.js`
+- Created `views/shop-view.js`
+- Created `views/quiz-view.js`
+- Created `views/race-view.js`
 
-### 3.3 View Manager
-- Create `views/view-manager.js`
+### 3.3 View Manager ✅ COMPLETE
+- Created `views/view-manager.js`
+
+### 3.4 Browser Integration ⏳ PENDING
+- Views created, need browser testing with main-v2.js
+- Tests: `npm test` ✅ (99 passed)
 
 ---
 
@@ -370,17 +374,20 @@ export class GameState {
 
 **Goal:** Add content without code changes.
 
-### 4.1 Question Mode Registry
-- Create `quiz/mode-registry.js`
-- Make adding modes a config change
+### 4.1 Question Mode Registry ✅ COMPLETE
+- Created `quiz/mode-registry.js`
+- Adding modes is now a config change
+- Tests: `npm test` ✅
 
-### 4.2 Upgrade System
-- Create `systems/upgrade-system.js`
-- Move upgrade formulas to config
+### 4.2 Upgrade System ✅ COMPLETE
+- Created `systems/upgrade-system.js`
+- Upgrade effects are configurable
+- Tests: `npm test` ✅
 
-### 4.3 Track Data Format
-- Create `data/tracks.json`
-- Support multiple tracks
+### 4.3 Track Data Format ✅ COMPLETE
+- Created `data/tracks.json`
+- Supports multiple tracks (oval, figure8)
+- Tests: `npm test` ✅
 
 ---
 
@@ -388,17 +395,27 @@ export class GameState {
 
 **Goal:** Prevent bugs, enable debugging.
 
-### 5.1 Input Validation
-- Create `core/validators.js`
+### 5.1 Input Validation ✅ COMPLETE
+- Created `core/validators.js`
+- Type validators, range validators, game-specific validators
+- Sanitization functions for game state
 
-### 5.2 Storage Migration
-- Create `core/storage.js` with versioning
+### 5.2 Storage Migration ✅ COMPLETE
+- Created `core/storage.js` with versioning
+- Automatic migration from legacy formats
+- Export/import for backup
 
-### 5.3 Error Boundaries
-- Create `core/error-handler.js`
+### 5.3 Error Boundaries ✅ COMPLETE
+- Created `core/error-handler.js`
+- GameError class with severity levels
+- Error boundaries for subsystems
+- Graceful degradation
 
-### 5.4 Debug Panel
-- Create `debug/debug-panel.js`
+### 5.4 Debug Panel ✅ COMPLETE
+- Created `debug/debug-panel.js`
+- FPS counter, state inspector
+- Physics overlay (F4)
+- Toggle with F3
 
 ---
 

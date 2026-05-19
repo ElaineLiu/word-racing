@@ -107,6 +107,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Hide learning panel, show question area
+    document.getElementById('quiz-question-area').style.display = 'block';
+    document.getElementById('quiz-learn-panel').style.display = 'none';
+
     const quizProgress = document.getElementById('quiz-progress');
     const quizWord = document.getElementById('quiz-word');
     const quizMeaningEn = document.getElementById('quiz-meaning-en');
@@ -193,6 +197,65 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
+  /**
+   * Show learning panel for a word
+   * @param {Object} q - Question object
+   * @param {boolean} isWrong - Whether this is shown after a wrong answer
+   */
+  window.showLearnPanel = function(q, isWrong = false) {
+    document.getElementById('quiz-question-area').style.display = 'none';
+    const learnPanel = document.getElementById('quiz-learn-panel');
+    learnPanel.style.display = 'block';
+    learnPanel.classList.toggle('wrong', isWrong);
+
+    document.getElementById('quiz-learn-word').textContent = q.correctWord || '';
+    document.getElementById('quiz-learn-phonetic').textContent = q.promptSub || '';
+    document.getElementById('quiz-learn-meaning').textContent = q.correctMeaning || '';
+    document.getElementById('quiz-learn-sentence').textContent = q.sentence ? `"${q.sentence}"` : '';
+
+    // Try to find Chinese sentence from word data
+    const wordData = game.quiz.words.find(w => w.word === q.correctWord);
+    document.getElementById('quiz-learn-sentence-cn').textContent = wordData?.sentence_cn || '';
+  };
+
+  /**
+   * Handle "I don't know" button click
+   */
+  window.handleDontKnow = function() {
+    const q = game.quiz.getCurrentQuestion();
+    if (!q) return;
+
+    // Mark as answered but not correct (for tracking purposes)
+    q.answered = true;
+    q.dontKnow = true;
+    game.quiz.totalAnswered++;
+
+    // Show learning panel
+    showLearnPanel(q, false);
+  };
+
+  /**
+   * Handle "Got it, continue" button click
+   */
+  window.handleLearnContinue = function() {
+    const q = game.quiz.getCurrentQuestion();
+    if (!q) return;
+
+    // If this was a "don't know", mark the word for later review
+    if (q.dontKnow) {
+      game.quiz._markWordWrong(
+        q.correctWord,
+        q.correctMeaning,
+        q.wordId,
+        q.mode
+      );
+    }
+
+    // Move to next question
+    game.quiz.currentIndex++;
+    showQuizQuestion();
+  };
+
   window.handleQuizAnswer = function(idx) {
     const result = game.quiz.submitAnswer(idx);
     if (!result) return;
@@ -205,7 +268,21 @@ document.addEventListener('DOMContentLoaded', () => {
       if (i === idx && !result.correct) btn.classList.add('wrong');
     });
 
-    setTimeout(() => showQuizQuestion(), 900);
+    // Hide "I don't know" button
+    document.getElementById('quiz-dont-know').style.display = 'none';
+
+    if (result.correct) {
+      // Correct answer - continue after short delay
+      setTimeout(() => {
+        document.getElementById('quiz-dont-know').style.display = 'block';
+        showQuizQuestion();
+      }, 900);
+    } else {
+      // Wrong answer - show learning panel
+      setTimeout(() => {
+        showLearnPanel(result, true);
+      }, 900);
+    }
   };
 
   window.finishQuiz = function() {
@@ -273,6 +350,12 @@ document.addEventListener('DOMContentLoaded', () => {
     game.quiz.generateQuiz(5, 4);
     showQuizQuestion();
   });
+
+  // "I don't know" button
+  document.getElementById('quiz-dont-know-btn').addEventListener('click', handleDontKnow);
+
+  // "Got it, continue" button
+  document.getElementById('quiz-learn-continue-btn').addEventListener('click', handleLearnContinue);
 
   // Quiz complete buttons
   document.getElementById('quiz-start-btn').addEventListener('click', () => {

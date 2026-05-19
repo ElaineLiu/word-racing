@@ -1,5 +1,5 @@
 /**
- * VocabularyQuiz - Vocabulary quiz module (v2.0)
+ * VocabularyQuiz - Vocabulary quiz module (v2.1)
  * Supports 4 question modes via QuestionFactory:
  *   PIT_BOARD (word->definition), RADIO_MSG (fill-in-blank),
  *   STRATEGY (definition->word), QUALIFYING (phonetic->word)
@@ -7,9 +7,11 @@
  * Mixed-mode distribution per round, mode-based rewards.
  *
  * Phase 1.2 - Converted to ES6 module
+ * Phase 1.5 - Added dynamic wordset loading
  */
 import { QuestionFactory } from './question-factory.js';
 import { QUIZ } from '../config/game-config.js';
+import { loadWordSet, loadLastSelection, getAvailableWordSets, getCurrentWordSetInfo, switchWordSet } from '../quiz/wordset-loader.js';
 
 export class VocabularyQuiz {
     constructor() {
@@ -26,9 +28,42 @@ export class VocabularyQuiz {
         this.maxLevel = 3;            // default difficulty cap
         this.quizMode = 'basic';      // 'basic' = Chinese options only, 'challenge' = all 5 modes
         this.loaded = false;
+        this.currentWordSetId = null;
+
+        // Track wrong words in current quiz for re-testing
+        this.currentQuizWrong = [];  // { wordData, mode }
 
         // Load persisted wrong words
         this._loadWrongWords();
+    }
+
+    // ==================== WordSet Management ====================
+
+    /**
+     * Get available wordsets
+     * @returns {Promise<Array>}
+     */
+    async getAvailableWordSets() {
+        return await getAvailableWordSets();
+    }
+
+    /**
+     * Switch to a different wordset
+     * @param {string} wordSetId
+     */
+    async switchWordSet(wordSetId) {
+        this.words = await switchWordSet(wordSetId);
+        this.currentWordSetId = wordSetId;
+        this.loaded = this.words.length > 0;
+        return this.loaded;
+    }
+
+    /**
+     * Get current wordset info
+     * @returns {Promise<Object|null>}
+     */
+    async getWordSetInfo() {
+        return await getCurrentWordSetInfo();
     }
 
     // ==================== Wrong Word Persistence ====================
@@ -85,12 +120,22 @@ export class VocabularyQuiz {
 
     // ==================== Word Loading ====================
 
-    async loadWords(url = 'data/words.json') {
+    /**
+     * Load words from specified wordset or use last selection
+     * @param {string} [wordSetId] - Optional wordset ID to load
+     */
+    async loadWords(wordSetId = null) {
         try {
-            const resp = await fetch(url);
-            const data = await resp.json();
-            this.words = data.words;
-            this.loaded = true;
+            if (wordSetId) {
+                this.words = await loadWordSet(wordSetId);
+                this.currentWordSetId = wordSetId;
+            } else {
+                // Load last selection or default
+                const lastSelection = await loadLastSelection();
+                this.words = await loadWordSet(lastSelection);
+                this.currentWordSetId = lastSelection;
+            }
+            this.loaded = this.words.length > 0;
         } catch (e) {
             console.error('Failed to load words:', e);
             this.words = this._getFallbackWords();
@@ -201,6 +246,7 @@ export class VocabularyQuiz {
         this.fuelCoinsEarned = 0;
         this.gearCoinsEarned = 0;
         this.combo = 0;
+        this.currentQuizWrong = [];  // Clear wrong words for this quiz
 
         return this.currentQuiz;
     }
@@ -333,6 +379,18 @@ export class VocabularyQuiz {
                 question.wordId || 0,
                 question.mode || 'PIT_BOARD'
             );
+
+            // Add wrong word to end of quiz for re-testing
+            // Only if not already a retry
+            if (!question.isRetry) {
+                const wordData = this.words.find(w => w.id === question.wordId || w.word === question.correctWord);
+                if (wordData) {
+                    this.currentQuizWrong.push({
+                        wordData,
+                        mode: question.mode
+                    });
+                }
+            }
         }
 
         // Move to next question after a short delay
@@ -347,9 +405,50 @@ export class VocabularyQuiz {
 
     /**
      * Check if the quiz is complete
+     * If there are wrong words to retry, add them to the quiz first
      */
     isComplete() {
-        return this.currentIndex >= this.currentQuiz.length;
+        // Check if we've reached the end of current quiz
+        if (this.currentIndex < this.currentQuiz.length) {
+            return false;
+        }
+
+        // Check if there are wrong words to retry
+        if (this.currentQuizWrong.length > 0) {
+            // Add wrong words to quiz for re-testing
+            this._addRetryQuestions();
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Add retry questions for wrong words
+     */
+    _addRetryQuestions() {
+        const eligible = this.words.filter(w => w.level <= this.maxLevel);
+        const useChinese = this.quizMode === 'basic';
+
+        for (const item of this.currentQuizWrong) {
+            // Create a new question for this word
+            const question = QuestionFactory.createQuestion(
+                item.wordData,
+                item.mode || 'PIT_BOARD',
+                this.maxLevel,
+                eligible,
+                useChinese
+            );
+
+            if (question) {
+                question.isRetry = true;  // Mark as retry question
+                question.modeLabel = '🔄 RETRY';
+                this.currentQuiz.push(question);
+            }
+        }
+
+        // Clear the wrong words list
+        this.currentQuizWrong = [];
     }
 
     /**

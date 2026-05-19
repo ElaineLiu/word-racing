@@ -4,7 +4,10 @@
  * Plus adaptive LAP_REVIEW that reuses the 4 modes for wrong words.
  *
  * Phase 1.2 - Converted to ES6 module
+ * Phase 4.1 - Uses Mode Registry for data-driven mode definitions
  */
+
+import { QuizModes, getMode, getReviewMode, getBaseModes } from '../quiz/mode-registry.js';
 
 export class DistractorEngine {
     /**
@@ -132,45 +135,18 @@ export class DistractorEngine {
 
 export class QuestionFactory {
     /**
-     * Mode definitions with labels, icons, and reward structures.
+     * Get mode definition (delegates to registry)
      */
-    static MODES = {
-        PIT_BOARD: {
-            key: 'PIT_BOARD',
-            label: 'PIT BOARD',
-            icon: 'PB',    // Will be styled as CSS in Sprint C
-            reward: { fuel: 10, gear: 0 },
-            description: 'Read the word, pick the right meaning'
-        },
-        RADIO_MSG: {
-            key: 'RADIO_MSG',
-            label: 'RADIO',
-            icon: 'RM',
-            reward: { fuel: 10, gear: 0 },
-            description: 'Fill in the blank in the sentence'
-        },
-        STRATEGY: {
-            key: 'STRATEGY',
-            label: 'STRATEGY',
-            icon: 'SC',
-            reward: { fuel: 15, gear: 0 },
-            description: 'Read the definition, pick the right word'
-        },
-        QUALIFYING: {
-            key: 'QUALIFYING',
-            label: 'QUALIFYING',
-            icon: 'QF',
-            reward: { fuel: 0, gear: 15 },
-            description: 'Read the phonetic, pick the right word'
-        },
-        LAP_REVIEW: {
-            key: 'LAP_REVIEW',
-            label: 'LAP REVIEW',
-            icon: 'LR',
-            reward: { fuel: 0, gear: 5 },
-            description: 'Review a word you got wrong'
-        }
-    };
+    static getMode(key) {
+        return getMode(key);
+    }
+
+    /**
+     * Get all modes (delegates to registry)
+     */
+    static get MODES() {
+        return QuizModes;
+    }
 
     /**
      * Create a question object for the given word and mode.
@@ -183,7 +159,7 @@ export class QuestionFactory {
      * @returns {object} Unified question data structure
      */
     static createQuestion(word, mode, level, eligibleWords, useChinese = false) {
-        const modeDef = QuestionFactory.MODES[mode];
+        const modeDef = getMode(mode);
         if (!modeDef) {
             console.error('Unknown question mode:', mode);
             return null;
@@ -204,7 +180,7 @@ export class QuestionFactory {
         // Build question-specific fields
         const question = {
             mode: mode,
-            modeLabel: modeDef.label,
+            modeLabel: useChinese && modeDef.labelCn ? modeDef.labelCn : modeDef.label,
             modeIcon: modeDef.icon,
             reward: { ...modeDef.reward },
             wordId: word.id,
@@ -218,58 +194,61 @@ export class QuestionFactory {
             correct: false
         };
 
-        // Mode-specific fields
+        // Mode-specific fields (using promptType from registry)
+        QuestionFactory._buildModeSpecificFields(question, word, modeDef, level, useChinese);
+
+        return question;
+    }
+
+    /**
+     * Build mode-specific question fields based on registry definition
+     */
+    static _buildModeSpecificFields(question, word, modeDef, level, useChinese) {
+        const mode = modeDef.key;
+
         switch (mode) {
             case 'PIT_BOARD':
                 question.prompt = word.word;
                 question.promptSub = word.phonetic || '';
                 question.sentence = word.sentence || '';
-                question.sentenceBlank = false;
-                // Chinese mode: label tells kid it's "word→meaning"
-                if (useChinese) {
-                    question.modeLabel = '词→义';
-                }
+                question.sentenceBlank = modeDef.sentenceBlank;
                 break;
 
             case 'RADIO_MSG':
                 question.prompt = QuestionFactory._blankSentence(word);
                 question.promptSub = word.meaning_en || word.meaning_cn;
                 question.sentence = word.sentence || '';
-                question.sentenceBlank = true;
-                // Store the original sentence with the word visible (for answer reveal)
+                question.sentenceBlank = modeDef.sentenceBlank;
                 question.sentenceOriginal = word.sentence || '';
                 break;
 
             case 'STRATEGY':
+                // STRATEGY always shows definition -> pick word, so sentence should always blank the answer
                 if (useChinese) {
-                    // Chinese mode: prompt = Chinese meaning, options = English words
                     question.prompt = word.meaning_cn;
                     question.promptSub = '';
-                    question.modeLabel = '义→词';
                 } else {
                     question.prompt = word.meaning_en || word.meaning_cn;
                     question.promptSub = word.phonetic || '';
-                    // At L1-2, show Chinese definition as prompt instead
                     if (level <= 2 && word.meaning_cn) {
                         question.promptCn = word.meaning_cn;
                     }
                 }
-                question.sentence = word.sentence || '';
-                question.sentenceBlank = false;
+                // Always blank the answer word in sentence for STRATEGY mode
+                question.sentence = QuestionFactory._blankSentence(word);
+                question.sentenceBlank = true;
                 break;
 
             case 'QUALIFYING':
                 question.prompt = word.phonetic || '';
-                question.promptSub = ''; // At L1-2, could add Chinese hint
+                question.promptSub = '';
                 question.sentence = '';
-                question.sentenceBlank = false;
+                question.sentenceBlank = modeDef.sentenceBlank;
                 if (level <= 2 && word.meaning_cn) {
                     question.promptCn = word.meaning_cn;
                 }
                 break;
         }
-
-        return question;
     }
 
     /**
@@ -291,27 +270,17 @@ export class QuestionFactory {
         );
         if (!word) return null;
 
-        // Pick a mode different from the one the user got wrong
-        let chosenMode;
-        if (useChinese) {
-            // In basic mode, only use PIT_BOARD or STRATEGY for review
-            chosenMode = Math.random() < 0.5 ? 'PIT_BOARD' : 'STRATEGY';
-        } else {
-            const baseModes = ['PIT_BOARD', 'RADIO_MSG', 'STRATEGY', 'QUALIFYING'];
-            if (wrongWord.reviewCount >= 2) {
-                chosenMode = baseModes[Math.floor(Math.random() * 2) + 2]; // STRATEGY or QUALIFYING
-            } else {
-                chosenMode = baseModes[Math.floor(Math.random() * 2)]; // PIT_BOARD or RADIO_MSG
-            }
-        }
+        // Pick a mode using the registry
+        const chosenMode = getReviewMode(wrongWord.reviewCount || 0, useChinese);
 
         const question = QuestionFactory.createQuestion(word, chosenMode, level, eligibleWords, useChinese);
         if (question) {
             // Override to LAP_REVIEW mode for reward tracking
+            const reviewDef = getMode('LAP_REVIEW');
             question.mode = 'LAP_REVIEW';
-            question.modeLabel = 'LAP REVIEW';
-            question.modeIcon = 'LR';
-            question.reward = { fuel: 0, gear: 5 };
+            question.modeLabel = reviewDef.label;
+            question.modeIcon = reviewDef.icon;
+            question.reward = { ...reviewDef.reward };
             question.isReview = true;
         }
         return question;

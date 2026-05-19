@@ -856,9 +856,10 @@ export class Game {
         this._lastLap = 0;
 
         this.state = 'QUIZ';
-        // Default to basic mode when starting from home/results
-        this.quiz.quizMode = 'basic';
-        return this.quiz.generateQuiz(5, 3);
+        // Preserve current quiz mode (basic/challenge)
+        const currentMode = this.quiz.quizMode || 'basic';
+        const maxLevel = currentMode === 'challenge' ? 4 : 3;
+        return this.quiz.generateQuiz(5, maxLevel);
     }
 
     /**
