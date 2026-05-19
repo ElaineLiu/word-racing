@@ -121,7 +121,7 @@ export class BaseView {
 
   show(selector) {
     const el = this.$(selector);
-    if (el) el.style.display = '';
+    if (el) el.style.display = 'block';
   }
 
   hide(selector) {
