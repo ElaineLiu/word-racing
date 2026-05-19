@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "defaultWordSet": "shanghai-zhongkao",
+  "wordSets": [
+    {
+      "id": "shanghai-zhongkao",
+      "name": "上海中考考纲",
+      "description": "2025年上海中考英语考纲词汇（1982词）",
+      "source": "2025年上海中考英语考纲词汇",
+      "difficultyRange": [1, 5],
+      "totalWords": 1982,
+      "file": "data/words-shanghai-zhongkao.json",
+      "tags": ["中考", "考纲", "上海", "初中"],
+      "gradeLevel": "7-9",
+      "geLevel": "2-4",
+      "isDefault": true
+    },
+    {
+      "id": "shanghai-grade6",
+      "name": "沪教版六年级",
+      "description": "上海沪教版六年级上下册核心词汇 + GE=3拓展",
+      "source": "牛津上海版六年级 + Reading A-Z H/I 级别词汇",
+      "difficultyRange": [1, 5],
+      "totalWords": 240,
+      "file": "data/words-shanghai-g6.json",
+      "tags": ["课本词汇", "上海", "六年级"],
+      "gradeLevel": "6",
+      "geLevel": "2.5-3.5"
+    },
+    {
+      "id": "f1-racing",
+      "name": "F1赛车词汇",
+      "description": "F1赛车相关英语词汇",
+      "source": "F1术语 + 赛车英语",
+      "difficultyRange": [2, 4],
+      "totalWords": 100,
+      "file": "data/words-f1.json",
+      "tags": ["F1", "赛车", "兴趣"],
+      "gradeLevel": "5-7",
+      "geLevel": "2-4"
+    },
+    {
+      "id": "raz-h",
+      "name": "Reading A-Z Level H",
+      "description": "RAZ H级别核心词汇",
+      "source": "Reading A-Z Level H",
+      "difficultyRange": [1, 3],
+      "totalWords": 150,
+      "file": "data/words-raz-h.json",
+      "tags": ["RAZ", "Level H"],
+      "gradeLevel": "2-3",
+      "geLevel": "1.5-2.5"
+    },
+    {
+      "id": "raz-i",
+      "name": "Reading A-Z Level I",
+      "description": "RAZ I级别核心词汇",
+      "source": "Reading A-Z Level I",
+      "difficultyRange": [2, 4],
+      "totalWords": 150,
+      "file": "data/words-raz-i.json",
+      "tags": ["RAZ", "Level I"],
+      "gradeLevel": "3-4",
+      "geLevel": "2-3"
+    }
+  ],
+  "difficultyLevels": {
+    "1": { "label": "基础", "description": "最常用基础词汇 (GE 1-2)", "ge": "1-2" },
+    "2": { "label": "初级", "description": "课本核心词汇 (GE 2-2.5)", "ge": "2-2.5" },
+    "3": { "label": "中级", "description": "中考核心词汇 (GE 2.5-3)", "ge": "2.5-3" },
+    "4": { "label": "进阶", "description": "中考拓展词汇 (GE 3-3.5)", "ge": "3-3.5" },
+    "5": { "label": "高级", "description": "超纲词汇 (GE 3.5-4+)", "ge": "3.5-4" }
+  },
+  "learningPath": {
+    "recommendedOrder": ["shanghai-zhongkao", "f1-racing"],
+    "notes": "建议使用中考考纲词汇为主，F1词汇提升兴趣"
+  }
+}
