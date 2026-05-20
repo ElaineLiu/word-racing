@@ -72,6 +72,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `views/view-manager.js` - View coordination and navigation
 - **New Entry Point**: Created `js/main-v2.js` using ViewManager
 
+### Changed - Architecture Integration
+- **ShopSystem Integration**: Shop logic centralized in `systems/shop-system.js`
+  - `Game._shopItems` getter delegates to `ShopSystem.getItems()`
+  - `Game._executeShopAction()` delegates to `ShopSystem.purchase()`
+- **RenderSystem Integration**: All rendering extracted from Game class
+  - `Game._render()` builds state object and delegates to `RenderSystem.render()`
+  - Floating text, HUD, countdown, results all handled by RenderSystem
+  - 400+ lines of rendering code removed from Game
+- **Game Class Reduction**: 995 lines → 552 lines (-44%)
+- **Skipped Subsystems**:
+  - QuizEngine: Thin wrapper, low integration value
+  - UpgradeSystem: Needs Car refactoring first
+
 ### Changed - Phase 2 Complete (Split God Class)
 - **RenderSystem**: Created `rendering/render-system.js`
   - All canvas rendering extracted from Game class

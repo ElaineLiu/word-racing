@@ -1,20 +1,41 @@
 # Word Racing Refactoring Plan
 
 > Created: 2026-05-15
-> Status: Phase 5 Complete (Robustness Layer)
-> Next: Browser Testing & Integration
+> Updated: 2026-05-20
+> Status: **Architecture Integration Complete**
+> Game class: 995 lines → 552 lines (-44%)
+
+## Refactoring Summary
+
+| Phase | Status | Lines Changed |
+|-------|--------|---------------|
+| Phase 0: Testing Infrastructure | ✅ Complete | +800 |
+| Phase 1: Foundation (Config + Modules + EventBus + GameState) | ✅ Complete | +1200 |
+| Phase 2: Split God Class | ✅ Complete | -400 |
+| Phase 3: View Layer Separation | ✅ Complete | +1400 |
+| Phase 4: Data-Driven Design | ✅ Complete | +400 |
+| Phase 5: Robustness Layer | ✅ Complete | +600 |
+| **Architecture Integration** | ✅ Complete | -460 |
+
+### Integrated Subsystems
+
+| Subsystem | Status | Impact |
+|-----------|--------|--------|
+| ShopSystem | ✅ Integrated | Shop logic centralized |
+| RenderSystem | ✅ Integrated | 400+ lines removed from Game |
+| QuizEngine | ⏭️ Skipped | Thin wrapper, low value |
+| UpgradeSystem | ⏭️ Skipped | Needs Car refactoring |
 
 ## Current Architecture Assessment
 
-| Problem | Impact | Severity |
-|---------|--------|----------|
-| **God Class** (`Game` does everything) | Hard to test, modify, extend | 🔴 Critical |
-| **No module system** (global window.*) | Namespace pollution, dependency unclear | 🔴 Critical |
-| **Tight coupling** (Game ↔ UI inline scripts) | Changes ripple everywhere | 🟠 High |
-| **Magic numbers** scattered | Tuning requires code changes | 🟠 High |
-| **No event system** (callbacks patched in) | Reactive updates are hacks | 🟡 Medium |
-| **Shop logic split** (game.js + index.html) | Single responsibility violated | 🟡 Medium |
-| **No data validation** | Silent failures, corrupt state | 🟡 Medium |
+| Problem | Before | After |
+|---------|--------|-------|
+| **God Class** | Game: 995 lines | Game: 552 lines |
+| **Module system** | window.* globals | ES6 modules |
+| **Event system** | Callbacks | EventBus |
+| **View layer** | Inline scripts | ViewManager + 4 Views |
+| **Shop logic** | Split across files | ShopSystem |
+| **Rendering** | Inline in Game | RenderSystem |
 
 ---
 
