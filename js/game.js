@@ -4,11 +4,14 @@
  * 三面板: QUIZ / SHOP / RACING 可手动切换（RACING中只能EXIT回QUIZ）
  *
  * Phase 1.2 - Converted to ES6 module, uses config
+ * Phase 2.2 - Integrated ShopSystem
  */
 import { Track } from './track.js';
 import { Car } from './car.js';
 import { VocabularyQuiz } from './quiz.js';
 import { ECONOMY, DISPLAY, GAME, UPGRADES } from '../config/game-config.js';
+import { EventBus } from '../core/event-bus.js';
+import { ShopSystem } from '../systems/shop-system.js';
 
 export class Game {
     constructor(canvas) {
@@ -61,6 +64,10 @@ export class Game {
         this.onExitRace = null;
         this.onResultsContinueCb = null;
 
+        // Core systems
+        this._eventBus = new EventBus();
+        this._shopSystem = new ShopSystem(this._eventBus, null);
+
         // Subsystems
         this.track = new Track();
         this.car = new Car(
@@ -70,9 +77,11 @@ export class Game {
         );
         this.quiz = new VocabularyQuiz();
         this.car.applyUpgrades(this.upgrades);
+    }
 
-        // Shop items from config
-        this._shopItems = ECONOMY.SHOP_ITEMS.map(item => ({ ...item }));
+    // Shop items delegate to ShopSystem
+    get _shopItems() {
+        return this._shopSystem.getItems();
     }
 
     // ==================== Leaderboard ====================
@@ -781,65 +790,38 @@ export class Game {
 
     /**
      * 执行 SHOP 按钮对应的操作
+     * Delegates to ShopSystem
      */
     _executeShopAction(id) {
-        // Find item in _shopItems
-        const item = this._shopItems.find(it => it.id === id);
-        if (!item) {
-            // Handle non-item actions
-            switch (id) {
-                case 'back_quiz':
-                    this.state = 'QUIZ';
-                    return 'QUIZ';
-                case 'start_race':
-                    if (this.fuel > 0) {
-                        this.totalLaps = this.selectedLaps;
-                        this.state = 'COUNTDOWN';
-                        this.countdownTimer = DISPLAY.COUNTDOWN_FRAMES;
-                        return 'COUNTDOWN';
-                    }
-                    break;
+        const context = {
+            fuelCoins: this.fuelCoins,
+            gearCoins: this.gearCoins,
+            fuel: this.fuel,
+            maxFuel: this.maxFuel,
+            nitroCharges: this.nitroCharges,
+            upgrades: this.upgrades,
+            car: this.car
+        };
+
+        const result = this._shopSystem.purchase(id, context);
+
+        if (result.success) {
+            // Sync context back
+            this.fuelCoins = context.fuelCoins;
+            this.gearCoins = context.gearCoins;
+            this.fuel = context.fuel;
+            this.nitroCharges = context.nitroCharges;
+            this.upgrades = context.upgrades;
+
+            if (result.newState) {
+                this.state = result.newState;
+                if (result.newState === 'COUNTDOWN') {
+                    this.totalLaps = this.selectedLaps;
+                }
+                if (result.countdownFrames) {
+                    this.countdownTimer = result.countdownFrames;
+                }
             }
-            return this.state;
-        }
-
-        // Check if can afford based on currency
-        let canAfford = false;
-        if (item.currency === 'fuel') {
-            canAfford = this.fuelCoins >= item.cost && this.fuel < this.maxFuel;
-        } else if (item.currency === 'gear') {
-            canAfford = this.gearCoins >= item.cost;
-            // For upgrades, check if already at max level
-            if (canAfford && item.upgrade) {
-                canAfford = this.upgrades[item.upgrade] < UPGRADES.MAX_LEVEL;
-            }
-        }
-
-        if (!canAfford) {
-            console.warn(`Cannot afford ${item.label} or item maxed out`);
-            return this.state;
-        }
-
-        // Deduct currency
-        if (item.currency === 'fuel') {
-            this.fuelCoins -= item.cost;
-        } else if (item.currency === 'gear') {
-            this.gearCoins -= item.cost;
-        }
-
-        // Apply effect
-        if (id.startsWith('fuel')) {
-            const amount = id === 'fuel20' ? 20 : 50;
-            this.fuel = Math.min(this.maxFuel, this.fuel + amount);
-        } else if (id.startsWith('nitro')) {
-            const amount = id === 'nitro1' ? 1 : 3;
-            this.car.addNitro(amount);
-            this.nitroCharges += amount;
-        } else if (item.upgrade) {
-            // Upgrade item
-            this.upgrades[item.upgrade] = Math.min(UPGRADES.MAX_LEVEL, this.upgrades[item.upgrade] + 1);
-            this.car.applyUpgrades(this.upgrades);
-            console.log(`Upgraded ${item.upgrade} to level ${this.upgrades[item.upgrade]}`);
         }
 
         return this.state;
