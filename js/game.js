@@ -335,7 +335,7 @@ export class Game {
             fuel: this.fuel,
             maxFuel: this.maxFuel,
             displaySpeed: this.car.speed * DISPLAY.SPEED_MULTIPLIER,
-            nitroStatus: this.car.nitro,
+            nitroStatus: this.car.getNitroStatus(),
             wrongWords: this.quizResults?.wrong || []
         };
 
