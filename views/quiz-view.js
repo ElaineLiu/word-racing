@@ -69,6 +69,15 @@ export class QuizView extends BaseView {
     }
   }
 
+  #showLearningPanel(q) {
+    this.setText('#quiz-learn-word', q.correctWord || q.word || '');
+    this.setText('#quiz-learn-phonetic', q.phonetic || '');
+    this.setText('#quiz-learn-meaning', `${q.correctMeaning || q.meaning || ''}  |  ${q.meaningEn || ''}`);
+    this.setText('#quiz-learn-sentence', q.sentence || '');
+    this.setText('#quiz-learn-sentence-cn', q.sentence_cn || '');
+    this.show('#quiz-learn-panel');
+  }
+
   #renderQuestionContent(q, isChallenge) {
     // For review questions, use the original mode for rendering
     const renderMode = q.isReview ? q.originalMode : q.mode;
@@ -253,6 +262,27 @@ export class QuizView extends BaseView {
     this.onClick('#quiz-next-btn', () => {
       if (this.#quiz.goToNext()) {
         this.showQuestion();
+      }
+    });
+
+    // "I don't know" button
+    this.onClick('#quiz-dont-know-btn', () => {
+      const q = this.#quiz.getCurrentQuestion();
+      if (!q || q.answered) return;
+
+      // Show learning panel
+      this.#showLearningPanel(q);
+    });
+
+    // Learning panel continue button
+    this.onClick('#quiz-learn-continue-btn', () => {
+      this.hide('#quiz-learn-panel');
+
+      // Mark as wrong answer (submit wrong index)
+      const q = this.#quiz.getCurrentQuestion();
+      if (q && !q.answered) {
+        const wrongIndex = (q.correctIndex + 1) % 4;
+        this.#handleAnswer(wrongIndex);
       }
     });
 

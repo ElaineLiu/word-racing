@@ -195,6 +195,9 @@ export class QuestionFactory {
             correctWord: word.word,
             correctMeaning: word.meaning_cn,
             meaningEn: word.meaning_en || '',
+            phonetic: word.phonetic || '',
+            sentence: word.sentence || '',
+            sentence_cn: word.sentence_cn || '',
             answered: false,
             correct: false
         };
