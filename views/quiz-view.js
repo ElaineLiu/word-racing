@@ -28,6 +28,9 @@ export class QuizView extends BaseView {
   }
 
   showQuestion() {
+    // Hide learning panel when showing new question
+    this.hide('#quiz-learn-panel');
+
     const q = this.#quiz.getCurrentQuestion();
     if (!q) {
       this.showComplete();

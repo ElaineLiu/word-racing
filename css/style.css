@@ -340,7 +340,7 @@ html, body {
 }
 
 #quiz-container {
-    max-width: 800px;
+    max-width: 1100px;
     margin: 0 auto;
     padding: var(--space-lg);
 }
@@ -378,6 +378,14 @@ html, body {
     border-color: rgba(255,215,0,0.4);
 }
 
+/* --- Quiz Layout (Question + Learning Panel) --- */
+#quiz-layout {
+    display: flex;
+    gap: var(--space-xl);
+    align-items: flex-start;
+    width: 100%;
+}
+
 /* --- Quiz Question Area --- */
 #quiz-question-area {
     background: var(--bg-card);
@@ -385,6 +393,8 @@ html, body {
     padding: var(--space-xl);
     border: 1px solid var(--border-default);
     box-shadow: var(--shadow-card);
+    width: 650px;
+    flex-shrink: 0;
 }
 
 #quiz-progress {
@@ -526,7 +536,20 @@ html, body {
     border: 1px solid var(--border-active);
     box-shadow: var(--shadow-card);
     text-align: center;
-    margin-top: var(--space-lg);
+    width: 320px;
+    flex-shrink: 0;
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 #quiz-learn-word {
@@ -1006,3 +1029,24 @@ html, body {
 .bg-panel    { background: var(--bg-secondary); }
 
 .border-subtle { border: 1px solid var(--border-default); }
+
+/* ========================================================================
+   Responsive: Quiz Layout
+   ======================================================================== */
+@media (max-width: 1050px) {
+    #quiz-container {
+        max-width: 800px;
+    }
+
+    #quiz-layout {
+        flex-direction: column;
+    }
+
+    #quiz-question-area {
+        width: 100%;
+    }
+
+    #quiz-learn-panel {
+        width: 100%;
+    }
+}
