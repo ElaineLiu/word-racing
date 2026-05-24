@@ -381,9 +381,16 @@ html, body {
 /* --- Quiz Layout (Question + Learning Panel) --- */
 #quiz-layout {
     display: flex;
+    justify-content: center;
     gap: var(--space-xl);
     align-items: flex-start;
     width: 100%;
+    transition: justify-content 0.3s ease;
+}
+
+/* When learning panel is visible, shift layout to left */
+#quiz-layout.has-learn-panel {
+    justify-content: flex-start;
 }
 
 /* --- Quiz Question Area --- */

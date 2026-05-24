@@ -31,6 +31,10 @@ export class QuizView extends BaseView {
     // Hide learning panel when showing new question
     this.hide('#quiz-learn-panel');
 
+    // Remove class to center layout
+    const layout = this.$('#quiz-layout');
+    if (layout) layout.classList.remove('has-learn-panel');
+
     const q = this.#quiz.getCurrentQuestion();
     if (!q) {
       this.showComplete();
@@ -78,6 +82,11 @@ export class QuizView extends BaseView {
     this.setText('#quiz-learn-meaning', `${q.correctMeaning || q.meaning || ''}  |  ${q.meaningEn || ''}`);
     this.setText('#quiz-learn-sentence', q.sentence || '');
     this.setText('#quiz-learn-sentence-cn', q.sentence_cn || '');
+
+    // Add class to shift layout
+    const layout = this.$('#quiz-layout');
+    if (layout) layout.classList.add('has-learn-panel');
+
     this.show('#quiz-learn-panel');
   }
 
@@ -280,6 +289,10 @@ export class QuizView extends BaseView {
     // Learning panel continue button
     this.onClick('#quiz-learn-continue-btn', () => {
       this.hide('#quiz-learn-panel');
+
+      // Remove class to center layout
+      const layout = this.$('#quiz-layout');
+      if (layout) layout.classList.remove('has-learn-panel');
 
       // Mark as wrong answer (submit wrong index)
       const q = this.#quiz.getCurrentQuestion();
