@@ -334,7 +334,7 @@ export class Game {
             quizScore: this.quizResults?.score || 0,
             fuel: this.fuel,
             maxFuel: this.maxFuel,
-            displaySpeed: this.car.speed * DISPLAY.SPEED_MULTIPLIER,
+            displaySpeed: Math.round(this.car.speed * DISPLAY.SPEED_DISPLAY_MULTIPLIER) || 0,
             nitroStatus: this.car.getNitroStatus(),
             wrongWords: this.quizResults?.wrong || []
         };
@@ -503,9 +503,9 @@ export class Game {
         this._floatingTexts = [];
         this._lastLap = 0;
 
-        // 返回 QUIZ 状态
-        this.state = 'QUIZ';
-        return 'QUIZ';
+        // 返回 HOME 状态
+        this.state = 'HOME';
+        return 'HOME';
     }
 
     /**

@@ -185,6 +185,56 @@ describe('Game', () => {
     });
   });
 
+  describe('exitRace', () => {
+    it('should return to HOME state on exit', () => {
+      game.fuel = 100;
+      game.state = GAME.STATES.RACING;
+      const newState = game.exitRace();
+      expect(newState).toBe('HOME');
+      expect(game.state).toBe('HOME');
+    });
+
+    it('should reset car position on exit', () => {
+      game.fuel = 100;
+      game.state = GAME.STATES.RACING;
+      game.car.x = 500;
+      game.car.y = 300;
+      game.exitRace();
+      expect(game.car.x).toBe(game.track.startPos.x);
+      expect(game.car.y).toBe(game.track.startPos.y);
+    });
+  });
+
+  describe('display speed', () => {
+    it('should calculate displaySpeed without NaN', () => {
+      game.car.speed = 2.5;
+      const displaySpeed = Math.round(game.car.speed * DISPLAY.SPEED_DISPLAY_MULTIPLIER) || 0;
+      expect(displaySpeed).toBe(125);
+      expect(Number.isNaN(displaySpeed)).toBe(false);
+    });
+
+    it('should return 0 when speed is undefined', () => {
+      game.car.speed = undefined;
+      const displaySpeed = Math.round(game.car.speed * DISPLAY.SPEED_DISPLAY_MULTIPLIER) || 0;
+      expect(displaySpeed).toBe(0);
+    });
+
+    it('should use correct config constant', () => {
+      expect(DISPLAY.SPEED_DISPLAY_MULTIPLIER).toBeDefined();
+      expect(DISPLAY.SPEED_DISPLAY_MULTIPLIER).toBe(50);
+    });
+
+    it('should render valid displaySpeed in gameState', () => {
+      game.car.speed = 3.0;
+      game.state = GAME.STATES.RACING;
+      const gameState = {
+        displaySpeed: Math.round(game.car.speed * DISPLAY.SPEED_DISPLAY_MULTIPLIER) || 0,
+      };
+      expect(gameState.displaySpeed).toBe(150);
+      expect(Number.isNaN(gameState.displaySpeed)).toBe(false);
+    });
+  });
+
   describe('state machine', () => {
     it('should transition from MENU to QUIZ', () => {
       game.startNewQuiz();

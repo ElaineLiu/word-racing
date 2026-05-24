@@ -340,7 +340,7 @@ html, body {
 }
 
 #quiz-container {
-    max-width: 800px;
+    max-width: 1100px;
     margin: 0 auto;
     padding: var(--space-lg);
 }
@@ -378,6 +378,21 @@ html, body {
     border-color: rgba(255,215,0,0.4);
 }
 
+/* --- Quiz Layout (Question + Learning Panel) --- */
+#quiz-layout {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-xl);
+    align-items: flex-start;
+    width: 100%;
+    transition: justify-content 0.3s ease;
+}
+
+/* When learning panel is visible, shift layout to left */
+#quiz-layout.has-learn-panel {
+    justify-content: flex-start;
+}
+
 /* --- Quiz Question Area --- */
 #quiz-question-area {
     background: var(--bg-card);
@@ -385,6 +400,8 @@ html, body {
     padding: var(--space-xl);
     border: 1px solid var(--border-default);
     box-shadow: var(--shadow-card);
+    width: 650px;
+    flex-shrink: 0;
 }
 
 #quiz-progress {
@@ -465,6 +482,36 @@ html, body {
     opacity: 0.4;
 }
 
+/* --- Navigation Buttons --- */
+#quiz-nav {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+}
+
+.quiz-nav-btn {
+    background: transparent;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-lg);
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.quiz-nav-btn:hover:not(:disabled) {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+    background: rgba(0,176,255,0.1);
+}
+
+.quiz-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
 /* --- "I Don't Know" Button --- */
 #quiz-dont-know {
     margin-top: var(--space-lg);
@@ -496,7 +543,20 @@ html, body {
     border: 1px solid var(--border-active);
     box-shadow: var(--shadow-card);
     text-align: center;
-    margin-top: var(--space-lg);
+    width: 320px;
+    flex-shrink: 0;
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 #quiz-learn-word {
@@ -976,3 +1036,24 @@ html, body {
 .bg-panel    { background: var(--bg-secondary); }
 
 .border-subtle { border: 1px solid var(--border-default); }
+
+/* ========================================================================
+   Responsive: Quiz Layout
+   ======================================================================== */
+@media (max-width: 1050px) {
+    #quiz-container {
+        max-width: 800px;
+    }
+
+    #quiz-layout {
+        flex-direction: column;
+    }
+
+    #quiz-question-area {
+        width: 100%;
+    }
+
+    #quiz-learn-panel {
+        width: 100%;
+    }
+}

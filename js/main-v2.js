@@ -25,18 +25,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const game = new Game(canvas);
   window.game = game;
 
-  // Set up callbacks
-  game.onExitRace = () => {
-    // Handled by ViewManager via events
-  };
-  game.onResultsContinueCb = () => {
-    // Handled by ViewManager via events
-  };
-
   game.init().then(() => {
     // Create ViewManager
     const viewManager = new ViewManager(new EventBus(), game);
     window.viewManager = viewManager;
+
+    // Set up callbacks (now that viewManager exists)
+    game.onExitRace = () => {
+      viewManager.switchTo('home');
+    };
+    game.onResultsContinueCb = () => {
+      viewManager.switchTo('home');
+    };
 
     // Initial stats update
     viewManager.updateHomeStats();
