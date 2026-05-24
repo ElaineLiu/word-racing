@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { VocabularyQuiz } from '../js/quiz.js';
+import { DistractorEngine } from '../js/question-factory.js';
 
 describe('VocabularyQuiz', () => {
   let quiz;
@@ -131,6 +132,57 @@ describe('VocabularyQuiz', () => {
       const results = quiz.getResults();
       expect(results.accuracy).toBe(100);
       expect(results.correctCount).toBe(5);
+    });
+  });
+});
+
+describe('DistractorEngine', () => {
+  describe('duplicate word handling', () => {
+    it('should not include duplicate words with same spelling', () => {
+      // Simulate the real word bank issue: duplicate "after" entries
+      const duplicateWords = [
+        { id: 1, word: 'after', meaning_cn: '在...之后', meaning_en: 'later than', level: 2, category: 'grammar' },
+        { id: 2, word: 'after', meaning_cn: '终究，毕竟', meaning_en: 'eventually', level: 2, category: 'other' },
+        { id: 3, word: 'before', meaning_cn: '在...之前', meaning_en: 'earlier than', level: 2, category: 'grammar' },
+        { id: 4, word: 'during', meaning_cn: '在...期间', meaning_en: 'throughout', level: 2, category: 'grammar' },
+        { id: 5, word: 'since', meaning_cn: '自从', meaning_en: 'from then', level: 2, category: 'grammar' },
+      ];
+      const targetWord = duplicateWords[0]; // after (id:1)
+      const distractors = DistractorEngine.generate(targetWord, 'PIT_BOARD', duplicateWords, 3, true);
+
+      // Should not include meanings from duplicate "after" entry
+      expect(distractors).not.toContain('终究，毕竟');
+      expect(distractors).not.toContain('在...之后');
+      // Should include meanings from other words
+      expect(distractors.length).toBeGreaterThan(0);
+    });
+
+    it('should generate distractors without target word meaning', () => {
+      const words = [
+        { id: 1, word: 'speed', meaning_cn: '速度', meaning_en: 'fast', level: 2, category: 'abstract' },
+        { id: 2, word: 'brake', meaning_cn: '刹车', meaning_en: 'stop', level: 2, category: 'actions' },
+        { id: 3, word: 'engine', meaning_cn: '引擎', meaning_en: 'motor', level: 2, category: 'objects' },
+        { id: 4, word: 'track', meaning_cn: '赛道', meaning_en: 'path', level: 2, category: 'places' },
+        { id: 5, word: 'trophy', meaning_cn: '奖杯', meaning_en: 'prize', level: 2, category: 'objects' },
+      ];
+      const targetWord = words[0];
+      const distractors = DistractorEngine.generate(targetWord, 'PIT_BOARD', words, 3, true);
+
+      expect(distractors).not.toContain('速度');
+      expect(distractors.length).toBe(3);
+    });
+
+    it('should filter by word text not just id', () => {
+      // Case insensitive matching
+      const words = [
+        { id: 1, word: 'After', meaning_cn: '正确答案', level: 2, category: 'grammar' },
+        { id: 2, word: 'after', meaning_cn: '错误干扰项', level: 2, category: 'other' },
+        { id: 3, word: 'before', meaning_cn: '之前', level: 2, category: 'grammar' },
+      ];
+      const targetWord = words[0];
+      const distractors = DistractorEngine.generate(targetWord, 'PIT_BOARD', words, 3, true);
+
+      expect(distractors).not.toContain('错误干扰项');
     });
   });
 });

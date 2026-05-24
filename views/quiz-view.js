@@ -52,6 +52,21 @@ export class QuizView extends BaseView {
 
     // Render options
     this.#renderOptions(q);
+
+    // Update navigation buttons
+    this.#updateNavButtons();
+  }
+
+  #updateNavButtons() {
+    const prevBtn = this.$('#quiz-prev-btn');
+    const nextBtn = this.$('#quiz-next-btn');
+
+    if (prevBtn) {
+      prevBtn.disabled = !this.#quiz.canGoPrevious();
+    }
+    if (nextBtn) {
+      nextBtn.disabled = !this.#quiz.canGoNext();
+    }
   }
 
   #renderQuestionContent(q, isChallenge) {
@@ -119,7 +134,16 @@ export class QuizView extends BaseView {
       const btn = document.createElement('button');
       btn.className = 'quiz-option';
       btn.textContent = opt;
-      btn.addEventListener('click', () => this.#handleAnswer(idx));
+
+      // If question already answered, show result state
+      if (q.answered) {
+        btn.classList.add('disabled');
+        if (idx === q.correctIndex) btn.classList.add('correct');
+        if (idx === q.selected && !q.correct) btn.classList.add('wrong');
+      } else {
+        btn.addEventListener('click', () => this.#handleAnswer(idx));
+      }
+
       container.appendChild(btn);
     });
   }
@@ -167,11 +191,8 @@ export class QuizView extends BaseView {
       this.setText('#quiz-result-wrong', 'Perfect! All correct!');
     }
 
-    if (results.nitroCharges > 0) {
-      this.setText('#quiz-result-nitro', `N2O Nitro x${results.nitroCharges} Ready!`);
-    } else {
-      this.setText('#quiz-result-nitro', 'No nitro this time. Try harder next race!');
-    }
+    // Hide nitro text since nitro is now earned through shop
+    this.hide('#quiz-result-nitro');
 
     this.#renderLapSelector();
 
@@ -220,6 +241,19 @@ export class QuizView extends BaseView {
       this.removeClass('#quiz-type-simple', 'active');
       this.#quiz.generateQuiz(5, 4);
       this.showQuestion();
+    });
+
+    // Navigation buttons
+    this.onClick('#quiz-prev-btn', () => {
+      if (this.#quiz.goToPrevious()) {
+        this.showQuestion();
+      }
+    });
+
+    this.onClick('#quiz-next-btn', () => {
+      if (this.#quiz.goToNext()) {
+        this.showQuestion();
+      }
     });
 
     // Complete screen buttons

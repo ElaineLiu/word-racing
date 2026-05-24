@@ -465,6 +465,36 @@ html, body {
     opacity: 0.4;
 }
 
+/* --- Navigation Buttons --- */
+#quiz-nav {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+}
+
+.quiz-nav-btn {
+    background: transparent;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-lg);
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.quiz-nav-btn:hover:not(:disabled) {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+    background: rgba(0,176,255,0.1);
+}
+
+.quiz-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
 /* --- "I Don't Know" Button --- */
 #quiz-dont-know {
     margin-top: var(--space-lg);

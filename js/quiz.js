@@ -331,6 +331,42 @@ export class VocabularyQuiz {
         return null;
     }
 
+    /**
+     * Go to previous question (view only, cannot change answer)
+     */
+    goToPrevious() {
+        if (this.currentIndex > 0) {
+            this.currentIndex--;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Go to next question
+     */
+    goToNext() {
+        if (this.currentIndex < this.currentQuiz.length - 1) {
+            this.currentIndex++;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if can go to previous question
+     */
+    canGoPrevious() {
+        return this.currentIndex > 0;
+    }
+
+    /**
+     * Check if can go to next question
+     */
+    canGoNext() {
+        return this.currentIndex < this.currentQuiz.length - 1;
+    }
+
     // ==================== Answer Submission ====================
 
     /**

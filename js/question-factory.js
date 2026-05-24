@@ -21,7 +21,12 @@ export class DistractorEngine {
      * @returns {Array} Array of distractor option strings
      */
     static generate(targetWord, mode, eligibleWords, count = 3, useChinese = false) {
-        const others = eligibleWords.filter(w => w.id !== targetWord.id);
+        // Filter out same id AND same word (to handle duplicate entries in word bank)
+        const targetWordLower = targetWord.word.toLowerCase();
+        const others = eligibleWords.filter(w =>
+            w.id !== targetWord.id &&
+            w.word.toLowerCase() !== targetWordLower
+        );
 
         // Score each candidate for distractor quality (higher = better distractor)
         const scored = others.map(w => {
