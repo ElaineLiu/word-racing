@@ -6,7 +6,7 @@
 import { sanitizeGameState } from './validators.js';
 
 // Current storage version - increment when structure changes
-const STORAGE_VERSION = 2;
+const STORAGE_VERSION = 3;
 
 // Storage keys
 const KEYS = {
@@ -28,6 +28,23 @@ const DEFAULT_STATE = {
   leaderboard: [],
   quizMode: 'basic',
   maxLevel: 3,
+  currentWordSetId: 'shanghai-zhongkao',
+  // 每日进度
+  daily: {
+    lastActiveDate: null,
+    streakDays: 0,
+    todayQuizzes: 0,
+    todayFuelCoins: 0,
+    todayGearCoins: 0,
+  },
+  // 学习统计
+  learning: {
+    totalWordsSeen: 0,
+    totalWordsMastered: 0,
+    totalQuizzes: 0,
+    totalQuestions: 0,
+    totalCorrect: 0,
+  },
 };
 
 /**
@@ -211,8 +228,28 @@ const MIGRATIONS = {
     };
   },
 
-  // Add more migrations as needed:
-  // 2: (state) => { ... }, // v2 → v3
+  // v2 → v3: Add daily, learning, currentWordSetId fields
+  2: (state) => {
+    return {
+      ...state,
+      currentWordSetId: state.currentWordSetId || 'shanghai-zhongkao',
+      daily: state.daily || {
+        lastActiveDate: null,
+        streakDays: 0,
+        todayQuizzes: 0,
+        todayFuelCoins: 0,
+        todayGearCoins: 0,
+      },
+      learning: state.learning || {
+        totalWordsSeen: 0,
+        totalWordsMastered: 0,
+        totalQuizzes: 0,
+        totalQuestions: 0,
+        totalCorrect: 0,
+      },
+      version: 3,
+    };
+  },
 };
 
 /**

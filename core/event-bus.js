@@ -128,4 +128,25 @@ export const Events = {
   // UI events
   VIEW_CHANGE: 'view:change',
   HUD_UPDATE: 'hud:update',
+
+  // Learning system - 单词进度
+  WORD_STATUS_CHANGED: 'learning:word_status_changed',
+  WORD_MASTERED: 'learning:word_mastered',
+  WORD_FORGOTTEN: 'learning:word_forgotten',
+
+  // Learning system - 每日
+  DAILY_PROGRESS: 'daily:progress',
+  DAILY_GOAL_COMPLETE: 'daily:goal_complete',
+  DAILY_RESET: 'daily:reset',
+  DAILY_STREAK_UPDATE: 'daily:streak_update',
+
+  // Learning system - 会话
+  SESSION_START: 'session:start',
+  SESSION_SAVE: 'session:save',
+  SESSION_RESUME: 'session:resume',
+  SESSION_CLEAR: 'session:clear',
+
+  // Learning system - 出题
+  QUIZ_BUILT: 'quiz:built',
+  REVIEW_WORDS_SELECTED: 'quiz:review_selected',
 };

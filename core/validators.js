@@ -172,6 +172,35 @@ export function isValidLeaderboardEntry(entry) {
   );
 }
 
+/**
+ * Validate daily progress data
+ */
+export function isValidDailyData(daily) {
+  if (!isObject(daily)) return false;
+  const { lastActiveDate, streakDays, todayQuizzes, todayFuelCoins, todayGearCoins } = daily;
+  // lastActiveDate can be null or a date string
+  if (lastActiveDate !== null && !isString(lastActiveDate)) return false;
+  if (!isInteger(streakDays) || streakDays < 0) return false;
+  if (!isInteger(todayQuizzes) || todayQuizzes < 0) return false;
+  if (!isInteger(todayFuelCoins) || todayFuelCoins < 0) return false;
+  if (!isInteger(todayGearCoins) || todayGearCoins < 0) return false;
+  return true;
+}
+
+/**
+ * Validate learning statistics data
+ */
+export function isValidLearningData(learning) {
+  if (!isObject(learning)) return false;
+  const { totalWordsSeen, totalWordsMastered, totalQuizzes, totalQuestions, totalCorrect } = learning;
+  if (!isInteger(totalWordsSeen) || totalWordsSeen < 0) return false;
+  if (!isInteger(totalWordsMastered) || totalWordsMastered < 0) return false;
+  if (!isInteger(totalQuizzes) || totalQuizzes < 0) return false;
+  if (!isInteger(totalQuestions) || totalQuestions < 0) return false;
+  if (!isInteger(totalCorrect) || totalCorrect < 0) return false;
+  return true;
+}
+
 // ============================================================================
 // Validation Result
 // ============================================================================
@@ -254,6 +283,9 @@ export function sanitizeGameState(state, defaults) {
       .filter(isValidLeaderboardEntry)
       .slice(0, 20);
   }
+  if (isNonEmptyString(state.currentWordSetId)) sanitized.currentWordSetId = state.currentWordSetId;
+  if (isValidDailyData(state.daily)) sanitized.daily = { ...state.daily };
+  if (isValidLearningData(state.learning)) sanitized.learning = { ...state.learning };
 
   return sanitized;
 }

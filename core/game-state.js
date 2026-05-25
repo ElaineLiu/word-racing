@@ -29,9 +29,28 @@ const DEFAULT_STATE = {
 
   // Settings
   maxLevel: 3,
+  currentWordSetId: 'shanghai-zhongkao',
+
+  // Daily progress
+  daily: {
+    lastActiveDate: null,
+    streakDays: 0,
+    todayQuizzes: 0,
+    todayFuelCoins: 0,
+    todayGearCoins: 0,
+  },
+
+  // Learning statistics
+  learning: {
+    totalWordsSeen: 0,
+    totalWordsMastered: 0,
+    totalQuizzes: 0,
+    totalQuestions: 0,
+    totalCorrect: 0,
+  },
 
   // Meta
-  version: 1,
+  version: 3,
 };
 
 // Storage key
