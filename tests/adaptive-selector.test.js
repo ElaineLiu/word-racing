@@ -315,7 +315,8 @@ describe('AdaptiveSelector', () => {
 
     it('should handle small wordset', () => {
       const smallWordSet = createTestWordSet(3);
-      const smallSelector = new AdaptiveSelector(eventBus, progressTracker, smallWordSet, 5);
+      // 设置 minLevel=1 以包含 level 1 的词
+      const smallSelector = new AdaptiveSelector(eventBus, progressTracker, smallWordSet, 5, 1);
       const questions = smallSelector.buildQuiz({ count: 10 });
 
       expect(questions.length).toBe(3);
@@ -374,13 +375,15 @@ describe('AdaptiveSelector', () => {
     it('should update wordset', () => {
       const newWordSet = createTestWordSet(20);
       selector.setWordSet(newWordSet);
-
+      // 默认 minLevel=2，所以 level 1 的词被过滤
+      // 20个词中，level 分布：1-10 是 level 1, 11-20 是 level 2
+      // 所以 eligible = 10 (只有 level 2)
       const stats = selector.getSelectionStats();
-      expect(stats.totalEligible).toBe(20);
+      expect(stats.totalEligible).toBe(10);
     });
 
     it('should update maxLevel', () => {
-      selector.setMaxLevel(2);
+      selector.setLevelRange(1, 2); // 设置 minLevel=1, maxLevel=2
 
       const questions = selector.buildQuiz({ count: 10 });
       questions.forEach(q => {
@@ -395,7 +398,8 @@ describe('AdaptiveSelector', () => {
   describe('performance', () => {
     it('should build quiz quickly with large wordset', () => {
       const largeWordSet = createTestWordSet(2000);
-      const largeSelector = new AdaptiveSelector(eventBus, progressTracker, largeWordSet, 5);
+      // 设置 minLevel=1 以包含所有词
+      const largeSelector = new AdaptiveSelector(eventBus, progressTracker, largeWordSet, 5, 1);
 
       const start = performance.now();
       largeSelector.buildQuiz({ count: 10 });

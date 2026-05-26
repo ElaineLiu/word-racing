@@ -20,6 +20,7 @@ export class AdaptiveSelector {
   #eventBus;
   #progressTracker;
   #wordSet;
+  #minLevel;
   #maxLevel;
 
   /**
@@ -27,12 +28,14 @@ export class AdaptiveSelector {
    * @param {ProgressTracker} progressTracker - 进度追踪器
    * @param {Array} wordSet - 词库数组
    * @param {number} maxLevel - 最大难度级别
+   * @param {number} minLevel - 最小难度级别
    */
-  constructor(eventBus, progressTracker, wordSet, maxLevel = 5) {
+  constructor(eventBus, progressTracker, wordSet, maxLevel = LEARNING.MAX_LEVEL, minLevel = LEARNING.MIN_LEVEL) {
     this.#eventBus = eventBus;
     this.#progressTracker = progressTracker;
     this.#wordSet = wordSet;
     this.#maxLevel = maxLevel;
+    this.#minLevel = minLevel;
   }
 
   // ==================== 主选题方法 ====================
@@ -237,7 +240,7 @@ export class AdaptiveSelector {
    * 获取符合难度要求的词
    */
   #getEligibleWords() {
-    return this.#wordSet.filter(w => w.level <= this.#maxLevel);
+    return this.#wordSet.filter(w => w.level >= this.#minLevel && w.level <= this.#maxLevel);
   }
 
   /**
@@ -385,10 +388,28 @@ export class AdaptiveSelector {
   }
 
   /**
+   * 更新最小难度
+   * @param {number} minLevel
+   */
+  setMinLevel(minLevel) {
+    this.#minLevel = minLevel;
+  }
+
+  /**
    * 更新最大难度
    * @param {number} maxLevel
    */
   setMaxLevel(maxLevel) {
+    this.#maxLevel = maxLevel;
+  }
+
+  /**
+   * 更新难度范围
+   * @param {number} minLevel
+   * @param {number} maxLevel
+   */
+  setLevelRange(minLevel, maxLevel) {
+    this.#minLevel = minLevel;
     this.#maxLevel = maxLevel;
   }
 

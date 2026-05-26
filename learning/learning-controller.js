@@ -49,7 +49,8 @@ export class LearningController {
       this.#eventBus,
       this.#progressTracker,
       wordSet,
-      5 // maxLevel
+      LEARNING.MAX_LEVEL,
+      LEARNING.MIN_LEVEL
     );
 
     // 初始化 UI
@@ -314,10 +315,24 @@ export class LearningController {
   }
 
   /**
+   * 更新最小难度
+   */
+  setMinLevel(minLevel) {
+    this.#adaptiveSelector?.setMinLevel(minLevel);
+  }
+
+  /**
    * 更新最大难度
    */
   setMaxLevel(maxLevel) {
     this.#adaptiveSelector?.setMaxLevel(maxLevel);
+  }
+
+  /**
+   * 更新难度范围
+   */
+  setLevelRange(minLevel, maxLevel) {
+    this.#adaptiveSelector?.setLevelRange(minLevel, maxLevel);
   }
 
   // ==================== 模块访问器 ====================

@@ -74,6 +74,10 @@ export const LEARNING = {
   MAX_REVIEW_PER_QUIZ: 3,           // 每套最多复习词数（错词）
   MAX_CHECK_WORDS_PER_QUIZ: 2,      // 每套最多检查词数（单题型通过）
 
+  // 难度范围
+  MIN_LEVEL: 2,                     // 最低难度（1=小学词汇，跳过）
+  MAX_LEVEL: 5,                     // 最高难度
+
   // 存储版本
   STORAGE_VERSION: 3,
 
