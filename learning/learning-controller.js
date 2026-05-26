@@ -42,8 +42,10 @@ export class LearningController {
   /**
    * 初始化学习系统
    * @param {Array} wordSet - 词库数组
+   * @param {Object} options - 配置选项
+   * @param {boolean} options.skipUI - 跳过 UI 初始化（用于测试）
    */
-  init(wordSet) {
+  init(wordSet, options = {}) {
     this.#wordSet = wordSet;
     this.#adaptiveSelector = new AdaptiveSelector(
       this.#eventBus,
@@ -53,22 +55,24 @@ export class LearningController {
       LEARNING.MIN_LEVEL
     );
 
-    // 初始化 UI
-    this.#learningUI = new LearningUI(
-      this.#eventBus,
-      this.#progressTracker,
-      this.#dailyManager,
-      this.#sessionManager
-    );
+    // 初始化 UI（可选）
+    if (!options.skipUI) {
+      this.#learningUI = new LearningUI(
+        this.#eventBus,
+        this.#progressTracker,
+        this.#dailyManager,
+        this.#sessionManager
+      );
 
-    // 创建 UI 面板
-    this.#learningUI.createContainer('#learning-panel-container');
+      // 创建 UI 面板
+      this.#learningUI.createContainer('#learning-panel-container');
 
-    // 检查是否有未完成的会话
-    this.#checkResumeSession();
+      // 检查是否有未完成的会话
+      this.#checkResumeSession();
 
-    // 更新 UI
-    this.#learningUI.update();
+      // 更新 UI
+      this.#learningUI.update();
+    }
 
     return this;
   }
@@ -77,7 +81,7 @@ export class LearningController {
    * 检查是否有未完成的会话
    */
   #checkResumeSession() {
-    if (this.#sessionManager.hasUnfinishedSession()) {
+    if (this.#sessionManager.hasUnfinishedSession() && this.#learningUI) {
       // 显示断点续答提示
       this.#learningUI.showResumePrompt({
         onContinue: () => this.resumeSession(),
@@ -110,8 +114,8 @@ export class LearningController {
     // 设置会话题目
     this.#sessionManager.setQuestions(this.#currentQuestions);
 
-    // 更新 UI
-    this.#learningUI.update();
+    // 更新 UI（可选）
+    this.#learningUI?.update();
 
     return this.#currentQuestions;
   }
@@ -187,8 +191,8 @@ export class LearningController {
     this.#progressTracker.updateStatus(wordText, question.mode, correct, question.wordId);
 
     // 更新每日进度
-    const newStatus = this.#progressTracker.getStatus(wordText)?.status;
-    const isNewWord = prevStatus === 'unlearned' || !prevStatus;
+    // 只有首次出现且答对的词才算"学习了一个新词"
+    const isNewWord = correct && (prevStatus === 'unlearned' || !prevStatus);
     const isReview = question.isReview;
 
     this.#dailyManager.updateProgress({
@@ -203,12 +207,12 @@ export class LearningController {
 
     // 显示连击动画
     if (correct && result.combo >= 3) {
-      this.#learningUI.showCombo(result.combo);
+      this.#learningUI?.showCombo(result.combo);
     }
 
     // 显示奖励动画
     if (correct) {
-      this.#learningUI.showReward(fuelCoins, gearCoins);
+      this.#learningUI?.showReward(fuelCoins, gearCoins);
     }
 
     return {
@@ -229,9 +233,9 @@ export class LearningController {
     const result = this.#sessionManager.completeQuiz();
     if (!result) return null;
 
-    // 更新 UI
-    this.#learningUI.update();
-    this.#learningUI.showQuizComplete(result);
+    // 更新 UI（可选）
+    this.#learningUI?.update();
+    this.#learningUI?.showQuizComplete(result);
 
     return result;
   }
