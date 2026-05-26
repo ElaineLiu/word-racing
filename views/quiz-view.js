@@ -4,15 +4,18 @@
 
 import { BaseView } from './base-view.js';
 import { Events } from '../core/event-bus.js';
+import { LEARNING } from '../config/learning-config.js';
 
 export class QuizView extends BaseView {
   #game;
   #quiz;
+  #learningController;
 
-  constructor(eventBus, game) {
+  constructor(eventBus, game, learningController = null) {
     super('page-quiz', eventBus);
     this.#game = game;
     this.#quiz = game.quiz;
+    this.#learningController = learningController;
   }
 
   mount() {
@@ -35,18 +38,37 @@ export class QuizView extends BaseView {
     const layout = this.$('#quiz-layout');
     if (layout) layout.classList.remove('has-learn-panel');
 
-    const q = this.#quiz.getCurrentQuestion();
-    if (!q) {
-      this.showComplete();
-      return;
-    }
+    // 优先使用 LearningController
+    let q;
+    let current;
+    let total;
+    let correctCount;
 
-    const current = Math.min(this.#quiz.currentIndex, this.#quiz.currentQuiz.length - 1);
-    const total = this.#quiz.currentQuiz.length;
+    if (this.#learningController) {
+      q = this.#learningController.getCurrentQuestion();
+      if (!q) {
+        this.showComplete();
+        return;
+      }
+      const status = this.#learningController.getSessionStatus();
+      current = status.answeredCount;
+      total = status.totalQuestions;
+      correctCount = status.correctCount;
+    } else {
+      q = this.#quiz.getCurrentQuestion();
+      if (!q) {
+        this.showComplete();
+        return;
+      }
+      current = Math.min(this.#quiz.currentIndex, this.#quiz.currentQuiz.length - 1);
+      total = this.#quiz.currentQuiz.length;
+      correctCount = this.#quiz.correctCount;
+    }
 
     // Mode label and hint
     const modeLabel = q.modeLabel || q.mode || 'QUIZ';
-    this.setText('#quiz-progress', `Q${current + 1}/${total} | ${modeLabel} | Correct: ${this.#quiz.correctCount}`);
+    const quizNum = this.#learningController?.getSessionStatus()?.currentQuiz || 1;
+    this.setText('#quiz-progress', `Quiz ${quizNum} | Q${current + 1}/${total} | ${modeLabel} | Correct: ${correctCount}`);
 
     const isChallenge = this.#quiz.quizMode === 'challenge';
     const nitroHint = isChallenge
@@ -68,11 +90,17 @@ export class QuizView extends BaseView {
     const prevBtn = this.$('#quiz-prev-btn');
     const nextBtn = this.$('#quiz-next-btn');
 
-    if (prevBtn) {
-      prevBtn.disabled = !this.#quiz.canGoPrevious();
-    }
-    if (nextBtn) {
-      nextBtn.disabled = !this.#quiz.canGoNext();
+    // LearningController 不支持前进后退
+    if (this.#learningController) {
+      if (prevBtn) prevBtn.disabled = true;
+      if (nextBtn) nextBtn.disabled = true;
+    } else {
+      if (prevBtn) {
+        prevBtn.disabled = !this.#quiz.canGoPrevious();
+      }
+      if (nextBtn) {
+        nextBtn.disabled = !this.#quiz.canGoNext();
+      }
     }
   }
 
@@ -170,8 +198,16 @@ export class QuizView extends BaseView {
   }
 
   #handleAnswer(idx) {
-    const result = this.#quiz.submitAnswer(idx);
-    if (!result) return;
+    let result;
+
+    // 优先使用 LearningController
+    if (this.#learningController) {
+      result = this.#learningController.submitAnswer(idx);
+      if (!result) return;
+    } else {
+      result = this.#quiz.submitAnswer(idx);
+      if (!result) return;
+    }
 
     // Highlight buttons
     const buttons = this.$$('.quiz-option');
@@ -186,7 +222,11 @@ export class QuizView extends BaseView {
 
     // Move to next question
     setTimeout(() => {
-      if (this.#quiz.isComplete()) {
+      const isComplete = this.#learningController
+        ? this.#learningController.isQuizComplete()
+        : this.#quiz.isComplete();
+
+      if (isComplete) {
         this.showComplete();
       } else {
         this.showQuestion();
@@ -195,18 +235,45 @@ export class QuizView extends BaseView {
   }
 
   showComplete() {
-    const results = this.#quiz.getResults();
+    let results;
+
+    // 优先使用 LearningController
+    if (this.#learningController) {
+      results = this.#learningController.completeQuiz();
+      if (!results) {
+        // Fallback to quiz results
+        results = this.#quiz.getResults();
+      }
+    } else {
+      results = this.#quiz.getResults();
+    }
+
     this.#game.onQuizComplete();
 
     this.hide('#quiz-question-area');
     this.show('#quiz-complete');
 
+    // Normalize result fields (LearningController uses fuelCoins, quiz uses fuelCoinsEarned)
+    const fuelCoins = results.fuelCoins ?? results.fuelCoinsEarned ?? 0;
+    const gearCoins = results.gearCoins ?? results.gearCoinsEarned ?? 0;
+
     // Display results
     this.setText('#quiz-result-accuracy', `Accuracy: ${results.accuracy}% (${results.correctCount}/${results.totalQuestions})`);
-    this.setText('#quiz-result-fuel', `Fuel Coins: +${results.fuelCoinsEarned}`);
-    this.setText('#quiz-result-gear', `Gear Coins: +${results.gearCoinsEarned}`);
+    this.setText('#quiz-result-fuel', `Fuel Coins: +${fuelCoins}`);
+    this.setText('#quiz-result-gear', `Gear Coins: +${gearCoins}`);
 
-    if (results.wrong.length > 0) {
+    // Combo result
+    const comboEl = document.getElementById('quiz-result-combo');
+    if (comboEl) {
+      if (results.maxCombo >= 3) {
+        comboEl.style.display = 'block';
+        comboEl.textContent = `Max Combo: ${results.maxCombo}x`;
+      } else {
+        comboEl.style.display = 'none';
+      }
+    }
+
+    if (results.wrong && results.wrong.length > 0) {
       this.setText('#quiz-result-wrong', 'Wrong: ' + results.wrong.map(w => `${w.word}=${w.meaning}`).join(', '));
     } else {
       this.setText('#quiz-result-wrong', 'Perfect! All correct!');
@@ -251,8 +318,7 @@ export class QuizView extends BaseView {
       this.#quiz.maxLevel = 3;
       this.addClass('#quiz-type-simple', 'active');
       this.removeClass('#quiz-type-complex', 'active');
-      this.#quiz.generateQuiz(5, 3);
-      this.showQuestion();
+      this.#startNewQuiz(3);
     });
 
     this.onClick('#quiz-type-complex', () => {
@@ -260,8 +326,7 @@ export class QuizView extends BaseView {
       this.#quiz.maxLevel = 4;
       this.addClass('#quiz-type-complex', 'active');
       this.removeClass('#quiz-type-simple', 'active');
-      this.#quiz.generateQuiz(5, 4);
-      this.showQuestion();
+      this.#startNewQuiz(4);
     });
 
     // Navigation buttons
@@ -279,7 +344,9 @@ export class QuizView extends BaseView {
 
     // "I don't know" button
     this.onClick('#quiz-dont-know-btn', () => {
-      const q = this.#quiz.getCurrentQuestion();
+      const q = this.#learningController
+        ? this.#learningController.getCurrentQuestion()
+        : this.#quiz.getCurrentQuestion();
       if (!q || q.answered) return;
 
       // Show learning panel
@@ -295,7 +362,9 @@ export class QuizView extends BaseView {
       if (layout) layout.classList.remove('has-learn-panel');
 
       // Mark as wrong answer (submit wrong index)
-      const q = this.#quiz.getCurrentQuestion();
+      const q = this.#learningController
+        ? this.#learningController.getCurrentQuestion()
+        : this.#quiz.getCurrentQuestion();
       if (q && !q.answered) {
         const wrongIndex = (q.correctIndex + 1) % 4;
         this.#handleAnswer(wrongIndex);
@@ -319,9 +388,27 @@ export class QuizView extends BaseView {
     this.onClick('#quiz-restart-btn', () => {
       this.show('#quiz-question-area');
       this.hide('#quiz-complete');
-      this.#game.startNewQuiz();
-      this.showQuestion();
+      this.#startNewQuiz(this.#quiz.maxLevel);
     });
+  }
+
+  #startNewQuiz(maxLevel = 3) {
+    // 优先使用 LearningController
+    if (this.#learningController) {
+      const questions = this.#learningController.startNewQuiz({
+        count: LEARNING.QUIZ_QUESTION_COUNT,
+        useChinese: true,
+      });
+      if (questions) {
+        this.showQuestion();
+      } else {
+        // 今日配额已用完
+        alert('You have completed all 3 quizzes for today! Come back tomorrow.');
+      }
+    } else {
+      this.#quiz.generateQuiz(LEARNING.QUIZ_QUESTION_COUNT, maxLevel);
+      this.showQuestion();
+    }
   }
 
   #subscribeToEvents() {
@@ -329,7 +416,7 @@ export class QuizView extends BaseView {
       if (this.isMounted()) {
         this.show('#quiz-question-area');
         this.hide('#quiz-complete');
-        this.showQuestion();
+        this.#startNewQuiz();
       }
     });
   }

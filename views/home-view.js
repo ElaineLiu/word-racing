@@ -8,10 +8,12 @@ import { GAME } from '../config/game-config.js';
 
 export class HomeView extends BaseView {
   #game;
+  #learningController;
 
-  constructor(eventBus, game) {
+  constructor(eventBus, game, learningController = null) {
     super('page-home', eventBus);
     this.#game = game;
+    this.#learningController = learningController;
   }
 
   mount() {
@@ -20,6 +22,7 @@ export class HomeView extends BaseView {
     this.#subscribeToEvents();
     this.renderLeaderboard();
     this.renderLapSelector();
+    this.updateLearningUI();
   }
 
   render() {
@@ -39,6 +42,12 @@ export class HomeView extends BaseView {
     this.setText('#home-nitro', this.#game.nitroCharges);
     this.setText('#home-fuel-coins', this.#game.fuelCoins);
     this.setText('#home-gear-coins', this.#game.gearCoins);
+  }
+
+  updateLearningUI() {
+    if (this.#learningController) {
+      this.#learningController.learningUI?.update();
+    }
   }
 
   renderLeaderboard() {
@@ -102,6 +111,12 @@ export class HomeView extends BaseView {
     this.subscribe(Events.LEADERBOARD_UPDATE, () => {
       if (this.isMounted()) {
         this.renderLeaderboard();
+      }
+    });
+
+    this.subscribe(Events.DAILY_PROGRESS, () => {
+      if (this.isMounted()) {
+        this.updateLearningUI();
       }
     });
   }

@@ -3,11 +3,13 @@
  * Uses the new ViewManager for UI coordination
  *
  * Phase 3 of Refactoring Plan
+ * Phase 5 - Learning System Integration
  */
 
 import { Game } from './game.js';
 import { EventBus, Events } from '../core/event-bus.js';
 import { ViewManager } from '../views/view-manager.js';
+import { LearningController } from '../learning/learning-controller.js';
 
 // Initialize game when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -26,8 +28,16 @@ document.addEventListener('DOMContentLoaded', () => {
   window.game = game;
 
   game.init().then(() => {
-    // Create ViewManager
-    const viewManager = new ViewManager(new EventBus(), game);
+    // Create shared EventBus
+    const eventBus = new EventBus();
+
+    // Initialize Learning Controller
+    const learningController = new LearningController();
+    learningController.init(game.quiz.words || []);
+    window.learningController = learningController;
+
+    // Create ViewManager with Learning Controller
+    const viewManager = new ViewManager(eventBus, game, learningController);
     window.viewManager = viewManager;
 
     // Set up callbacks (now that viewManager exists)

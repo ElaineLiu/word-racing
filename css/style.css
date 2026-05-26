@@ -1057,3 +1057,386 @@ html, body {
         width: 100%;
     }
 }
+
+/* ========================================================================
+   Learning Panel (Home Page)
+   ======================================================================== */
+.learning-panel {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    margin-bottom: var(--space-lg);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-card);
+}
+
+.learning-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--border-default);
+    cursor: pointer;
+    user-select: none;
+}
+
+.learning-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+}
+
+.learning-streak {
+    font-size: 13px;
+    color: var(--accent-orange);
+    font-weight: 600;
+}
+
+.learning-progress {
+    padding: var(--space-md) 0;
+}
+
+.quiz-indicators {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-sm);
+}
+
+.quiz-dot {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-default);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-tertiary);
+    transition: all var(--transition-base);
+}
+
+.quiz-dot::after {
+    content: attr(data-quiz);
+}
+
+.quiz-dot.completed {
+    background: rgba(0, 200, 83, 0.15);
+    border-color: var(--accent-green);
+    color: var(--accent-green);
+}
+
+.quiz-dot.current {
+    background: rgba(255, 215, 0, 0.15);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+    animation: pulse-gold 2s infinite;
+}
+
+.quiz-dot.locked {
+    opacity: 0.5;
+}
+
+@keyframes pulse-gold {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(255, 215, 0, 0); }
+}
+
+.quiz-progress-text {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.learning-goals {
+    display: flex;
+    gap: var(--space-sm);
+    padding: var(--space-sm) 0;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.goal-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+    transition: all var(--transition-fast);
+}
+
+.goal-item.achieved {
+    background: rgba(0, 200, 83, 0.1);
+    border-color: rgba(0, 200, 83, 0.3);
+    color: var(--accent-green);
+}
+
+.goal-icon {
+    font-size: 14px;
+}
+
+.learning-stats {
+    border-top: 1px solid var(--border-default);
+    padding-top: var(--space-sm);
+    margin-top: var(--space-sm);
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-xs) 0;
+    font-size: 13px;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+}
+
+.stat-value {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.stat-value.fuel {
+    color: var(--accent-gold);
+}
+
+.stat-value.gear {
+    color: var(--accent-blue);
+}
+
+/* Collapsed state */
+.learning-panel.collapsed .learning-progress,
+.learning-panel.collapsed .learning-goals,
+.learning-panel.collapsed .learning-stats {
+    display: none;
+}
+
+/* ========================================================================
+   Combo Display
+   ======================================================================== */
+.combo-display {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 42px;
+    font-weight: 900;
+    color: var(--accent-orange);
+    text-shadow: 0 0 20px rgba(255, 109, 0, 0.5);
+    animation: combo-pop 0.5s ease-out;
+    pointer-events: none;
+    z-index: 10;
+}
+
+@keyframes combo-pop {
+    0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+.combo-display.fade-out {
+    animation: combo-fade 0.3s ease-out forwards;
+}
+
+@keyframes combo-fade {
+    to {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* ========================================================================
+   Reward Popup
+   ======================================================================== */
+.reward-popup {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: var(--space-md);
+    animation: reward-float 1s ease-out;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.reward-popup .fuel-reward,
+.reward-popup .gear-reward {
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.reward-popup .fuel-reward {
+    background: rgba(255, 215, 0, 0.2);
+    color: var(--accent-gold);
+    border: 1px solid rgba(255, 215, 0, 0.4);
+}
+
+.reward-popup .gear-reward {
+    background: rgba(0, 176, 255, 0.2);
+    color: var(--accent-blue);
+    border: 1px solid rgba(0, 176, 255, 0.4);
+}
+
+@keyframes reward-float {
+    0% {
+        transform: translateX(-50%) translateY(20px);
+        opacity: 0;
+    }
+    30% {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-50%) translateY(-10px);
+        opacity: 0;
+    }
+}
+
+.reward-popup.fade-out {
+    animation: reward-fade 0.3s ease-out forwards;
+}
+
+@keyframes reward-fade {
+    to {
+        opacity: 0;
+    }
+}
+
+/* ========================================================================
+   Resume Prompt Dialog
+   ======================================================================== */
+.resume-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-overlay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-modal);
+    animation: overlay-fade-in 0.2s ease-out;
+}
+
+@keyframes overlay-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.resume-dialog {
+    background: var(--bg-card);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-elevated);
+}
+
+.resume-dialog h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent-gold);
+    margin-bottom: var(--space-sm);
+}
+
+.resume-dialog p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: var(--space-lg);
+}
+
+.resume-buttons {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: center;
+}
+
+.resume-btn {
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.resume-btn.continue {
+    background: linear-gradient(135deg, var(--accent-green), #00E676);
+    border: none;
+    color: var(--text-inverse);
+}
+
+.resume-btn.continue:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 20px rgba(0, 200, 83, 0.4);
+}
+
+.resume-btn.restart {
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+}
+
+.resume-btn.restart:hover {
+    border-color: var(--accent-red);
+    color: var(--accent-red);
+}
+
+/* ========================================================================
+   Goal Complete Message
+   ======================================================================== */
+.goal-complete-message {
+    background: rgba(0, 200, 83, 0.1);
+    border: 1px solid rgba(0, 200, 83, 0.3);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
+    text-align: center;
+}
+
+.goal-complete-message span {
+    display: inline-block;
+    margin: var(--space-xs) var(--space-sm);
+    font-size: 14px;
+    color: var(--accent-green);
+    font-weight: 600;
+}
+
+/* ========================================================================
+   Quiz Complete Combo Result
+   ======================================================================== */
+#quiz-result-combo {
+    display: none;
+    font-size: 16px;
+    color: var(--accent-orange);
+    font-weight: 700;
+    margin: var(--space-sm) 0;
+    padding: var(--space-sm) var(--space-md);
+    background: rgba(255, 109, 0, 0.1);
+    border: 1px solid rgba(255, 109, 0, 0.3);
+    border-radius: var(--radius-sm);
+}

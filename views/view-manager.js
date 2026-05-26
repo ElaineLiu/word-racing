@@ -13,22 +13,24 @@ import { RaceView } from './race-view.js';
 export class ViewManager {
   #eventBus;
   #game;
+  #learningController;
   #views = new Map();
   #currentView = null;
   #currentPage = 'home';
   #navBtns = [];
 
-  constructor(eventBus, game) {
+  constructor(eventBus, game, learningController = null) {
     this.#eventBus = eventBus;
     this.#game = game;
+    this.#learningController = learningController;
     this.#createViews();
     this.#setupNavigation();
     this.#setupEventListeners();
   }
 
   #createViews() {
-    this.#views.set('home', new HomeView(this.#eventBus, this.#game));
-    this.#views.set('quiz', new QuizView(this.#eventBus, this.#game));
+    this.#views.set('home', new HomeView(this.#eventBus, this.#game, this.#learningController));
+    this.#views.set('quiz', new QuizView(this.#eventBus, this.#game, this.#learningController));
     this.#views.set('shop', new ShopView(this.#eventBus, this.#game));
     this.#views.set('race', new RaceView(this.#eventBus, this.#game));
   }
