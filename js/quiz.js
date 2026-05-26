@@ -29,6 +29,7 @@ export class VocabularyQuiz {
         this.quizMode = 'basic';      // 'basic' = Chinese options only, 'challenge' = all 5 modes
         this.loaded = false;
         this.currentWordSetId = null;
+        this.onWordsLoaded = null;    // Callback when words are loaded
 
         // Track wrong words in current quiz for re-testing
         this.currentQuizWrong = [];  // { wordData, mode }
@@ -136,10 +137,18 @@ export class VocabularyQuiz {
                 this.currentWordSetId = lastSelection;
             }
             this.loaded = this.words.length > 0;
+            // Notify callback if set
+            if (this.onWordsLoaded && this.words.length > 0) {
+                this.onWordsLoaded(this.words);
+            }
         } catch (e) {
             console.error('Failed to load words:', e);
             this.words = this._getFallbackWords();
             this.loaded = true;
+            // Notify callback with fallback words
+            if (this.onWordsLoaded) {
+                this.onWordsLoaded(this.words);
+            }
         }
     }
 

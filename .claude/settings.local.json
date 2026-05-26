@@ -53,7 +53,10 @@
       "Bash(npx serve *)",
       "Bash(git stash *)",
       "Bash(awk '$1 > 1')",
-      "Bash(shuf)"
+      "Bash(shuf)",
+      "Bash(npm run *)",
+      "Bash(npx http-server *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/index.html)"
     ]
   }
 }

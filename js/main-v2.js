@@ -31,10 +31,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Create shared EventBus
     const eventBus = new EventBus();
 
-    // Initialize Learning Controller
+    // Initialize Learning Controller with loaded wordset
     const learningController = new LearningController();
     learningController.init(game.quiz.words || []);
     window.learningController = learningController;
+
+    // Update wordset when quiz loads new words
+    game.quiz.onWordsLoaded = (words) => {
+      learningController.setWordSet(words);
+    };
 
     // Create ViewManager with Learning Controller
     const viewManager = new ViewManager(eventBus, game, learningController);

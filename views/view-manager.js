@@ -127,6 +127,12 @@ export class ViewManager {
 
     this.#currentPage = viewName;
 
+    // 更新首页统计
+    if (viewName === 'home') {
+      const homeView = this.#views.get('home');
+      homeView?.updateStats?.();
+    }
+
     console.log(`[ViewManager] Switched to: ${viewName}`);
   }
 

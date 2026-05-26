@@ -243,6 +243,10 @@ export class QuizView extends BaseView {
       if (!results) {
         // Fallback to quiz results
         results = this.#quiz.getResults();
+      } else {
+        // Sync coins to game object
+        this.#game.fuelCoins = (this.#game.fuelCoins || 0) + (results.fuelCoins || 0);
+        this.#game.gearCoins = (this.#game.gearCoins || 0) + (results.gearCoins || 0);
       }
     } else {
       results = this.#quiz.getResults();
@@ -267,14 +271,14 @@ export class QuizView extends BaseView {
     if (comboEl) {
       if (results.maxCombo >= 3) {
         comboEl.style.display = 'block';
-        comboEl.textContent = `Max Combo: ${results.maxCombo}x`;
+        comboEl.textContent = `Max Combo: ${results.maxCombo}x (+${results.comboReward?.gear || 0} Gear)`;
       } else {
         comboEl.style.display = 'none';
       }
     }
 
-    if (results.wrong && results.wrong.length > 0) {
-      this.setText('#quiz-result-wrong', 'Wrong: ' + results.wrong.map(w => `${w.word}=${w.meaning}`).join(', '));
+    if (results.wrongCount > 0) {
+      this.setText('#quiz-result-wrong', `Wrong: ${results.wrongCount} words need review`);
     } else {
       this.setText('#quiz-result-wrong', 'Perfect! All correct!');
     }

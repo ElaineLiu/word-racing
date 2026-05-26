@@ -1225,29 +1225,32 @@ html, body {
    Combo Display
    ======================================================================== */
 .combo-display {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 42px;
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    font-size: 32px;
     font-weight: 900;
     color: var(--accent-orange);
     text-shadow: 0 0 20px rgba(255, 109, 0, 0.5);
-    animation: combo-pop 0.5s ease-out;
+    animation: combo-slide 0.5s ease-out;
     pointer-events: none;
-    z-index: 10;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 109, 0, 0.3);
 }
 
-@keyframes combo-pop {
+@keyframes combo-slide {
     0% {
-        transform: translate(-50%, -50%) scale(0.5);
+        transform: translateX(100px);
         opacity: 0;
     }
     50% {
-        transform: translate(-50%, -50%) scale(1.2);
+        transform: translateX(-10px);
     }
     100% {
-        transform: translate(-50%, -50%) scale(1);
+        transform: translateX(0);
         opacity: 1;
     }
 }
@@ -1258,7 +1261,7 @@ html, body {
 
 @keyframes combo-fade {
     to {
-        transform: translate(-50%, -50%) scale(1.5);
+        transform: translateX(50px);
         opacity: 0;
     }
 }

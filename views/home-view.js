@@ -40,8 +40,11 @@ export class HomeView extends BaseView {
     this.setText('#home-coins', this.#game.coins || 0);
     this.setText('#home-fuel', Math.round(this.#game.fuel));
     this.setText('#home-nitro', this.#game.nitroCharges);
-    this.setText('#home-fuel-coins', this.#game.fuelCoins);
-    this.setText('#home-gear-coins', this.#game.gearCoins);
+    // 学习系统金币优先
+    const fuelCoins = this.#learningController?.getTodayEarnings()?.fuel || this.#game.fuelCoins || 0;
+    const gearCoins = this.#learningController?.getTodayEarnings()?.gear || this.#game.gearCoins || 0;
+    this.setText('#home-fuel-coins', fuelCoins);
+    this.setText('#home-gear-coins', gearCoins);
   }
 
   updateLearningUI() {
@@ -117,6 +120,13 @@ export class HomeView extends BaseView {
     this.subscribe(Events.DAILY_PROGRESS, () => {
       if (this.isMounted()) {
         this.updateLearningUI();
+        this.updateStats();
+      }
+    });
+
+    this.subscribe(Events.QUIZ_COMPLETE, () => {
+      if (this.isMounted()) {
+        this.updateStats();
       }
     });
   }
