@@ -31,3 +31,4 @@ Desktop.ini
 dist/
 build/
 .cache/
+coverage/

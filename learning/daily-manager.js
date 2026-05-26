@@ -454,4 +454,19 @@ export class DailyManager {
   canContinueQuiz() {
     return this.getRemainingQuizzes() > 0;
   }
+
+  /**
+   * 重置每日进度（用于测试）
+   */
+  reset() {
+    this.#todayStats = null;
+    this.#gameState.set('daily', {
+      lastActiveDate: null,
+      streakDays: 0,
+      todayQuizzes: 0,
+      todayFuelCoins: 0,
+      todayGearCoins: 0,
+    });
+    this.#eventBus.emit(Events.DAILY_RESET, {});
+  }
 }

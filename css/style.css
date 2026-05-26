@@ -173,6 +173,16 @@ html, body {
     border-radius: 2px;
 }
 
+.nav-btn-debug {
+    opacity: 0.4;
+    font-size: 16px;
+    padding: var(--space-sm);
+}
+
+.nav-btn-debug:hover {
+    opacity: 1;
+}
+
 /* ========================================================================
    Page Base
    ======================================================================== */

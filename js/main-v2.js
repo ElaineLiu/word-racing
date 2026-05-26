@@ -55,6 +55,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial stats update
     viewManager.updateHomeStats();
+
+    // Debug reset button
+    const resetBtn = document.getElementById('debug-reset');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        if (confirm('Reset all learning progress? This is for testing only.')) {
+          localStorage.removeItem('wr_word_progress');
+          localStorage.removeItem('wr_quiz_session');
+          localStorage.removeItem('wr_daily_progress');
+          localStorage.removeItem('wr_game_state');
+          localStorage.removeItem('wr_wrongWords');
+          // 给测试用户一些初始资源
+          const testState = {
+            version: 3,
+            fuel: 50,
+            fuelCoins: 100,
+            gearCoins: 50,
+            nitroCharges: 3,
+            upgrades: { engine: 1, tire: 1, body: 1 },
+          };
+          localStorage.setItem('wr_game_state', JSON.stringify(testState));
+          // 同步到 Game 对象
+          game.fuel = testState.fuel;
+          game.fuelCoins = testState.fuelCoins;
+          game.gearCoins = testState.gearCoins;
+          game.nitroCharges = testState.nitroCharges;
+          game.upgrades = testState.upgrades;
+          game.car?.applyUpgrades?.(testState.upgrades);
+          // 重置学习控制器
+          if (learningController) {
+            learningController.progressTracker?.clear?.();
+            learningController.dailyManager?.reset?.();
+            learningController.sessionManager?.clearSession?.();
+          }
+          alert('Progress reset with test resources!');
+          viewManager.switchTo('home');
+        }
+      });
+    }
   }).catch(err => {
     const d = document.createElement('div');
     d.style.cssText = 'color:#fff;background:#c00;padding:16px;font-size:14px;position:fixed;top:0;left:0;right:0;z-index:99999;';
