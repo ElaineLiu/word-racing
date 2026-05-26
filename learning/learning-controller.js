@@ -14,7 +14,7 @@ import { DailyManager } from './daily-manager.js';
 import { QuizSessionManager } from './quiz-session.js';
 import { AdaptiveSelector } from './adaptive-selector.js';
 import { LearningUI } from '../ui/learning-ui.js';
-import { LEARNING } from '../config/learning-config.js';
+import { LEARNING, REWARDS } from '../config/learning-config.js';
 
 export class LearningController {
   #eventBus;
@@ -163,9 +163,11 @@ export class LearningController {
     let gearCoins = 0;
     if (correct) {
       if (question.mode === 'PIT_BOARD' || question.mode === 'STRATEGY') {
-        fuelCoins = LEARNING.FUEL_COINS_PER_CORRECT;
+        fuelCoins = REWARDS.perCorrectSimple.fuel;
+        gearCoins = REWARDS.perCorrectSimple.gear;
       } else {
-        gearCoins = LEARNING.GEAR_COINS_PER_CORRECT;
+        fuelCoins = REWARDS.perCorrectComplex.fuel;
+        gearCoins = REWARDS.perCorrectComplex.gear;
       }
     }
 
@@ -181,7 +183,23 @@ export class LearningController {
 
     // 更新单词进度
     const wordText = question.correctWord || question.word;
+    const prevStatus = this.#progressTracker.getStatus(wordText)?.status;
     this.#progressTracker.updateStatus(wordText, question.mode, correct, question.wordId);
+
+    // 更新每日进度
+    const newStatus = this.#progressTracker.getStatus(wordText)?.status;
+    const isNewWord = prevStatus === 'unlearned' || !prevStatus;
+    const isReview = question.isReview;
+
+    this.#dailyManager.updateProgress({
+      correct,
+      mode: question.mode,
+      fuelCoins,
+      gearCoins,
+      combo: result.combo,
+      isNewWord,
+      isReview,
+    });
 
     // 显示连击动画
     if (correct && result.combo >= 3) {
