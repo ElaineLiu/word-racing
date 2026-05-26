@@ -254,7 +254,7 @@ export class QuizSessionManager {
    * @returns {Object} 套题结果
    */
   completeQuiz() {
-    if (!this.#session) {
+    if (!this.#session || this.#session.completed) {
       return null;
     }
 
