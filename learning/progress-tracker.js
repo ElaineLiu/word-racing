@@ -140,8 +140,12 @@ export class ProgressTracker {
   #handleCorrect(progress, mode) {
     if (isSimpleMode(mode)) {
       progress.simpleCorrect = true;
+      // 答对后清除该题型的错误计数
+      progress.simpleWrongCount = 0;
     } else if (isComplexMode(mode)) {
       progress.complexCorrect = true;
+      // 答对后清除该题型的错误计数
+      progress.complexWrongCount = 0;
     }
   }
 
@@ -237,16 +241,24 @@ export class ProgressTracker {
   // ==================== 查询方法 ====================
 
   /**
-   * 获取需要复习的词（有答错记录）
+   * 获取需要复习的词（当前有题型未通过）
+   * 只返回"正在学习且当前题型有问题"的词，不包括已掌握的词
    * @returns {Array<Object>}
    */
   getWrongWords() {
     const result = [];
     for (const progress of this.#progress.values()) {
-      if (progress.simpleWrongCount > 0 || progress.complexWrongCount > 0) {
-        if (progress.status !== MASTERY_STATUS.MASTERED) {
-          result.push(progress);
-        }
+      // 跳过已掌握的词
+      if (progress.status === MASTERY_STATUS.MASTERED) continue;
+
+      // 只选择当前有错误的词（不是历史错误）
+      // simpleWrongCount > 0 表示简单题最近答错过
+      // complexWrongCount > 0 表示复杂题最近答错过
+      const hasRecentErrors = progress.simpleWrongCount > 0 || progress.complexWrongCount > 0;
+
+      // 如果有最近错误记录，加入复习列表
+      if (hasRecentErrors) {
+        result.push(progress);
       }
     }
     // 按错误次数排序（多的优先）

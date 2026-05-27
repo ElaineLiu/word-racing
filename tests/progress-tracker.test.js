@@ -222,6 +222,31 @@ describe('ProgressTracker', () => {
       expect(wrongWords[0].word).toBe('wrong1');
     });
 
+    it('should clear wrong count when answered correctly', () => {
+      // 答错简单题
+      tracker.updateStatus('testword', 'PIT_BOARD', false, 100);
+      let status = tracker.getStatus('testword');
+      expect(status.simpleWrongCount).toBe(1);
+
+      // 答对简单题后，错误计数应该清零
+      tracker.updateStatus('testword', 'PIT_BOARD', true, 100);
+      status = tracker.getStatus('testword');
+      expect(status.simpleWrongCount).toBe(0);
+      expect(status.simpleCorrect).toBe(true);
+    });
+
+    it('should not return word in wrong list after correcting', () => {
+      // 答错
+      tracker.updateStatus('testword2', 'PIT_BOARD', false, 101);
+      let wrongWords = tracker.getWrongWords();
+      expect(wrongWords.some(w => w.word === 'testword2')).toBe(true);
+
+      // 答对后，错误计数清零，不应该再出现在错词列表
+      tracker.updateStatus('testword2', 'PIT_BOARD', true, 101);
+      wrongWords = tracker.getWrongWords();
+      expect(wrongWords.some(w => w.word === 'testword2')).toBe(false);
+    });
+
     it('should get check words correctly', () => {
       const { needSimpleCheck, needComplexCheck } = tracker.getCheckWords();
 
