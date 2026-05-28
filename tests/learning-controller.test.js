@@ -139,6 +139,61 @@ describe('LearningController', () => {
       const progress = controller.getDailyProgress();
       expect(progress.quizzesCompleted).toBe(1);
     });
+
+    it('should persist word progress to localStorage after answering', () => {
+      controller.startNewQuiz();
+      const question = controller.getCurrentQuestion();
+      const wordText = question.correctWord || question.word;
+
+      controller.submitAnswer(question.correctIndex);
+
+      // 验证持久化：从 localStorage 重新加载
+      const stored = localStorage.getItem('wr_word_progress');
+      expect(stored).not.toBeNull();
+
+      const data = JSON.parse(stored);
+      expect(data.progress[wordText]).toBeDefined();
+      expect(data.progress[wordText].status).not.toBe('unlearned');
+    });
+
+    it('should update totalWordsSeen when first seeing a word', () => {
+      controller.startNewQuiz();
+
+      controller.submitAnswer(controller.getCurrentQuestion().correctIndex);
+
+      const stats = controller.dailyManager.getTotalStats();
+      expect(stats.totalWordsSeen).toBe(1);
+    });
+
+    it('should update totalWordsMastered when word becomes mastered', () => {
+      // 让一个单词两种题型都答对
+      controller.startNewQuiz();
+
+      // 找一个单词，让它两种题型都出现并答对
+      const questions = controller.getCurrentSession().questions;
+      const targetWord = questions[0].word;
+
+      // 答第一题
+      controller.submitAnswer(controller.getCurrentQuestion().correctIndex);
+
+      // 继续答题直到目标单词再次出现（不同题型）
+      for (let i = 1; i < questions.length; i++) {
+        const q = controller.getCurrentQuestion();
+        if (q && (q.correctWord === targetWord || q.word === targetWord)) {
+          controller.submitAnswer(q.correctIndex);
+          break;
+        } else if (q) {
+          controller.submitAnswer(q.correctIndex);
+        }
+      }
+
+      // 检查是否有单词被掌握
+      const mastered = controller.progressTracker.getMasteredWords();
+      if (mastered.length > 0) {
+        const stats = controller.dailyManager.getTotalStats();
+        expect(stats.totalWordsMastered).toBeGreaterThan(0);
+      }
+    });
   });
 
   // ==================== 目标达成验证 ====================

@@ -49,20 +49,24 @@ export class DistractorEngine {
 
         // Pick top candidates, ensuring no duplicate meanings
         const usedMeanings = new Set([targetWord.meaning_cn]);
+        const usedWords = new Set([targetWordLower]);
         const distractors = [];
 
         for (const item of scored) {
             if (distractors.length >= count) break;
-            // For PIT_BOARD and STRATEGY, avoid same-meaning options
+
+            const wordLower = item.word.word.toLowerCase();
+
+            // 所有模式：避免相同的单词（包括与正确答案相同）
+            if (usedWords.has(wordLower)) continue;
+
+            // PIT_BOARD 和 STRATEGY：避免相同含义
             if (mode === 'PIT_BOARD' || mode === 'STRATEGY') {
                 if (usedMeanings.has(item.word.meaning_cn)) continue;
                 usedMeanings.add(item.word.meaning_cn);
             }
-            // For RADIO_MSG and QUALIFYING, avoid same-word options (case-insensitive)
-            if (mode === 'RADIO_MSG' || mode === 'QUALIFYING') {
-                const wordLower = item.word.word.toLowerCase();
-                if (distractors.some(d => d.toLowerCase() === wordLower)) continue;
-            }
+
+            usedWords.add(wordLower);
             distractors.push(DistractorEngine._extractOption(item.word, mode, useChinese));
         }
 
@@ -248,13 +252,11 @@ export class QuestionFactory {
                 break;
 
             case 'QUALIFYING':
+                // 音标题：显示音标 + 中文意思，让用户选单词
                 question.prompt = word.phonetic || '';
-                question.promptSub = '';
+                question.promptSub = word.meaning_cn || '';  // 显示中文意思
                 question.sentence = '';
                 question.sentenceBlank = modeDef.sentenceBlank;
-                if (level <= 2 && word.meaning_cn) {
-                    question.promptCn = word.meaning_cn;
-                }
                 break;
         }
     }

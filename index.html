@@ -13,13 +13,21 @@
         <button class="nav-btn" data-page="quiz">Quiz</button>
         <button class="nav-btn" data-page="shop">Shop</button>
         <button class="nav-btn" data-page="race">Race</button>
-        <button class="nav-btn nav-btn-debug" id="debug-reset" title="Reset all progress (for testing)">⚙️</button>
+        <button class="nav-btn" data-page="report">Report</button>
     </nav>
 
     <!-- Page 1: Home -->
     <div id="page-home" class="page active">
         <div class="home-content">
-            <h1>WORD RACING</h1>
+            <div class="home-header">
+                <h1>WORD RACING</h1>
+                <div class="settings-wrapper">
+                    <button id="home-settings-btn" class="settings-btn" title="Settings">⚙️</button>
+                    <div id="settings-dropdown" class="settings-dropdown" style="display:none;">
+                        <button id="reset-daily-btn" class="settings-menu-item">重置每日答题限制</button>
+                    </div>
+                </div>
+            </div>
             <p>Back words, drive fast!</p>
             <!-- Learning Panel (inserted by LearningUI) -->
             <div id="learning-panel-container"></div>
@@ -131,6 +139,40 @@
                 <button class="touch-btn" data-action="up">&#9650;</button>
                 <button class="touch-btn" data-action="right">&#9654;</button>
                 <button class="touch-btn touch-btn-nitro" data-action="nitro">N2O</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 5: Report -->
+    <div id="page-report" class="page">
+        <div class="report-content">
+            <h2>📊 学习进度报告</h2>
+
+            <div class="report-section">
+                <h3>累计统计</h3>
+                <div id="report-total-stats" class="report-stats"></div>
+            </div>
+
+            <div class="report-section">
+                <h3>今日进度</h3>
+                <div id="report-today-stats" class="report-stats"></div>
+            </div>
+
+            <div class="report-section">
+                <h3>单词掌握状态</h3>
+                <p class="section-hint">已掌握 = 简单题和复杂题都答对；学习中 = 只通过一种题型或有答错</p>
+                <div id="report-mastery-stats" class="report-stats"></div>
+            </div>
+
+            <div class="report-section">
+                <h3>错词列表</h3>
+                <div id="report-wrong-words" class="report-list"></div>
+            </div>
+
+            <div class="report-section">
+                <h3>单词详情</h3>
+                <p class="section-hint">按答题状态排序，已掌握的排在最后</p>
+                <div id="report-word-details" class="report-list"></div>
             </div>
         </div>
     </div>

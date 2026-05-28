@@ -46,23 +46,32 @@ export class AdaptiveSelector {
    * @param {number} options.count - 题目数量（默认10）
    * @param {boolean} options.useChinese - 是否使用中文选项
    * @param {string} options.preferredMode - 默认题型偏好
+   * @param {string} options.modePreference - 题型偏好模式：'auto' | 'simple' | 'complex'
    * @returns {Array} 题目数组
    */
   buildQuiz(options = {}) {
     const count = options.count || LEARNING.QUIZ_QUESTION_COUNT;
     const useChinese = options.useChinese !== false;
     const preferredMode = options.preferredMode || 'PIT_BOARD';
+    const modePreference = options.modePreference || LEARNING.MODE_PREFERENCE.AUTO;
 
     const questions = [];
     const usedWordIds = new Set();
     const eligibleWords = this.#getEligibleWords();
+
+    // 检查是否有足够的词
+    if (eligibleWords.length === 0) {
+      console.error('[AdaptiveSelector] No eligible words available');
+      return [];
+    }
 
     // 1. 错词复习（最多 MAX_REVIEW_PER_QUIZ 题）
     const reviewQuestions = this.#selectReviewWords(
       Math.min(LEARNING.MAX_REVIEW_PER_QUIZ, count),
       eligibleWords,
       usedWordIds,
-      useChinese
+      useChinese,
+      modePreference
     );
     questions.push(...reviewQuestions);
 
@@ -72,7 +81,8 @@ export class AdaptiveSelector {
       Math.min(LEARNING.MAX_CHECK_WORDS_PER_QUIZ * 2, remainingAfterReview),
       eligibleWords,
       usedWordIds,
-      useChinese
+      useChinese,
+      modePreference
     );
     questions.push(...checkQuestions);
 
@@ -83,12 +93,16 @@ export class AdaptiveSelector {
       eligibleWords,
       usedWordIds,
       useChinese,
-      preferredMode
+      preferredMode,
+      modePreference
     );
     questions.push(...newQuestions);
 
+    // 过滤掉 null/undefined
+    const validQuestions = questions.filter(q => q && q.options);
+
     // 打乱顺序（但保持复习题不会连续太多）
-    const shuffled = this.#shuffleQuestions(questions);
+    const shuffled = this.#shuffleQuestions(validQuestions);
 
     // 发送事件
     this.#eventBus.emit(Events.QUIZ_BUILT, {
@@ -106,7 +120,7 @@ export class AdaptiveSelector {
   /**
    * 选择需要复习的错词
    */
-  #selectReviewWords(maxCount, eligibleWords, usedWordIds, useChinese) {
+  #selectReviewWords(maxCount, eligibleWords, usedWordIds, useChinese, modePreference) {
     const questions = [];
     const wrongWords = this.#progressTracker.getWrongWords();
 
@@ -125,8 +139,8 @@ export class AdaptiveSelector {
 
       if (!wordData || usedWordIds.has(wordData.id)) continue;
 
-      // 选择题型：优先选择答错过的题型
-      const mode = this.#selectModeForWrongWord(progress);
+      // 选择题型：根据用户偏好
+      const mode = this.#selectModeForWrongWord(progress, modePreference);
 
       const question = this.#createQuestion(wordData, mode, eligibleWords, useChinese, true);
       if (question) {
@@ -149,13 +163,19 @@ export class AdaptiveSelector {
   /**
    * 为错词选择合适的题型
    */
-  #selectModeForWrongWord(progress) {
-    // 优先选择答错过的题型
+  #selectModeForWrongWord(progress, modePreference) {
+    // 如果用户明确选择了简单题或复杂题，按用户选择
+    if (modePreference === LEARNING.MODE_PREFERENCE.SIMPLE) {
+      return this.#getRandomMode(QUESTION_MODES.SIMPLE);
+    }
+    if (modePreference === LEARNING.MODE_PREFERENCE.COMPLEX) {
+      return this.#getRandomMode(QUESTION_MODES.COMPLEX);
+    }
+
+    // AUTO 模式：优先选择答错过的题型
     if (progress.complexWrongCount > progress.simpleWrongCount) {
-      // 复杂题错得多，出复杂题
       return this.#getRandomMode(QUESTION_MODES.COMPLEX);
     } else if (progress.simpleWrongCount > 0) {
-      // 简单题有错，出简单题
       return this.#getRandomMode(QUESTION_MODES.SIMPLE);
     }
     // 都没错过或都错过，随机
@@ -167,11 +187,17 @@ export class AdaptiveSelector {
   /**
    * 选择需要检查的词（单题型通过）
    */
-  #selectCheckWords(maxCount, eligibleWords, usedWordIds, useChinese) {
+  #selectCheckWords(maxCount, eligibleWords, usedWordIds, useChinese, modePreference) {
     const questions = [];
     const { needSimpleCheck, needComplexCheck } = this.#progressTracker.getCheckWords();
 
-    // 合并并打乱
+    // 如果用户明确选择了简单题或复杂题，跳过检查词（强制按用户选择出题）
+    if (modePreference === LEARNING.MODE_PREFERENCE.SIMPLE ||
+        modePreference === LEARNING.MODE_PREFERENCE.COMPLEX) {
+      return questions;
+    }
+
+    // AUTO 模式：合并并打乱
     const allCheckWords = [
       ...needSimpleCheck.map(w => ({ ...w, needMode: 'simple' })),
       ...needComplexCheck.map(w => ({ ...w, needMode: 'complex' })),
@@ -204,7 +230,7 @@ export class AdaptiveSelector {
   /**
    * 选择新词
    */
-  #selectNewWords(count, eligibleWords, usedWordIds, useChinese, preferredMode) {
+  #selectNewWords(count, eligibleWords, usedWordIds, useChinese, preferredMode, modePreference) {
     const questions = [];
 
     // 过滤出未学过的词
@@ -220,8 +246,16 @@ export class AdaptiveSelector {
     for (let i = 0; i < Math.min(count, sorted.length); i++) {
       const wordData = sorted[i];
 
-      // 新词先出简单题
-      const mode = this.#getRandomMode(QUESTION_MODES.SIMPLE);
+      // 根据偏好选择题型
+      let mode;
+      if (modePreference === LEARNING.MODE_PREFERENCE.SIMPLE) {
+        mode = this.#getRandomMode(QUESTION_MODES.SIMPLE);
+      } else if (modePreference === LEARNING.MODE_PREFERENCE.COMPLEX) {
+        mode = this.#getRandomMode(QUESTION_MODES.COMPLEX);
+      } else {
+        // AUTO: 新词先出简单题
+        mode = this.#getRandomMode(QUESTION_MODES.SIMPLE);
+      }
 
       const question = this.#createQuestion(wordData, mode, eligibleWords, useChinese, false);
       if (question) {

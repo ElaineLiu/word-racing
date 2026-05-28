@@ -35,11 +35,11 @@ export const MASTERY_STATUS = {
 /**
  * 题型分类
  * SIMPLE: 简单题 - 词→义 / 义→词
- * COMPLEX: 复杂题 - 填空 / 音标
+ * COMPLEX: 复杂题 - 填空
  */
 export const QUESTION_MODES = {
   SIMPLE: ['PIT_BOARD', 'STRATEGY'],
-  COMPLEX: ['RADIO_MSG', 'QUALIFYING'],
+  COMPLEX: ['RADIO_MSG'],
   REVIEW: ['LAP_REVIEW'],
 };
 
@@ -77,6 +77,13 @@ export const LEARNING = {
   // 难度范围
   MIN_LEVEL: 2,                     // 最低难度（1=小学词汇，跳过）
   MAX_LEVEL: 5,                     // 最高难度
+
+  // 题型偏好
+  MODE_PREFERENCE: {
+    AUTO: 'auto',       // 自适应（根据掌握状态自动选择）
+    SIMPLE: 'simple',   // 偏好简单题
+    COMPLEX: 'complex', // 偏好复杂题
+  },
 
   // 存储版本
   STORAGE_VERSION: 3,

@@ -321,10 +321,10 @@ describe('ProgressTracker', () => {
       expect(status.simpleCorrect).toBe(true);
     });
 
-    it('should handle QUALIFYING mode (complex)', () => {
-      tracker.updateStatus('qualifying_word', 'QUALIFYING', true, 1);
+    it('should handle RADIO_MSG mode (complex)', () => {
+      tracker.updateStatus('radio_word', 'RADIO_MSG', true, 1);
 
-      const status = tracker.getStatus('qualifying_word');
+      const status = tracker.getStatus('radio_word');
       expect(status.complexCorrect).toBe(true);
     });
 

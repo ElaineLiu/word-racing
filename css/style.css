@@ -212,14 +212,13 @@ html, body {
    ======================================================================== */
 #page-home {
     background: linear-gradient(160deg, #0D1117 0%, #111922 40%, #0F1923 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
 }
 
 #page-home.active {
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: var(--space-xl);
 }
 
 .home-content {
@@ -1452,4 +1451,218 @@ html, body {
     background: rgba(255, 109, 0, 0.1);
     border: 1px solid rgba(255, 109, 0, 0.3);
     border-radius: var(--radius-sm);
+}
+
+/* ========================================================================
+   Home Settings Button
+   ======================================================================== */
+.home-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-sm);
+}
+
+.settings-wrapper {
+    position: relative;
+}
+
+.settings-btn {
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+    font-size: 20px;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.settings-btn:hover {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+    transform: rotate(45deg);
+}
+
+.settings-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: var(--space-xs);
+    background: var(--bg-card);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    min-width: 200px;
+    box-shadow: var(--shadow-elevated);
+    z-index: var(--z-modal);
+    white-space: nowrap;
+}
+
+.settings-menu-item {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    padding: var(--space-sm) var(--space-md);
+    text-align: left;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    transition: all var(--transition-fast);
+}
+
+.settings-menu-item:hover {
+    background: var(--bg-card-hover);
+    color: var(--accent-red);
+}
+
+/* ========================================================================
+   Report Page
+   ======================================================================== */
+#page-report {
+    background: linear-gradient(160deg, #0D1117 0%, #111922 40%, #0F1923 100%);
+}
+
+.report-content {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: var(--space-lg);
+}
+
+.report-content h2 {
+    text-align: center;
+    margin-bottom: var(--space-lg);
+    color: var(--accent-cyan);
+}
+
+.report-section {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.report-section h3 {
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: var(--space-xs);
+    padding-bottom: var(--space-xs);
+    border-bottom: 1px solid var(--border-default);
+}
+
+.section-hint {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-sm);
+}
+
+.report-stats {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-xs) 0;
+    font-size: 14px;
+}
+
+.stat-row span {
+    color: var(--text-secondary);
+}
+
+.stat-row strong {
+    font-weight: 600;
+}
+
+.stat-row strong.text-success {
+    color: var(--accent-green);
+}
+
+.stat-row strong.text-warning {
+    color: var(--accent-orange);
+}
+
+.stat-row strong.text-muted {
+    color: var(--text-tertiary);
+}
+
+.goals-section {
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--border-default);
+}
+
+.goal {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    padding: var(--space-xs) 0;
+}
+
+.goal.achieved {
+    color: var(--accent-green);
+}
+
+.report-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.empty-message {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: var(--space-lg);
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.report-table th,
+.report-table td {
+    text-align: left;
+    padding: var(--space-xs) var(--space-sm);
+    border-bottom: 1px solid var(--border-default);
+}
+
+.report-table th {
+    color: var(--text-tertiary);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.report-table td strong {
+    color: var(--text-primary);
+}
+
+.status-mastered {
+    color: var(--accent-green);
+}
+
+.status-exposed,
+.status-simple_passed,
+.status-complex_passed {
+    color: var(--accent-orange);
+}
+
+.status-forgotten {
+    color: var(--accent-red);
+}
+
+.more-hint {
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: 11px;
+    margin-top: var(--space-sm);
 }

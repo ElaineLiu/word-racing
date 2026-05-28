@@ -102,6 +102,63 @@ export class HomeView extends BaseView {
     this.onClick('#home-start-btn', () => {
       this.emit(Events.QUIZ_START, { source: 'home' });
     });
+
+    // Settings dropdown
+    this.onClick('#home-settings-btn', (e) => {
+      e.stopPropagation();
+      const dropdown = this.$('#settings-dropdown');
+      if (dropdown) {
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      const dropdown = this.$('#settings-dropdown');
+      const btn = this.$('#home-settings-btn');
+      if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    // Reset daily limit
+    this.onClick('#reset-daily-btn', () => {
+      if (confirm('确定要重置每日答题限制吗？\n\n注意：不会清除单词掌握进度。')) {
+        this.#resetDailyLimit();
+      }
+    });
+  }
+
+  #resetDailyLimit() {
+    try {
+      const state = JSON.parse(localStorage.getItem('wr_game_state') || '{}');
+      state.daily = {
+        lastActiveDate: null,
+        streakDays: 0,
+        todayQuizzes: 0,
+        todayFuelCoins: 0,
+        todayGearCoins: 0,
+      };
+      localStorage.setItem('wr_game_state', JSON.stringify(state));
+      localStorage.removeItem('wr_quiz_session');
+
+      // 更新内存状态
+      if (this.#learningController) {
+        this.#learningController.dailyManager?.reset?.();
+        this.#learningController.sessionManager?.clearSession?.();
+      }
+
+      alert('已重置！可以继续答题。');
+
+      // 关闭下拉菜单
+      const dropdown = this.$('#settings-dropdown');
+      if (dropdown) dropdown.style.display = 'none';
+
+      // 刷新 UI
+      this.updateLearningUI();
+    } catch (e) {
+      alert('重置失败: ' + e.message);
+    }
   }
 
   #subscribeToEvents() {

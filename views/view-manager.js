@@ -9,6 +9,7 @@ import { HomeView } from './home-view.js';
 import { QuizView } from './quiz-view.js';
 import { ShopView } from './shop-view.js';
 import { RaceView } from './race-view.js';
+import { ReportView } from './report-view.js';
 
 export class ViewManager {
   #eventBus;
@@ -33,6 +34,7 @@ export class ViewManager {
     this.#views.set('quiz', new QuizView(this.#eventBus, this.#game, this.#learningController));
     this.#views.set('shop', new ShopView(this.#eventBus, this.#game));
     this.#views.set('race', new RaceView(this.#eventBus, this.#game));
+    this.#views.set('report', new ReportView(this.#eventBus, this.#learningController));
   }
 
   #setupNavigation() {

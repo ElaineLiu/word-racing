@@ -26,6 +26,7 @@ export class LearningController {
   #learningUI;
   #wordSet = [];
   #currentQuestions = [];
+  #modePreference = LEARNING.MODE_PREFERENCE.AUTO; // 题型偏好
 
   constructor() {
     this.#eventBus = new EventBus();
@@ -108,8 +109,17 @@ export class LearningController {
       return null;
     }
 
-    // 生成题目
-    this.#currentQuestions = this.#adaptiveSelector.buildQuiz(options);
+    // 检查词库是否为空
+    if (!this.#wordSet || this.#wordSet.length === 0) {
+      console.error('[LearningController] wordSet is empty');
+      return [];
+    }
+
+    // 生成题目（传递题型偏好）
+    this.#currentQuestions = this.#adaptiveSelector.buildQuiz({
+      ...options,
+      modePreference: this.#modePreference,
+    });
 
     // 设置会话题目
     this.#sessionManager.setQuestions(this.#currentQuestions);
@@ -129,17 +139,11 @@ export class LearningController {
       return this.startNewQuiz();
     }
 
-    // 重新加载题目数据
-    this.#currentQuestions = session.questions.map(q => {
-      const wordData = this.#wordSet.find(w => w.id === q.wordId || w.word === q.word);
-      return {
-        ...wordData,
-        ...q,
-        answered: session.answers.some(a => a.questionIndex === session.questions.indexOf(q)),
-      };
-    });
-
-    return this.#currentQuestions;
+    // 会话恢复成功，但需要重新生成完整的题目（包含选项）
+    // 因为存储的只有 wordId 和 mode，没有 options 和 correctIndex
+    // 为了简化，直接开始新的一套题
+    this.#sessionManager.clearSession();
+    return this.startNewQuiz();
   }
 
   /**
@@ -188,11 +192,25 @@ export class LearningController {
     // 更新单词进度
     const wordText = question.correctWord || question.word;
     const prevStatus = this.#progressTracker.getStatus(wordText)?.status;
-    this.#progressTracker.updateStatus(wordText, question.mode, correct, question.wordId);
+    const newProgress = this.#progressTracker.updateStatus(wordText, question.mode, correct, question.wordId);
+
+    // 持久化单词进度
+    this.#progressTracker.save();
+
+    // 更新统计：是否首次见到这个单词
+    const isNewlySeen = !prevStatus || prevStatus === 'unlearned';
+    if (isNewlySeen) {
+      this.#gameState.modify('learning.totalWordsSeen', 1);
+    }
+
+    // 更新统计：是否新掌握这个单词
+    const isNowMastered = newProgress.status === 'mastered' && prevStatus !== 'mastered';
+    if (isNowMastered) {
+      this.#gameState.modify('learning.totalWordsMastered', 1);
+    }
 
     // 更新每日进度
-    // 只有首次出现且答对的词才算"学习了一个新词"
-    const isNewWord = correct && (prevStatus === 'unlearned' || !prevStatus);
+    const isNewWord = correct && isNewlySeen;
     const isReview = question.isReview;
 
     this.#dailyManager.updateProgress({
@@ -348,6 +366,22 @@ export class LearningController {
    */
   setMaxLevel(maxLevel) {
     this.#adaptiveSelector?.setMaxLevel(maxLevel);
+  }
+
+  /**
+   * 设置题型偏好
+   * @param {string} preference - 'auto' | 'simple' | 'complex'
+   */
+  setModePreference(preference) {
+    this.#modePreference = preference;
+  }
+
+  /**
+   * 获取题型偏好
+   * @returns {string}
+   */
+  getModePreference() {
+    return this.#modePreference;
   }
 
   /**

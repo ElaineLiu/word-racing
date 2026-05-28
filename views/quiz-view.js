@@ -22,6 +22,60 @@ export class QuizView extends BaseView {
     super.mount();
     this.#setupEventListeners();
     this.#subscribeToEvents();
+
+    // 同步按钮状态与当前偏好
+    this.#syncModeButtons();
+
+    // 初始化题目
+    this.#initializeQuiz();
+  }
+
+  /**
+   * 初始化答题页面
+   */
+  #initializeQuiz() {
+    if (!this.#learningController) return;
+
+    // 检查是否有未完成的会话
+    if (this.#learningController.sessionManager?.hasUnfinishedSession?.()) {
+      const questions = this.#learningController.resumeSession();
+      if (questions && questions.length > 0) {
+        this.showQuestion();
+        return;
+      }
+    }
+
+    // 检查当前是否有有效题目
+    const currentQuestion = this.#learningController.getCurrentQuestion();
+    if (currentQuestion && currentQuestion.options) {
+      this.showQuestion();
+      return;
+    }
+
+    // 自动开始新题目
+    this.#startNewQuiz();
+  }
+
+  /**
+   * 同步 Basic/Advanced 按钮状态与当前偏好
+   */
+  #syncModeButtons() {
+    const preference = this.#learningController?.getModePreference?.() || 'auto';
+    const simpleBtn = this.$('#quiz-type-simple');
+    const complexBtn = this.$('#quiz-type-complex');
+
+    if (preference === 'simple') {
+      simpleBtn?.classList.add('active');
+      complexBtn?.classList.remove('active');
+    } else if (preference === 'complex') {
+      complexBtn?.classList.add('active');
+      simpleBtn?.classList.remove('active');
+    } else {
+      // auto 模式：默认选中 Basic
+      simpleBtn?.classList.add('active');
+      complexBtn?.classList.remove('active');
+      this.#learningController?.setModePreference('simple');
+    }
   }
 
   render() {
@@ -47,6 +101,12 @@ export class QuizView extends BaseView {
     if (this.#learningController) {
       q = this.#learningController.getCurrentQuestion();
       if (!q) {
+        this.showComplete();
+        return;
+      }
+      // 验证题目有效性
+      if (!q.options || !Array.isArray(q.options)) {
+        console.error('[QuizView] Invalid question: missing options', q);
         this.showComplete();
         return;
       }
@@ -322,6 +382,12 @@ export class QuizView extends BaseView {
       this.#quiz.maxLevel = 3;
       this.addClass('#quiz-type-simple', 'active');
       this.removeClass('#quiz-type-complex', 'active');
+
+      // 设置题型偏好
+      if (this.#learningController) {
+        this.#learningController.setModePreference('simple');
+      }
+
       this.#startNewQuiz(3);
     });
 
@@ -330,6 +396,12 @@ export class QuizView extends BaseView {
       this.#quiz.maxLevel = 4;
       this.addClass('#quiz-type-complex', 'active');
       this.removeClass('#quiz-type-simple', 'active');
+
+      // 设置题型偏好
+      if (this.#learningController) {
+        this.#learningController.setModePreference('complex');
+      }
+
       this.#startNewQuiz(4);
     });
 
@@ -403,11 +475,17 @@ export class QuizView extends BaseView {
         count: LEARNING.QUIZ_QUESTION_COUNT,
         useChinese: true,
       });
-      if (questions) {
+
+      // 检查是否成功生成题目
+      if (questions && questions.length > 0 && questions[0]?.options) {
         this.showQuestion();
-      } else {
+      } else if (questions === null) {
         // 今日配额已用完
         alert('You have completed all 3 quizzes for today! Come back tomorrow.');
+      } else {
+        // 题目生成失败（可能是词库问题）
+        console.error('[QuizView] Failed to generate questions:', { questions });
+        alert('无法生成题目，请刷新页面重试。');
       }
     } else {
       this.#quiz.generateQuiz(LEARNING.QUIZ_QUESTION_COUNT, maxLevel);
