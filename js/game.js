@@ -12,11 +12,17 @@ import { Car } from './car.js';
 import { VocabularyQuiz } from './quiz.js';
 import { ECONOMY, DISPLAY, GAME, UPGRADES } from '../config/game-config.js';
 import { EventBus } from '../core/event-bus.js';
+import { GameState } from '../core/game-state.js';
 import { ShopSystem } from '../systems/shop-system.js';
 import { RenderSystem } from '../rendering/render-system.js';
+import { TRACK_REGISTRY } from '../config/track-registry.js';
+import { FeatureFlags } from '../config/feature-flags.js';
+import { TrackUnlockManager } from '../systems/track-unlock-manager.js';
+import { RacingCostManager } from '../systems/racing-cost-manager.js';
+import { TrackFactory } from '../systems/track-factory.js';
 
 export class Game {
-    constructor(canvas) {
+    constructor(canvas, gameState = null) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.scale = 1;
@@ -26,26 +32,29 @@ export class Game {
         this.selectedLaps = GAME.MIN_LAPS;
         this.totalLaps = GAME.MIN_LAPS;
 
-        // Player resources
+        // Core systems (EventBus 先建好，GameState 可注入或自建)
+        this._eventBus = new EventBus();
+        this._gameState = gameState || new GameState(this._eventBus);
+
+        // Load feature flags
+        FeatureFlags.load();
+
+        // Manager instances
+        this._trackUnlockManager = new TrackUnlockManager(this._eventBus, this._gameState);
+        this._racingCostManager = new RacingCostManager(this._eventBus, this._gameState);
+        this._trackFactory = new TrackFactory(this._eventBus, this._gameState);
+
+        // Player resources (legacy 'coins' counter, not persisted — kept for UI compatibility)
         this.coins = 0;
-        // --- 双货币系统 ---
-        this.fuelCoins = 0;      // 燃油币（橙色图标 🪙）
-        this.gearCoins = 0;      // 装备币（蓝色图标 ⚙️）
-        this.maxFuel = ECONOMY.MAX_FUEL;
-        this.fuel = ECONOMY.INITIAL_FUEL;
         this.fuelPerLap = ECONOMY.FUEL_PER_LAP;
         this.raceScore = 0;
         this.totalScore = 0;
         this.raceStartTime = 0;
         this.raceTime = 0;
         this.quizResults = null;
-        // --- 改装等级 ---
-        this.upgrades = {
-            engine: UPGRADES.MIN_LEVEL,
-            tire: UPGRADES.MIN_LEVEL,
-            body: UPGRADES.MIN_LEVEL
-        };
-        this.nitroCharges = 0;
+
+        // 注：fuel / maxFuel / upgrades / nitroCharges 均通过 GameState 代理
+        // 见下方 getter/setter，避免与 GameState 数据双源
 
         // Countdown
         this.countdownTimer = 0;
@@ -66,9 +75,8 @@ export class Game {
         this.onExitRace = null;
         this.onResultsContinueCb = null;
 
-        // Core systems
-        this._eventBus = new EventBus();
-        this._shopSystem = new ShopSystem(this._eventBus, null);
+        // Render & Shop systems
+        this._shopSystem = new ShopSystem(this._eventBus, this._gameState);
         this._renderSystem = new RenderSystem(canvas);
 
         // Subsystems
@@ -80,6 +88,8 @@ export class Game {
         );
         this.quiz = new VocabularyQuiz();
         this.car.applyUpgrades(this.upgrades);
+        // 同步持久化的 nitroCharges 到 Car（运行时单一源）
+        this.car.nitroCharges = this._gameState.get('nitroCharges') || 0;
 
         // Connect render system
         this._renderSystem.setTrack(this.track);
@@ -90,6 +100,41 @@ export class Game {
     get _shopItems() {
         return this._shopSystem.getItems();
     }
+
+    // ==================== GameState 同步字段（Phase 3.1a） ====================
+    // 这些字段背后由 GameState 单一管理，确保与 LearningController / AchievementManager 共享同一份数据。
+
+    get gameState() { return this._gameState; }
+
+    get fuelCoins() { return this._gameState.get('fuelCoins') || 0; }
+    set fuelCoins(value) { this._gameState.set('fuelCoins', value); }
+
+    get gearCoins() { return this._gameState.get('gearCoins') || 0; }
+    set gearCoins(value) { this._gameState.set('gearCoins', value); }
+
+    get fuel() { return this._gameState.get('fuel') ?? ECONOMY.INITIAL_FUEL; }
+    set fuel(value) { this._gameState.set('fuel', value); }
+
+    get maxFuel() { return ECONOMY.MAX_FUEL; }
+
+    get upgrades() { return this._gameState.get('upgrades'); }
+    set upgrades(value) { this._gameState.set('upgrades', value); }
+
+    // nitroCharges: Car 是运行时单一源（每帧消耗），GameState 是持久化源。
+    // 读取优先 Car（运行时最新），写入双写以保证持久化。
+    get nitroCharges() {
+        return this.car ? this.car.nitroCharges : (this._gameState.get('nitroCharges') || 0);
+    }
+    set nitroCharges(value) {
+        if (this.car) this.car.nitroCharges = value;
+        this._gameState.set('nitroCharges', value);
+    }
+
+    get unlockedTracks() { return this._gameState.get('unlockedTracks') || []; }
+    // 不提供 setter：解锁逻辑统一走 AchievementManager
+
+    get selectedTrackId() { return this._gameState.get('selectedTrackId') || 'shanghai-2d'; }
+    set selectedTrackId(value) { this._gameState.set('selectedTrackId', value); }
 
     // ==================== Leaderboard ====================
     _loadLeaderboard() {
@@ -158,7 +203,7 @@ export class Game {
         const container = this.canvas.parentElement;
         const containerW = container.clientWidth;
         const containerH = container.clientHeight;
-        const gameAspect = 920 / 620;
+        const gameAspect = DISPLAY.CANVAS_WIDTH / DISPLAY.CANVAS_HEIGHT;
         let canvasW, canvasH;
         if (containerW / containerH > gameAspect) {
             canvasH = containerH;
@@ -169,7 +214,7 @@ export class Game {
         }
         this.canvas.width = canvasW;
         this.canvas.height = canvasH;
-        this.scale = canvasW / 920;
+        this.scale = canvasW / DISPLAY.CANVAS_WIDTH;
     }
 
     /**
@@ -295,8 +340,7 @@ export class Game {
         this.car.input = this._getCarInput();
         this.car.update(this.track, this.totalLaps);
 
-        // BugFix: sync nitro charges (car.nitroCharges changes when nitro is used)
-        this.nitroCharges = this.car.nitroCharges;
+        // nitro 运行时单一源是 Car；持久化到 GameState 由比赛结束/退出统一处理
 
         this.raceTime = Date.now() - this.raceStartTime;
 
@@ -449,12 +493,16 @@ export class Game {
     }
 
     /**
-     * 用户确认开始比赛（从 QUIZ 完成面板或 SHOP 面板触发）
+     * 确保比赛已准备就绪（用于页面导航/恢复，不重复扣金币）
+     * 如果当前已处于 COUNTDOWN/RACING/RESULTS，则不做任何事。
+     * 否则委托给 startRace() 走完整流程：扣金币 + 用 TrackFactory 创建赛道。
      */
     continueToRace() {
-        this.totalLaps = this.selectedLaps;
-        this.state = 'COUNTDOWN';
-        this.countdownTimer = 240;
+        // 已在比赛生命周期内，避免重复扣金币（修复刷新/导航导致 fuelCoins 清零）
+        if ([GAME.STATES.COUNTDOWN, GAME.STATES.RACING, GAME.STATES.RESULTS].includes(this.state)) {
+            return;
+        }
+        this.startRace();
     }
 
     /**
@@ -473,6 +521,9 @@ export class Game {
         const partialFuel = this.fuelPerLap * Math.max(0, progress);
         const totalFuelUsed = lapsDone * this.fuelPerLap + partialFuel;
         this.fuel = Math.max(0, this.fuel - totalFuelUsed);
+
+        // 同步赛车运行时 nitro 到持久化层（单一源 Car → GameState）
+        this._gameState.set('nitroCharges', this.car.nitroCharges);
 
         this.totalScore = this.raceScore + (this.quizResults ? this.quizResults.score : 0);
         // 保存最快圈速到排行榜
@@ -496,6 +547,9 @@ export class Game {
         const partialFuel = this.fuelPerLap * Math.max(0, progress); // 当前圈按比例扣
         const totalFuelUsed = lapsDone * this.fuelPerLap + partialFuel;
         this.fuel = Math.max(0, this.fuel - totalFuelUsed);
+
+        // 同步赛车运行时 nitro 到持久化层
+        this._gameState.set('nitroCharges', this.car.nitroCharges);
 
         // 赛车回起点
         this.car.reset(this.track.startPos.x, this.track.startPos.y, this.track.startPos.angle);
@@ -523,6 +577,81 @@ export class Game {
     }
 
     /**
+     * 选择赛道（UC-02）
+     * 验证赛道是否存在、是否解锁、金币是否足够，然后持久化到 GameState。
+     * @param {string} trackId
+     * @throws {Error} Unknown track / Track not unlocked / Insufficient fuel coins
+     */
+    selectTrack(trackId) {
+        const track = TRACK_REGISTRY[trackId];
+        if (!track) throw new Error('Unknown track');
+
+        // 委托给 TrackUnlockManager
+        if (!this._trackUnlockManager.isUnlocked(trackId)) {
+            throw new Error('Track not unlocked');
+        }
+
+        const fuelCoins = this._gameState.get('fuelCoins') || 0;
+        if (fuelCoins < track.cost) throw new Error('Insufficient fuel coins');
+
+        this.selectedTrackId = trackId;
+    }
+
+    /**
+     * 开始比赛（UC-03）
+     * 扣除赛道 cost，创建赛道实例并切换到 COUNTDOWN。
+     * @throws {Error} Unknown track / Insufficient fuel coins / 3D track not implemented yet
+     */
+    startRace() {
+        const trackId = this.selectedTrackId;
+        const trackDef = TRACK_REGISTRY[trackId];
+        if (!trackDef) throw new Error('Unknown track');
+
+        // 使用 RacingCostManager 扣除金币
+        const result = this._racingCostManager.deductCost(trackId);
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+
+        // 使用 TrackFactory 创建赛道实例
+        let newTrack;
+        try {
+            newTrack = this._trackFactory.create(trackId);
+        } catch (error) {
+            // 创建失败，退款
+            this._racingCostManager.refund(trackId);
+            throw error;
+        }
+
+        // 替换赛道实例
+        this.track = newTrack;
+        this._renderSystem.setTrack(this.track);
+
+        // 重置赛车到新赛道起点
+        this.car.reset(this.track.startPos.x, this.track.startPos.y, this.track.startPos.angle);
+
+        // 进入倒计时
+        this.totalLaps = this.selectedLaps;
+        this.state = GAME.STATES.COUNTDOWN;
+        this.countdownTimer = 240;
+    }
+
+    /**
+     * 获取所有赛道及其解锁/可购买状态（供 ShopView 渲染）
+     * @returns {Array<Object>}
+     */
+    getAvailableTracks() {
+        // 使用 TrackFactory 过滤 FeatureFlags
+        const availableTracks = this._trackFactory.getAvailableTracks();
+
+        return availableTracks.map(track => ({
+            ...track,
+            unlocked: this._trackUnlockManager.isUnlocked(track.id),
+            canAfford: this._racingCostManager.canAfford(track.id)
+        }));
+    }
+
+    /**
      * Format milliseconds to M:SS.ms
      */
     _formatTime(ms) {
@@ -531,22 +660,5 @@ export class Game {
         const sec = totalSec % 60;
         const millis = Math.floor((ms % 1000) / 10);
         return `${min}:${sec.toString().padStart(2, '0')}.${millis.toString().padStart(2, '0')}`;
-    }
-
-    /**
-     * Draw rounded rectangle
-     */
-    _roundRect(ctx, x, y, w, h, r) {
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.lineTo(x + w - r, y);
-        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-        ctx.lineTo(x + w, y + h - r);
-        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-        ctx.lineTo(x + r, y + h);
-        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-        ctx.lineTo(x, y + r);
-        ctx.quadraticCurveTo(x, y, x + r, y);
-        ctx.closePath();
     }
 }

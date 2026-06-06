@@ -14,6 +14,58 @@ import { LEARNING, REWARDS } from '../config/learning-config.js';
 
 // 存储键
 const SESSION_KEY = LEARNING.STORAGE_KEYS.QUIZ_SESSION;
+const QUESTION_FIELDS = [
+  'wordId',
+  'word',
+  'meaning',
+  'meaningEn',
+  'meaning_en',
+  'mode',
+  'modeLabel',
+  'modeIcon',
+  'prompt',
+  'promptSub',
+  'promptCn',
+  'options',
+  'correctIndex',
+  'correctWord',
+  'correctMeaning',
+  'phonetic',
+  'sentence',
+  'sentence_cn',
+  'sentenceBlank',
+  'sentenceOriginal',
+  'reward',
+  'isReview',
+  'originalMode',
+  'isCheck',
+  'isNew',
+  'level',
+];
+
+function sanitizeQuestion(question) {
+  const sanitized = {};
+
+  QUESTION_FIELDS.forEach(field => {
+    if (question[field] !== undefined) {
+      sanitized[field] = Array.isArray(question[field]) ? [...question[field]] : question[field];
+    }
+  });
+
+  if (sanitized.word === undefined) sanitized.word = question.correctWord || question.word;
+  if (sanitized.meaning === undefined) sanitized.meaning = question.correctMeaning || question.meaning;
+
+  return sanitized;
+}
+
+function hasResumableQuestions(session) {
+  if (!Array.isArray(session.questions) || session.questions.length === 0) return false;
+  if (!Array.isArray(session.answers)) return false;
+  if (session.answers.length >= session.questions.length) return false;
+
+  const currentQuestion = session.questions[session.answers.length];
+  return Array.isArray(currentQuestion?.options) && typeof currentQuestion.correctIndex === 'number';
+}
 
 /**
  * QuizSessionManager - 答题会话管理器
@@ -100,6 +152,10 @@ export class QuizSessionManager {
       return null;
     }
 
+    if (!hasResumableQuestions(this.#session)) {
+      return null;
+    }
+
     this.#eventBus.emit(Events.SESSION_RESUME, {
       quizNumber: this.#session.currentQuiz,
       answeredCount: this.#session.answers.length,
@@ -122,7 +178,7 @@ export class QuizSessionManager {
     if (this.#session.date !== this.#getToday()) return false;
     if (this.#session.completed) return false;
 
-    return this.#session.answers.length < this.#session.questions.length;
+    return hasResumableQuestions(this.#session);
   }
 
   // ==================== 答题进度 ====================
@@ -136,12 +192,7 @@ export class QuizSessionManager {
       this.startDailySession();
     }
 
-    this.#session.questions = questions.map(q => ({
-      wordId: q.wordId,
-      word: q.correctWord || q.word,
-      meaning: q.correctMeaning || q.meaning,
-      mode: q.mode,
-    }));
+    this.#session.questions = questions.map(q => sanitizeQuestion(q));
     this.#saveSession();
   }
 
@@ -259,6 +310,7 @@ export class QuizSessionManager {
     }
 
     this.#session.completed = true;
+    this.#saveSession();
 
     // 计算连击奖励
     const comboReward = this.getComboReward();

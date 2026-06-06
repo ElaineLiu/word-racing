@@ -10,6 +10,7 @@ export class QuizView extends BaseView {
   #game;
   #quiz;
   #learningController;
+  #isProcessingAnswer = false; // Prevent concurrent answer processing
 
   constructor(eventBus, game, learningController = null) {
     super('page-quiz', eventBus);
@@ -36,20 +37,20 @@ export class QuizView extends BaseView {
   #initializeQuiz() {
     if (!this.#learningController) return;
 
-    // 检查是否有未完成的会话
-    if (this.#learningController.sessionManager?.hasUnfinishedSession?.()) {
-      const questions = this.#learningController.resumeSession();
-      if (questions && questions.length > 0) {
-        this.showQuestion();
-        return;
-      }
-    }
-
-    // 检查当前是否有有效题目
+    // 检查当前是否有有效题目（用户已主动开始或刚选择继续/重开）
     const currentQuestion = this.#learningController.getCurrentQuestion();
     if (currentQuestion && currentQuestion.options) {
       this.showQuestion();
       return;
+    }
+
+    // 方案 B：只有进入 Quiz 页时才提示是否继续未完成会话，首页初始化不弹窗
+    if (this.#learningController.hasUnfinishedSession?.()) {
+      const prompted = this.#learningController.promptResumeQuiz?.({
+        onContinue: () => this.showQuestion(),
+        onRestart: () => this.showQuestion(),
+      });
+      if (prompted) return;
     }
 
     // 自动开始新题目
@@ -110,7 +111,11 @@ export class QuizView extends BaseView {
         this.showComplete();
         return;
       }
-      const status = this.#learningController.getSessionStatus();
+      const status = this.#learningController.getSessionStatus() || {
+        answeredCount: 0,
+        totalQuestions: q.options ? LEARNING.QUIZ_QUESTION_COUNT : 0,
+        correctCount: 0,
+      };
       current = status.answeredCount;
       total = status.totalQuestions;
       correctCount = status.correctCount;
@@ -258,6 +263,20 @@ export class QuizView extends BaseView {
   }
 
   #handleAnswer(idx) {
+    // Debug logging
+    console.log('[QuizView] #handleAnswer called', {
+      idx,
+      isProcessing: this.#isProcessingAnswer,
+      hasLearningController: !!this.#learningController,
+      timestamp: Date.now()
+    });
+
+    // Prevent concurrent processing
+    if (this.#isProcessingAnswer) {
+      console.warn('[QuizView] Already processing answer, ignoring click');
+      return;
+    }
+
     let result;
 
     // 优先使用 LearningController
@@ -268,6 +287,9 @@ export class QuizView extends BaseView {
       result = this.#quiz.submitAnswer(idx);
       if (!result) return;
     }
+
+    // Set processing flag
+    this.#isProcessingAnswer = true;
 
     // Highlight buttons
     const buttons = this.$$('.quiz-option');
@@ -291,6 +313,9 @@ export class QuizView extends BaseView {
       } else {
         this.showQuestion();
       }
+
+      // Reset processing flag
+      this.#isProcessingAnswer = false;
     }, 900);
   }
 
@@ -431,6 +456,12 @@ export class QuizView extends BaseView {
 
     // Learning panel continue button
     this.onClick('#quiz-learn-continue-btn', () => {
+      // Check processing state
+      if (this.#isProcessingAnswer) {
+        console.warn('[QuizView] Already processing, ignoring continue button');
+        return;
+      }
+
       this.hide('#quiz-learn-panel');
 
       // Remove class to center layout
@@ -453,8 +484,12 @@ export class QuizView extends BaseView {
         alert('Insufficient fuel! Buy fuel in the shop first.');
         return;
       }
-      this.#game.continueToRace();
-      this.emit(Events.RACE_START, { source: 'quiz' });
+      try {
+        this.#game.continueToRace();
+        this.emit(Events.RACE_START, { source: 'quiz' });
+      } catch (err) {
+        alert(err.message);
+      }
     });
 
     this.onClick('#quiz-shop-btn', () => {

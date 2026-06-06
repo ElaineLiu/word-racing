@@ -8,7 +8,7 @@ import { EventBus, Events } from './event-bus.js';
 // Default state structure
 const DEFAULT_STATE = {
   // Resources
-  fuel: 100,
+  fuel: 0,  // must buy in shop (match ECONOMY.INITIAL_FUEL)
   fuelCoins: 0,
   gearCoins: 0,
   nitroCharges: 0,
@@ -47,7 +47,13 @@ const DEFAULT_STATE = {
     totalQuizzes: 0,
     totalQuestions: 0,
     totalCorrect: 0,
+    lastPerfectQuiz: false,  // 上次是否全对
   },
+
+  // Achievement system
+  achievements: [],           // 已解锁的成就ID列表
+  unlockedTracks: ['shanghai-2d'],  // 已解锁的赛道ID列表
+  selectedTrackId: 'shanghai-2d',   // 当前选择的赛道ID
 
   // Meta
   version: 3,
@@ -279,6 +285,14 @@ export class GameState {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
+
+        // 兼容性迁移：确保新字段有默认值
+        if (!parsed.achievements) parsed.achievements = [];
+        if (!parsed.unlockedTracks) parsed.unlockedTracks = ['shanghai-2d'];
+        if (!parsed.selectedTrackId) parsed.selectedTrackId = 'shanghai-2d';
+        if (!parsed.learning) parsed.learning = {};
+        if (parsed.learning.lastPerfectQuiz === undefined) parsed.learning.lastPerfectQuiz = false;
+
         this.#state = { ...this.#deepClone(DEFAULT_STATE), ...parsed };
       }
     } catch (e) {

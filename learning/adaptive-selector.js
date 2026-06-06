@@ -302,6 +302,7 @@ export class AdaptiveSelector {
 
       if (question && isReview) {
         question.isReview = true;
+        question.originalMode = mode;
       }
 
       return question;

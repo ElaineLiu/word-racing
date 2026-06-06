@@ -864,6 +864,278 @@ html, body {
     opacity: 0.5;
 }
 
+/* ==================== Shop Tabs (Phase 3.4) ==================== */
+#shop-tabs {
+    display: flex;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+#shop-tabs button {
+    flex: 1;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: all var(--transition-fast);
+}
+
+#shop-tabs button.active {
+    background: linear-gradient(135deg, var(--accent-green) 0%, #009624 100%);
+    color: var(--text-primary);
+    border-color: var(--accent-green);
+}
+
+#shop-tracks {
+    background: var(--bg-card);
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-card);
+}
+
+.shop-track-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) var(--space-lg);
+    margin-bottom: var(--space-sm);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-default);
+    transition: all var(--transition-fast);
+}
+
+.shop-track-item.selected {
+    border-color: var(--accent-green);
+    box-shadow: 0 0 12px rgba(0,200,83,0.3);
+}
+
+.shop-track-item button {
+    padding: var(--space-sm) var(--space-lg);
+    background: linear-gradient(135deg, var(--accent-green) 0%, #009624 100%);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+.shop-track-item button:disabled {
+    background: var(--text-tertiary);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* ==================== Achievement Toast (Phase 3.3) ==================== */
+#toast-container {
+    position: fixed;
+    top: var(--space-lg);
+    right: var(--space-lg);
+    z-index: var(--z-toast);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    pointer-events: none;
+}
+
+.achievement-toast {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border: 2px solid var(--accent-green);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md) var(--space-lg);
+    box-shadow: 0 8px 32px rgba(0, 200, 83, 0.3);
+    pointer-events: auto;
+    animation: slideInRight 0.3s ease-out;
+    min-width: 300px;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.achievement-toast-content {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+}
+
+.achievement-toast-icon {
+    font-size: 32px;
+    line-height: 1;
+}
+
+.achievement-toast-text {
+    flex: 1;
+}
+
+.achievement-toast-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent-green);
+    margin-bottom: var(--space-xs);
+}
+
+.achievement-toast-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+}
+
+.achievement-toast-reward {
+    font-size: 12px;
+    color: var(--text-primary);
+    opacity: 0.9;
+}
+
+/* ==================== Achievement Panel Modal (Phase 3.5) ==================== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-card);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--border-default);
+    padding-bottom: var(--space-md);
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 28px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 var(--space-sm);
+}
+
+.modal-close:hover {
+    color: var(--text-primary);
+}
+
+#achievement-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.achievement-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    transition: all var(--transition-fast);
+}
+
+.achievement-item.unlocked {
+    background: linear-gradient(135deg, rgba(0, 200, 83, 0.1) 0%, rgba(0, 150, 60, 0.1) 100%);
+    border-color: var(--accent-green);
+}
+
+.achievement-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+}
+
+.achievement-icon {
+    font-size: 32px;
+    line-height: 1;
+}
+
+.achievement-info {
+    flex: 1;
+}
+
+.achievement-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.achievement-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.achievement-progress {
+    margin-top: var(--space-sm);
+    background: var(--bg-primary);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    position: relative;
+    height: 24px;
+}
+
+.achievement-progress-bar {
+    background: linear-gradient(90deg, var(--accent-green) 0%, #00c853 100%);
+    height: 100%;
+    transition: width var(--transition-normal);
+}
+
+.achievement-progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+    z-index: 1;
+}
+
+.achievement-empty {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: var(--space-xl);
+    font-size: 14px;
+}
+
 #shop-actions {
     margin-top: var(--space-lg);
     text-align: center;
@@ -1458,10 +1730,33 @@ html, body {
    ======================================================================== */
 .home-header {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     gap: var(--space-md);
     margin-bottom: var(--space-sm);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.icon-btn {
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+    font-size: 20px;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.icon-btn:hover {
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+    transform: scale(1.1);
 }
 
 .settings-wrapper {
@@ -1530,6 +1825,18 @@ html, body {
     max-width: 600px;
     margin: 0 auto;
     padding: var(--space-lg);
+}
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.report-header h2 {
+    margin: 0;
+    color: var(--accent-cyan);
 }
 
 .report-content h2 {
@@ -1665,4 +1972,109 @@ html, body {
     color: var(--text-tertiary);
     font-size: 11px;
     margin-top: var(--space-sm);
+}
+
+/* ==================== Home Page Progress Card ==================== */
+.progress-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    padding: var(--space-md);
+    margin: var(--space-lg) 0;
+}
+
+.progress-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-md);
+}
+
+.progress-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+}
+
+.progress-item {
+    text-align: center;
+}
+
+.progress-label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+}
+
+.progress-value {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent-cyan);
+}
+
+/* ==================== Home Stats Container ==================== */
+.stats-container {
+    display: flex;
+    gap: var(--space-lg);
+    margin: var(--space-lg) 0;
+}
+
+.stats-section {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    padding: var(--space-md);
+}
+
+.stats-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-md);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.stat-icon {
+    font-size: 20px;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+    .progress-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-container {
+        flex-direction: column;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
 }

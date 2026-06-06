@@ -5,6 +5,11 @@
  * - 初始化并协调所有学习模块
  * - 连接 UI 与学习逻辑
  * - 处理答题流程
+ *
+ * ISSUE_LOG 注意事项：
+ * - #005: 集成测试必须验证方法被调用，不能只测功能存在
+ * - #007: 所有公开方法（如 getAchievements）必须在设计文档和实现中都存在
+ * - 新增公开方法时，务必检查是否被 UI 组件正确调用
  */
 
 import { EventBus, Events } from '../core/event-bus.js';
@@ -14,6 +19,7 @@ import { DailyManager } from './daily-manager.js';
 import { QuizSessionManager } from './quiz-session.js';
 import { AdaptiveSelector } from './adaptive-selector.js';
 import { LearningUI } from '../ui/learning-ui.js';
+import { AchievementManager } from '../systems/achievement-manager.js';
 import { LEARNING, REWARDS } from '../config/learning-config.js';
 
 export class LearningController {
@@ -23,17 +29,22 @@ export class LearningController {
   #dailyManager;
   #sessionManager;
   #adaptiveSelector;
+  #achievementManager;
   #learningUI;
   #wordSet = [];
   #currentQuestions = [];
   #modePreference = LEARNING.MODE_PREFERENCE.AUTO; // 题型偏好
 
-  constructor() {
-    this.#eventBus = new EventBus();
+  /**
+   * @param {EventBus} eventBus - 可选的事件总线，不传则自建（向后兼容）
+   */
+  constructor(eventBus = null) {
+    this.#eventBus = eventBus ?? new EventBus();
     this.#gameState = new GameState(this.#eventBus);
     this.#progressTracker = new ProgressTracker(this.#eventBus);
     this.#dailyManager = new DailyManager(this.#eventBus, this.#gameState);
     this.#sessionManager = new QuizSessionManager(this.#eventBus, this.#dailyManager, this.#progressTracker);
+    this.#achievementManager = new AchievementManager(this.#eventBus, this.#gameState);
     this.#adaptiveSelector = null;
     this.#learningUI = null;
   }
@@ -68,9 +79,6 @@ export class LearningController {
       // 创建 UI 面板
       this.#learningUI.createContainer('#learning-panel-container');
 
-      // 检查是否有未完成的会话
-      this.#checkResumeSession();
-
       // 更新 UI
       this.#learningUI.update();
     }
@@ -79,16 +87,34 @@ export class LearningController {
   }
 
   /**
-   * 检查是否有未完成的会话
+   * 检查是否有未完成的会话，并显示续答提示（方案 B：只在进入 Quiz 页时调用）
    */
-  #checkResumeSession() {
-    if (this.#sessionManager.hasUnfinishedSession() && this.#learningUI) {
-      // 显示断点续答提示
-      this.#learningUI.showResumePrompt({
-        onContinue: () => this.resumeSession(),
-        onRestart: () => this.startNewQuiz(),
-      });
+  promptResumeQuiz(callbacks = {}) {
+    if (!this.#learningUI || !this.#sessionManager.hasUnfinishedSession()) {
+      return false;
     }
+
+    this.#learningUI.showResumePrompt({
+      onContinue: () => {
+        const result = this.resumeSession();
+        if (result) callbacks.onContinue?.(result);
+        return result;
+      },
+      onRestart: () => {
+        const result = this.startNewQuiz();
+        if (result) callbacks.onRestart?.(result);
+        return result;
+      },
+    });
+
+    return true;
+  }
+
+  /**
+   * 检查是否有未完成的会话（用于外部判断）
+   */
+  hasUnfinishedSession() {
+    return this.#sessionManager.hasUnfinishedSession();
   }
 
   // ==================== 答题流程 ====================
@@ -135,15 +161,10 @@ export class LearningController {
    */
   resumeSession() {
     const session = this.#sessionManager.resumeSession();
-    if (!session) {
-      return this.startNewQuiz();
-    }
+    if (!session) return null;
 
-    // 会话恢复成功，但需要重新生成完整的题目（包含选项）
-    // 因为存储的只有 wordId 和 mode，没有 options 和 correctIndex
-    // 为了简化，直接开始新的一套题
-    this.#sessionManager.clearSession();
-    return this.startNewQuiz();
+    this.#currentQuestions = session.questions;
+    return this.#currentQuestions;
   }
 
   /**
@@ -161,7 +182,23 @@ export class LearningController {
    */
   submitAnswer(selectedIndex) {
     const question = this.getCurrentQuestion();
+
+    // Debug logging
+    console.log('[LearningController] submitAnswer called', {
+      selectedIndex,
+      hasQuestion: !!question,
+      answered: question?.answered,
+      correctIndex: question?.correctIndex,
+      timestamp: Date.now()
+    });
+
     if (!question) return null;
+
+    // Check if already answered (prevent duplicate submission)
+    if (question.answered) {
+      console.warn('[LearningController] Question already answered, ignoring duplicate submission');
+      return null;
+    }
 
     const correct = selectedIndex === question.correctIndex;
     const currentQuiz = this.#sessionManager.getCurrentSession();
@@ -188,6 +225,11 @@ export class LearningController {
       fuelCoins,
       gearCoins,
     });
+
+    // Mark question as answered
+    question.answered = true;
+    question.selected = selectedIndex;
+    question.correct = correct;
 
     // 更新单词进度
     const wordText = question.correctWord || question.word;
@@ -250,6 +292,14 @@ export class LearningController {
   completeQuiz() {
     const result = this.#sessionManager.completeQuiz();
     if (!result) return null;
+
+    // DailyManager.completeQuiz 已更新 learning.totalQuizzes/totalQuestions/totalCorrect
+    // 这里只更新 lastPerfectQuiz（DailyManager 不负责此字段）
+    const isPerfect = result.correctCount === result.totalQuestions && result.totalQuestions > 0;
+    this.#gameState.set('learning.lastPerfectQuiz', isPerfect);
+
+    // 触发成就检查（解锁条件满足时会自动发放奖励）
+    this.#achievementManager.checkAll();
 
     // 更新 UI（可选）
     this.#learningUI?.update();
@@ -397,6 +447,10 @@ export class LearningController {
     return this.#eventBus;
   }
 
+  get gameState() {
+    return this.#gameState;
+  }
+
   get progressTracker() {
     return this.#progressTracker;
   }
@@ -411,6 +465,18 @@ export class LearningController {
 
   get adaptiveSelector() {
     return this.#adaptiveSelector;
+  }
+
+  get achievementManager() {
+    return this.#achievementManager;
+  }
+
+  /**
+   * 获取所有成就状态（供 UI 显示）
+   * @returns {Array<Object>}
+   */
+  getAchievements() {
+    return this.#achievementManager.getAllStatus();
   }
 
   get learningUI() {

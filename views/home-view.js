@@ -37,14 +37,39 @@ export class HomeView extends BaseView {
   }
 
   updateStats() {
-    this.setText('#home-coins', this.#game.coins || 0);
+    // 比赛资源
     this.setText('#home-fuel', Math.round(this.#game.fuel));
     this.setText('#home-nitro', this.#game.nitroCharges);
-    // 学习系统金币优先
+
+    // 货币资源
     const fuelCoins = this.#learningController?.getTodayEarnings()?.fuel || this.#game.fuelCoins || 0;
     const gearCoins = this.#learningController?.getTodayEarnings()?.gear || this.#game.gearCoins || 0;
     this.setText('#home-fuel-coins', fuelCoins);
     this.setText('#home-gear-coins', gearCoins);
+
+    // 学习进度
+    this.#updateLearningProgress();
+  }
+
+  #updateLearningProgress() {
+    if (!this.#game.gameState) return;
+
+    const state = this.#game.gameState.getAll();
+    const daily = state.daily || {};
+    const learning = state.learning || {};
+
+    // 今日答题数
+    const todayQuizzes = daily.todayQuizzes || 0;
+    const maxQuizzes = 3; // LEARNING.DAILY_QUIZ_COUNT
+    this.setText('#home-quizzes-today', `${todayQuizzes}/${maxQuizzes}`);
+
+    // 已掌握单词数
+    const mastered = learning.totalWordsMastered || 0;
+    this.setText('#home-words-mastered', `${mastered} 词`);
+
+    // 连续学习天数
+    const streak = daily.streakDays || 0;
+    this.setText('#home-streak', `${streak} 天`);
   }
 
   updateLearningUI() {

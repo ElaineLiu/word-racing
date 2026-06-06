@@ -112,9 +112,7 @@ export class ShopSystem {
       context.fuel = Math.min(context.maxFuel, context.fuel + amount);
     } else if (itemId.startsWith('nitro')) {
       const amount = itemId === 'nitro1' ? 1 : 3;
-      if (context.car) {
-        context.car.addNitro(amount);
-      }
+      // 只修改 context；Game 的 setter 会同步到 Car 和 GameState
       context.nitroCharges += amount;
     } else if (item.upgrade) {
       context.upgrades[item.upgrade] = Math.min(UPGRADES.MAX_LEVEL, (context.upgrades[item.upgrade] || 1) + 1);
