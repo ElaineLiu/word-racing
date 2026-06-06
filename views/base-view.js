@@ -9,6 +9,7 @@ export class BaseView {
   #container;
   #eventBus;
   #subscriptions = [];
+  #domListeners = []; // Track DOM event listeners for cleanup
   #mounted = false;
 
   constructor(containerId, eventBus) {
@@ -35,6 +36,7 @@ export class BaseView {
   unmount() {
     this.#mounted = false;
     this.#unsubscribeAll();
+    this.#removeAllDomListeners();
   }
 
   /**
@@ -150,6 +152,7 @@ export class BaseView {
     const el = this.$(selector);
     if (el) {
       el.addEventListener('click', handler);
+      this.#domListeners.push({ element: el, event: 'click', handler });
     }
   }
 
@@ -157,6 +160,14 @@ export class BaseView {
     const el = this.$(selector);
     if (el) {
       el.addEventListener(event, handler);
+      this.#domListeners.push({ element: el, event, handler });
     }
+  }
+
+  #removeAllDomListeners() {
+    this.#domListeners.forEach(({ element, event, handler }) => {
+      element.removeEventListener(event, handler);
+    });
+    this.#domListeners = [];
   }
 }

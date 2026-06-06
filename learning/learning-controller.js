@@ -182,7 +182,23 @@ export class LearningController {
    */
   submitAnswer(selectedIndex) {
     const question = this.getCurrentQuestion();
+
+    // Debug logging
+    console.log('[LearningController] submitAnswer called', {
+      selectedIndex,
+      hasQuestion: !!question,
+      answered: question?.answered,
+      correctIndex: question?.correctIndex,
+      timestamp: Date.now()
+    });
+
     if (!question) return null;
+
+    // Check if already answered (prevent duplicate submission)
+    if (question.answered) {
+      console.warn('[LearningController] Question already answered, ignoring duplicate submission');
+      return null;
+    }
 
     const correct = selectedIndex === question.correctIndex;
     const currentQuiz = this.#sessionManager.getCurrentSession();
@@ -209,6 +225,11 @@ export class LearningController {
       fuelCoins,
       gearCoins,
     });
+
+    // Mark question as answered
+    question.answered = true;
+    question.selected = selectedIndex;
+    question.correct = correct;
 
     // 更新单词进度
     const wordText = question.correctWord || question.word;

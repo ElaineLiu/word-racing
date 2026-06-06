@@ -10,6 +10,7 @@ export class QuizView extends BaseView {
   #game;
   #quiz;
   #learningController;
+  #isProcessingAnswer = false; // Prevent concurrent answer processing
 
   constructor(eventBus, game, learningController = null) {
     super('page-quiz', eventBus);
@@ -258,6 +259,20 @@ export class QuizView extends BaseView {
   }
 
   #handleAnswer(idx) {
+    // Debug logging
+    console.log('[QuizView] #handleAnswer called', {
+      idx,
+      isProcessing: this.#isProcessingAnswer,
+      hasLearningController: !!this.#learningController,
+      timestamp: Date.now()
+    });
+
+    // Prevent concurrent processing
+    if (this.#isProcessingAnswer) {
+      console.warn('[QuizView] Already processing answer, ignoring click');
+      return;
+    }
+
     let result;
 
     // 优先使用 LearningController
@@ -268,6 +283,9 @@ export class QuizView extends BaseView {
       result = this.#quiz.submitAnswer(idx);
       if (!result) return;
     }
+
+    // Set processing flag
+    this.#isProcessingAnswer = true;
 
     // Highlight buttons
     const buttons = this.$$('.quiz-option');
@@ -291,6 +309,9 @@ export class QuizView extends BaseView {
       } else {
         this.showQuestion();
       }
+
+      // Reset processing flag
+      this.#isProcessingAnswer = false;
     }, 900);
   }
 
@@ -431,6 +452,12 @@ export class QuizView extends BaseView {
 
     // Learning panel continue button
     this.onClick('#quiz-learn-continue-btn', () => {
+      // Check processing state
+      if (this.#isProcessingAnswer) {
+        console.warn('[QuizView] Already processing, ignoring continue button');
+        return;
+      }
+
       this.hide('#quiz-learn-panel');
 
       // Remove class to center layout

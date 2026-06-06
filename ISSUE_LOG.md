@@ -25,6 +25,39 @@
 
 ## 已解决问题
 
+### #012 - Event Listener 累积导致多次触发
+**发现时间**: 2026-06-06
+**问题类型**: 架构设计缺陷
+**严重程度**: 高
+
+**问题描述**:
+用户在quiz状态下点击"我不认识"按钮，出现学习面板后，点击"我知道了"按钮，quiz意外结束。
+
+**原因分析**:
+1. BaseView.onClick() 使用 addEventListener 但不清理监听器
+2. View 多次 mount/unmount 后监听器累积
+3. 一次点击触发多个监听器 → 多次调用处理函数
+4. 第二次调用时 getCurrentQuestion() 返回 null → 触发 showComplete()
+
+**解决方案**:
+1. BaseView 跟踪所有 DOM 监听器，unmount 时移除
+2. LearningController.submitAnswer() 检查 question.answered 标志
+3. QuizView.#handleAnswer() 添加 #isProcessingAnswer 防抖标志
+4. 添加调试日志帮助排查
+
+**预防措施**:
+1. ✅ **DOM 事件监听器必须清理**：所有 View 在 unmount 时必须移除 DOM 监听器
+2. ✅ **状态标志双重保护**：业务逻辑层和 UI层都要有防重复标志
+3. ✅ **测试必须覆盖多次 mount/unmount**：所有 View 的测试都要验证监听器不累积
+4. ✅ **快速点击场景必须测试**：UI 交互测试要包含连续点击场景
+
+**相关文件**:
+- `views/base-view.js`
+- `views/quiz-view.js`
+- `learning/learning-controller.js`
+
+---
+
 ### #011 - 双重 EventBus 导致学习系统事件隔离
 **发现时间**: 2026-06-02
 **问题类型**: 架构设计缺陷
