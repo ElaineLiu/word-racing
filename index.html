@@ -34,13 +34,62 @@
             <p>Back words, drive fast!</p>
             <!-- Learning Panel (inserted by LearningUI) -->
             <div id="learning-panel-container"></div>
-            <div id="home-stats">
-                <div class="stat-item"><span class="text-muted">Coins</span> <span id="home-coins">0</span></div>
-                <div class="stat-item"><span class="text-muted">Fuel</span> <span class="stat-value"><span id="home-fuel">0</span>/100</span></div>
-                <div class="stat-item"><span class="text-muted">Nitro</span> <span id="home-nitro">0</span></div>
-                <div class="stat-item"><span class="text-muted">Fuel Coins</span> <span id="home-fuel-coins">0</span></div>
-                <div class="stat-item"><span class="text-muted">Gear Coins</span> <span id="home-gear-coins">0</span></div>
+
+            <!-- 学习进度卡片 -->
+            <div id="home-progress" class="progress-card">
+                <div class="progress-title">📚 学习进度</div>
+                <div class="progress-grid">
+                    <div class="progress-item">
+                        <span class="progress-label">今日答题</span>
+                        <span class="progress-value" id="home-quizzes-today">0/3</span>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">已掌握</span>
+                        <span class="progress-value" id="home-words-mastered">0 词</span>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">连续学习</span>
+                        <span class="progress-value" id="home-streak">0 天</span>
+                    </div>
+                </div>
             </div>
+
+            <!-- 资源信息 -->
+            <div id="home-stats" class="stats-container">
+                <!-- 比赛资源 -->
+                <div class="stats-section">
+                    <div class="stats-section-title">🏁 比赛资源</div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-icon">⛽</span>
+                            <span class="stat-label">燃油</span>
+                            <span class="stat-value"><span id="home-fuel">0</span>/100</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">🔥</span>
+                            <span class="stat-label">氮气</span>
+                            <span class="stat-value" id="home-nitro">0</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- 货币资源 -->
+                <div class="stats-section">
+                    <div class="stats-section-title">💰 货币</div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-icon">🪙</span>
+                            <span class="stat-label">燃油币</span>
+                            <span class="stat-value" id="home-fuel-coins">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">⚙️</span>
+                            <span class="stat-label">齿轮币</span>
+                            <span class="stat-value" id="home-gear-coins">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="home-leaderboard">
                 <!-- Leaderboard will be rendered here -->
             </div>

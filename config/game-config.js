@@ -143,30 +143,33 @@ export const ECONOMY = {
 
 export const TRACK = {
   // Track dimensions
-  WIDTH: 76,                     // track width in pixels
+  WIDTH: 90,                     // track width in pixels (default: Shanghai v2)
   SAMPLES_PER_SEGMENT: 200,      // spline interpolation samples
 
-  // Waypoints for the circuit (18 control points)
+  // Waypoints for default circuit (Shanghai v2, 20 control points)
+  // Mirrors track-registry.js shanghai-2d. Update both together.
   WAYPOINTS: [
-    { x: 180, y: 180 },  // Start/finish area
-    { x: 350, y: 160 },
-    { x: 520, y: 155 },
-    { x: 660, y: 170 },
-    { x: 740, y: 220 },  // Turn 1
-    { x: 770, y: 300 },
-    { x: 760, y: 380 },  // Turn 1 exit
-    { x: 720, y: 430 },  // Turn 2 entry
-    { x: 640, y: 465 },  // Turn 2 apex
-    { x: 540, y: 475 },  // Back straight
-    { x: 420, y: 470 },
-    { x: 340, y: 455 },  // Hairpin entry
-    { x: 290, y: 430 },
-    { x: 270, y: 390 },  // Hairpin apex
-    { x: 280, y: 350 },  // Hairpin exit
-    { x: 310, y: 320 },  // S-curve entry
-    { x: 270, y: 285 },  // S-curve mid 1
-    { x: 220, y: 270 },  // S-curve mid 2
-    { x: 175, y: 250 },  // S-curve exit
+    { x: 120, y: 120 },
+    { x: 300, y: 115 },
+    { x: 500, y: 110 },
+    { x: 700, y: 110 },
+    { x: 900, y: 115 },
+    { x: 1100, y: 130 },
+    { x: 1240, y: 200 },
+    { x: 1300, y: 340 },
+    { x: 1230, y: 480 },
+    { x: 1050, y: 560 },
+    { x: 780, y: 575 },
+    { x: 500, y: 575 },
+    { x: 280, y: 580 },
+    { x: 180, y: 660 },
+    { x: 280, y: 740 },
+    { x: 420, y: 730 },
+    { x: 560, y: 700 },
+    { x: 680, y: 620 },
+    { x: 780, y: 480 },
+    { x: 600, y: 350 },
+    { x: 350, y: 260 },
   ],
 
   // Kerb rendering
@@ -180,8 +183,8 @@ export const TRACK = {
 
 export const DISPLAY = {
   // Canvas dimensions
-  CANVAS_WIDTH: 920,
-  CANVAS_HEIGHT: 620,
+  CANVAS_WIDTH: 1400,
+  CANVAS_HEIGHT: 800,
 
   // Speed display
   SPEED_DISPLAY_MULTIPLIER: 50,  // speed * 50 = km/h display
@@ -255,11 +258,11 @@ export const GAME = {
     RESULTS: 'RESULTS',
   },
 
-  // Boundaries
+  // Boundaries (匹配 DISPLAY.CANVAS_WIDTH/HEIGHT 1400×800，留 20px 边距)
   WORLD_MIN_X: 20,
-  WORLD_MAX_X: 900,
+  WORLD_MAX_X: 1380,
   WORLD_MIN_Y: 20,
-  WORLD_MAX_Y: 600,
+  WORLD_MAX_Y: 780,
 };
 
 // ============================================================================

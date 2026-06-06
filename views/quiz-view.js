@@ -111,7 +111,11 @@ export class QuizView extends BaseView {
         this.showComplete();
         return;
       }
-      const status = this.#learningController.getSessionStatus();
+      const status = this.#learningController.getSessionStatus() || {
+        answeredCount: 0,
+        totalQuestions: q.options ? LEARNING.QUIZ_QUESTION_COUNT : 0,
+        correctCount: 0,
+      };
       current = status.answeredCount;
       total = status.totalQuestions;
       correctCount = status.correctCount;
@@ -480,8 +484,12 @@ export class QuizView extends BaseView {
         alert('Insufficient fuel! Buy fuel in the shop first.');
         return;
       }
-      this.#game.continueToRace();
-      this.emit(Events.RACE_START, { source: 'quiz' });
+      try {
+        this.#game.continueToRace();
+        this.emit(Events.RACE_START, { source: 'quiz' });
+      } catch (err) {
+        alert(err.message);
+      }
     });
 
     this.onClick('#quiz-shop-btn', () => {

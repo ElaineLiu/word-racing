@@ -3,6 +3,8 @@
  * Extracted from Game class for separation of concerns
  */
 
+import { DISPLAY } from '../config/game-config.js';
+
 export class RenderSystem {
   #canvas;
   #ctx;
@@ -141,8 +143,8 @@ export class RenderSystem {
     const pts = this.#track.points;
     for (let i = 0; i < pts.length; i += 8) {
       const p = pts[i];
-      const sx = mx + (p.x / 920) * mW;
-      const sy = my + (p.y / 620) * mH;
+      const sx = mx + (p.x / DISPLAY.CANVAS_WIDTH) * mW;
+      const sy = my + (p.y / DISPLAY.CANVAS_HEIGHT) * mH;
       if (i === 0) ctx.moveTo(sx, sy);
       else ctx.lineTo(sx, sy);
     }
@@ -151,15 +153,15 @@ export class RenderSystem {
 
     if (pts.length > 0) {
       ctx.fillStyle = '#FFD700';
-      const sx = mx + (pts[0].x / 920) * mW;
-      const sy = my + (pts[0].y / 620) * mH;
+      const sx = mx + (pts[0].x / DISPLAY.CANVAS_WIDTH) * mW;
+      const sy = my + (pts[0].y / DISPLAY.CANVAS_HEIGHT) * mH;
       ctx.beginPath();
       ctx.arc(sx, sy, 3, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    const pix = mx + (this.#car.x / 920) * mW;
-    const piy = my + (this.#car.y / 620) * mH;
+    const pix = mx + (this.#car.x / DISPLAY.CANVAS_WIDTH) * mW;
+    const piy = my + (this.#car.y / DISPLAY.CANVAS_HEIGHT) * mH;
     ctx.fillStyle = '#E53935';
     ctx.fillRect(pix - 2, piy - 2, 4, 4);
 
@@ -171,13 +173,13 @@ export class RenderSystem {
   #renderCountdown(text, scale) {
     const ctx = this.#ctx;
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
-    ctx.fillRect(0, 0, 920, 620);
+    ctx.fillRect(0, 0, DISPLAY.CANVAS_WIDTH, DISPLAY.CANVAS_HEIGHT);
 
     ctx.fillStyle = text === 'GO!' ? '#00C853' : '#FFD700';
     ctx.font = `bold ${text === 'GO!' ? 90 : 110}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, 460, 310);
+    ctx.fillText(text, DISPLAY.CANVAS_WIDTH / 2, DISPLAY.CANVAS_HEIGHT / 2);
   }
 
   // ==================== HUD ====================
@@ -185,13 +187,17 @@ export class RenderSystem {
   #renderHUD(gameState, scale) {
     const ctx = this.#ctx;
     const padding = 12;
+    const W = DISPLAY.CANVAS_WIDTH;
+    const H = DISPLAY.CANVAS_HEIGHT;
+    const centerX = W / 2;
+    const rightX = W - 110 - padding; // right panels (width 110)
 
     // LAP panel
     this.#drawPanel(ctx, padding, padding, 110, 48, 'LAP',
       `${Math.min(gameState.lap + 1, gameState.totalLaps)} / ${gameState.totalLaps}`, '#FFD700');
 
-    // TIME panel
-    this.#drawPanel(ctx, 375, padding, 170, 48, 'TIME',
+    // TIME panel (centered)
+    this.#drawPanel(ctx, centerX - 85, padding, 170, 48, 'TIME',
       this.#formatTime(gameState.raceTime), '#FFF');
 
     // Best lap
@@ -200,20 +206,20 @@ export class RenderSystem {
       ctx.font = '11px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      ctx.fillText('BEST  ' + this.#formatTime(gameState.bestLapTime), 460, padding + 54);
+      ctx.fillText('BEST  ' + this.#formatTime(gameState.bestLapTime), centerX, padding + 54);
     }
 
-    // SCORE panel
-    this.#drawPanel(ctx, 798, padding, 110, 48, 'SCORE',
+    // SCORE panel (right)
+    this.#drawPanel(ctx, rightX, padding, 110, 48, 'SCORE',
       String(gameState.raceScore), '#FFD700');
 
-    // FUEL bar
-    this.#renderFuelBar(ctx, 798, padding + 54, 110, 18, gameState.fuel, gameState.maxFuel);
+    // FUEL bar (right, below SCORE)
+    this.#renderFuelBar(ctx, rightX, padding + 54, 110, 18, gameState.fuel, gameState.maxFuel);
 
-    // SPEED panel
-    this.#renderSpeedPanel(ctx, padding, 512, 130, 88, gameState.displaySpeed);
+    // SPEED panel (bottom-left)
+    this.#renderSpeedPanel(ctx, padding, H - 88 - padding, 130, 88, gameState.displaySpeed);
 
-    // NITRO panel
+    // NITRO panel (bottom-right)
     this.#renderNitroHUD(ctx, scale, padding, gameState.nitroStatus);
 
     // EXIT RACE button
@@ -302,10 +308,12 @@ export class RenderSystem {
   }
 
   #renderNitroHUD(ctx, scale, padding, nitroStatus) {
-    const x = 798;
-    const y = 512;
+    const W = DISPLAY.CANVAS_WIDTH;
+    const H = DISPLAY.CANVAS_HEIGHT;
     const w = 110;
     const h = 88;
+    const x = W - w - padding;
+    const y = H - h - padding;
 
     ctx.fillStyle = 'rgba(13,17,23,0.82)';
     this.#roundRect(ctx, x, y, w, h, 10);
@@ -382,12 +390,15 @@ export class RenderSystem {
 
   #renderResults(gameState, scale) {
     const ctx = this.#ctx;
+    const W = DISPLAY.CANVAS_WIDTH;
+    const H = DISPLAY.CANVAS_HEIGHT;
+    const centerX = W / 2;
 
     ctx.fillStyle = 'rgba(0,0,0,0.75)';
-    ctx.fillRect(0, 0, 920, 620);
+    ctx.fillRect(0, 0, W, H);
 
     const bw = 460, bh = 440;
-    const bx = (920 - bw) / 2, by = (620 - bh) / 2;
+    const bx = (W - bw) / 2, by = (H - bh) / 2;
 
     ctx.fillStyle = '#161B22';
     this.#roundRect(ctx, bx, by, bw, bh, 16);
@@ -401,11 +412,11 @@ export class RenderSystem {
     ctx.font = 'bold 30px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('RACE COMPLETE!', 460, by + 45);
+    ctx.fillText('RACE COMPLETE!', centerX, by + 45);
 
     ctx.fillStyle = '#00C853';
     ctx.font = 'bold 22px Arial';
-    ctx.fillText('1st Place!', 460, by + 82);
+    ctx.fillText('1st Place!', centerX, by + 82);
 
     ctx.strokeStyle = 'rgba(255,255,255,0.08)';
     ctx.lineWidth = 1;
@@ -441,7 +452,7 @@ export class RenderSystem {
       ctx.font = '12px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('Review: ' + gameState.wrongWords.map(w => w.word + '(' + w.meaning + ')').join(', '), 460, by + bh - 72);
+      ctx.fillText('Review: ' + gameState.wrongWords.map(w => w.word + '(' + w.meaning + ')').join(', '), centerX, by + bh - 72);
     }
 
     const btnText = gameState.fuel <= 0 ? 'NEED FUEL! QUIZ NOW!' : 'CONTINUE';
@@ -457,7 +468,7 @@ export class RenderSystem {
     ctx.font = 'bold 18px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(btnText, 460, by + bh - 34);
+    ctx.fillText(btnText, centerX, by + bh - 34);
 
     this.#resultsButtons = [{
       id: 'continue',

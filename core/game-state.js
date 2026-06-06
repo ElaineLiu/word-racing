@@ -8,7 +8,7 @@ import { EventBus, Events } from './event-bus.js';
 // Default state structure
 const DEFAULT_STATE = {
   // Resources
-  fuel: 100,
+  fuel: 0,  // must buy in shop (match ECONOMY.INITIAL_FUEL)
   fuelCoins: 0,
   gearCoins: 0,
   nitroCharges: 0,

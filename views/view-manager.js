@@ -91,7 +91,13 @@ export class ViewManager {
         alert('Insufficient fuel! Buy fuel in the shop first.');
         viewName = 'home';
       } else if (![GAME.STATES.COUNTDOWN, GAME.STATES.RACING, GAME.STATES.RESULTS].includes(this.#game.state)) {
-        this.#game.continueToRace();
+        try {
+          this.#game.continueToRace();
+        } catch (err) {
+          // 友好提示：赛道未解锁 / 金币不足等
+          alert(err.message);
+          viewName = 'home';
+        }
       }
     }
 

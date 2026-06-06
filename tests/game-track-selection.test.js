@@ -164,9 +164,12 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
 
   // ==================== getAvailableTracks ====================
   describe('getAvailableTracks()', () => {
-    it('应返回 registry 中所有赛道', () => {
+    it('应返回 FeatureFlags 启用的赛道', () => {
       const tracks = game.getAvailableTracks();
-      expect(tracks.length).toBe(Object.keys(TRACK_REGISTRY).length);
+      // 默认 FeatureFlags: 2d-track=true, 3d-track=false
+      // 应该返回 3 条 2D 赛道
+      expect(tracks.length).toBe(3);
+      expect(tracks.every(t => t.type === '2d')).toBe(true);
     });
 
     it('应正确标记 unlocked 状态', () => {
@@ -216,7 +219,7 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
       game.startRace();
       expect(gameState.get('fuelCoins')).toBe(35); // 50 - 15
       expect(game.state).toBe('COUNTDOWN');
-      expect(game.track.trackWidth).toBe(60);
+      expect(game.track.trackWidth).toBe(50);
     });
   });
 });

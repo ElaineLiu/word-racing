@@ -20,6 +20,12 @@ const createMockGame = () => ({
   gearCoins: 50,
   selectedLaps: 3,
   state: 'IDLE',
+  gameState: {
+    getAll: () => ({
+      daily: { todayQuizzes: 1, streakDays: 3 },
+      learning: { totalWordsMastered: 25 }
+    })
+  },
   quiz: {
     getCurrentQuestion: vi.fn(),
     submitAnswer: vi.fn(),
@@ -231,11 +237,13 @@ describe('HomeView', () => {
   beforeEach(() => {
     const html = `
       <div id="page-home">
-        <span id="home-coins"></span>
         <span id="home-fuel"></span>
         <span id="home-nitro"></span>
         <span id="home-fuel-coins"></span>
         <span id="home-gear-coins"></span>
+        <span id="home-quizzes-today"></span>
+        <span id="home-words-mastered"></span>
+        <span id="home-streak"></span>
         <div id="home-leaderboard"></div>
         <div id="home-lap-select"></div>
         <button id="home-start-btn"></button>
@@ -254,9 +262,18 @@ describe('HomeView', () => {
     view.mount();
     view.updateStats();
 
-    expect(document.getElementById('home-coins').textContent).toBe('100');
+    // 比赛资源
     expect(document.getElementById('home-fuel').textContent).toBe('50');
     expect(document.getElementById('home-nitro').textContent).toBe('2');
+
+    // 货币资源
+    expect(document.getElementById('home-fuel-coins').textContent).toBe('200');
+    expect(document.getElementById('home-gear-coins').textContent).toBe('50');
+
+    // 学习进度
+    expect(document.getElementById('home-quizzes-today').textContent).toBe('1/3');
+    expect(document.getElementById('home-words-mastered').textContent).toBe('25 词');
+    expect(document.getElementById('home-streak').textContent).toBe('3 天');
   });
 
   it('should emit QUIZ_START when start button clicked', () => {

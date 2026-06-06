@@ -245,6 +245,7 @@ describe('Game', () => {
 
     it('should start COUNTDOWN even without fuel (fuel check is in NavManager)', () => {
       game.fuel = 0;
+      game.fuelCoins = 100; // 比赛需要扣 shanghai cost=10
       game.continueToRace();
       // continueToRace() doesn't check fuel - NavManager does that
       expect(game.state).toBe(GAME.STATES.COUNTDOWN);
@@ -252,6 +253,7 @@ describe('Game', () => {
 
     it('should transition to COUNTDOWN when race starts', () => {
       game.fuel = 50;
+      game.fuelCoins = 100; // 比赛需要扣 shanghai cost=10
       game.continueToRace();
       expect(game.state).toBe(GAME.STATES.COUNTDOWN);
     });
