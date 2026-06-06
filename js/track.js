@@ -8,13 +8,14 @@
 import { TRACK, DISPLAY } from '../config/game-config.js';
 
 export class Track {
-    constructor() {
+    constructor(waypoints = null, trackWidth = null) {
         this.points = [];       // Smooth track center points
-        this.trackWidth = TRACK.WIDTH;   // Track width in game pixels
+        this.trackWidth = trackWidth != null ? trackWidth : TRACK.WIDTH;
         this.startPos = { x: 0, y: 0, angle: 0 };
 
         // Define control waypoints for the circuit
-        this.waypoints = TRACK.WAYPOINTS.map(wp => ({ ...wp }));
+        const sourceWp = waypoints || TRACK.WAYPOINTS;
+        this.waypoints = sourceWp.map(wp => ({ ...wp }));
 
         this._generateSmoothCurve(TRACK.SAMPLES_PER_SEGMENT);
         this._calculateStartPos();

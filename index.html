@@ -21,10 +21,13 @@
         <div class="home-content">
             <div class="home-header">
                 <h1>WORD RACING</h1>
-                <div class="settings-wrapper">
-                    <button id="home-settings-btn" class="settings-btn" title="Settings">⚙️</button>
-                    <div id="settings-dropdown" class="settings-dropdown" style="display:none;">
-                        <button id="reset-daily-btn" class="settings-menu-item">重置每日答题限制</button>
+                <div class="header-actions">
+                    <button id="achievement-btn-home" class="icon-btn" title="成就">🏆</button>
+                    <div class="settings-wrapper">
+                        <button id="home-settings-btn" class="settings-btn" title="Settings">⚙️</button>
+                        <div id="settings-dropdown" class="settings-dropdown" style="display:none;">
+                            <button id="reset-daily-btn" class="settings-menu-item">重置每日答题限制</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -102,6 +105,7 @@
                     <button id="quiz-restart-btn">RETRY QUIZ</button>
                     <button id="quiz-start-btn">START RACE</button>
                     <button id="quiz-shop-btn">GO TO SHOP</button>
+                    <button id="achievement-btn">🏆 成就</button>
                 </div>
             </div>
         </div>
@@ -117,8 +121,15 @@
                 <div>Fuel: <span id="shop-fuel">0</span>/100</div>
                 <div>Nitro: <span id="shop-nitro">0</span></div>
             </div>
+            <div id="shop-tabs">
+                <button id="shop-tab-items" class="active">Items</button>
+                <button id="shop-tab-tracks">Tracks</button>
+            </div>
             <div id="shop-items">
                 <!-- Shop items will be rendered here -->
+            </div>
+            <div id="shop-tracks" style="display:none;">
+                <!-- Track list will be rendered here -->
             </div>
             <div id="shop-actions">
                 <button id="shop-back-btn">BACK</button>
@@ -146,7 +157,10 @@
     <!-- Page 5: Report -->
     <div id="page-report" class="page">
         <div class="report-content">
-            <h2>📊 学习进度报告</h2>
+            <div class="report-header">
+                <h2>📊 学习进度报告</h2>
+                <button id="achievement-btn-report" class="icon-btn" title="成就">🏆 成就</button>
+            </div>
 
             <div class="report-section">
                 <h3>累计统计</h3>
@@ -174,6 +188,17 @@
                 <p class="section-hint">按答题状态排序，已掌握的排在最后</p>
                 <div id="report-word-details" class="report-list"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Achievement Panel Modal (Phase 3.5) -->
+    <div id="achievement-panel" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🏆 成就</h2>
+                <button id="achievement-panel-close" class="modal-close">×</button>
+            </div>
+            <div id="achievement-list"></div>
         </div>
     </div>
 

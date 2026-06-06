@@ -10,6 +10,8 @@ import { Game } from './game.js';
 import { EventBus, Events } from '../core/event-bus.js';
 import { ViewManager } from '../views/view-manager.js';
 import { LearningController } from '../learning/learning-controller.js';
+import { AchievementToast } from '../ui/achievement-toast.js';
+import { AchievementPanel } from '../ui/achievement-panel.js';
 
 // Initialize game when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,26 +26,37 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const canvas = document.getElementById('gameCanvas');
-  const game = new Game(canvas);
+
+  // 创建共享 EventBus（统一事件总线，避免双重 EventBus 问题）
+  const eventBus = new EventBus();
+
+  // 先创建 LearningController，传入共享 EventBus
+  // 它会自建 GameState，然后把这个 GameState 注入给 Game，确保单一数据源（Phase 3.1a）
+  const learningController = new LearningController(eventBus);
+  const game = new Game(canvas, learningController.gameState);
   window.game = game;
+  window.learningController = learningController;
 
   game.init().then(() => {
-    // Create shared EventBus
-    const eventBus = new EventBus();
-
     // Initialize Learning Controller with loaded wordset
-    const learningController = new LearningController();
     learningController.init(game.quiz.words || []);
-    window.learningController = learningController;
 
     // Update wordset when quiz loads new words
     game.quiz.onWordsLoaded = (words) => {
       learningController.setWordSet(words);
     };
 
-    // Create ViewManager with Learning Controller
+    // Create ViewManager with Learning Controller (use shared EventBus)
     const viewManager = new ViewManager(eventBus, game, learningController);
     window.viewManager = viewManager;
+
+    // Initialize Achievement Toast (Phase 3.3)
+    const achievementToast = new AchievementToast(eventBus);
+    achievementToast.mount();
+
+    // Initialize Achievement Panel (Phase 3.5)
+    const achievementPanel = new AchievementPanel(learningController);
+    achievementPanel.init();
 
     // Set up callbacks (now that viewManager exists)
     game.onExitRace = () => {
@@ -76,10 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
             upgrades: { engine: 1, tire: 1, body: 1 },
           };
           localStorage.setItem('wr_game_state', JSON.stringify(testState));
-          // 同步到 Game 对象
+          // 重新加载 GameState，让 Game/LearningController 都看到新数据
+          learningController.gameState.deserialize(JSON.stringify(testState));
+          // 同步 Game 中尚未迁移的字段（Phase 3.1b 完成后可移除）
           game.fuel = testState.fuel;
-          game.fuelCoins = testState.fuelCoins;
-          game.gearCoins = testState.gearCoins;
           game.nitroCharges = testState.nitroCharges;
           game.upgrades = testState.upgrades;
           game.car?.applyUpgrades?.(testState.upgrades);

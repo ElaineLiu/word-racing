@@ -149,4 +149,13 @@ export const Events = {
   // Learning system - 出题
   QUIZ_BUILT: 'quiz:built',
   REVIEW_WORDS_SELECTED: 'quiz:review_selected',
+
+  // Achievement system - 成就
+  ACHIEVEMENT_UNLOCKED: 'achievement:unlocked',
+  ACHIEVEMENT_PROGRESS: 'achievement:progress',
+
+  // Track system - 赛道
+  TRACK_SELECTED: 'track:selected',
+  TRACK_UNLOCKED: 'track:unlocked',
+  TRACK_PURCHASED: 'track:purchased',
 };

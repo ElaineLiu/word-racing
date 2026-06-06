@@ -340,15 +340,11 @@ export class LearningUI {
     overlay.querySelector('.continue').addEventListener('click', () => {
       overlay.remove();
       callbacks.onContinue?.();
-      // 跳转到 quiz 页面
-      this.#eventBus.emit(Events.VIEW_CHANGE, { view: 'quiz' });
     });
 
     overlay.querySelector('.restart').addEventListener('click', () => {
       overlay.remove();
       callbacks.onRestart?.();
-      // 跳转到 quiz 页面
-      this.#eventBus.emit(Events.VIEW_CHANGE, { view: 'quiz' });
     });
   }
 

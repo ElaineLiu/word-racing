@@ -32,3 +32,6 @@ dist/
 build/
 .cache/
 coverage/
+
+# 打包文件
+*.zip

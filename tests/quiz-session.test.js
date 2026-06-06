@@ -10,6 +10,21 @@ import { GameState } from '../core/game-state.js';
 import { DailyManager } from '../learning/daily-manager.js';
 import { ProgressTracker } from '../learning/progress-tracker.js';
 import { LEARNING } from '../config/learning-config.js';
+const createQuestion = (id, word = `word${id}`, overrides = {}) => ({
+  wordId: id,
+  word,
+  mode: 'PIT_BOARD',
+  modeLabel: '词→义',
+  prompt: word,
+  promptSub: `/wɜːrd${id}/`,
+  sentence: `This is ${word}.`,
+  options: ['选项A', '选项B', '选项C', `词${id}`],
+  correctIndex: 3,
+  correctWord: word,
+  correctMeaning: `词${id}`,
+  isNew: true,
+  ...overrides,
+});
 
 describe('QuizSessionManager', () => {
   let eventBus;
@@ -89,8 +104,8 @@ describe('QuizSessionManager', () => {
     it('should resume incomplete session', () => {
       const session = sessionManager.startDailySession();
       sessionManager.setQuestions([
-        { wordId: 1, word: 'speed', mode: 'PIT_BOARD' },
-        { wordId: 2, word: 'brake', mode: 'PIT_BOARD' },
+        createQuestion(1, 'speed'),
+        createQuestion(2, 'brake'),
       ]);
       sessionManager.saveAnswer({ questionIndex: 0, correct: true, mode: 'PIT_BOARD' });
 
@@ -107,7 +122,10 @@ describe('QuizSessionManager', () => {
       eventBus.on(Events.SESSION_RESUME, handler);
 
       sessionManager.startDailySession();
-      sessionManager.setQuestions([{ wordId: 1, word: 'speed', mode: 'PIT_BOARD' }]);
+      sessionManager.setQuestions([
+        createQuestion(1, 'speed'),
+        createQuestion(2, 'brake'),
+      ]);
       sessionManager.saveAnswer({ questionIndex: 0, correct: true, mode: 'PIT_BOARD' });
 
       // Resume
@@ -127,8 +145,8 @@ describe('QuizSessionManager', () => {
     it('should return true for incomplete session', () => {
       sessionManager.startDailySession();
       sessionManager.setQuestions([
-        { wordId: 1, word: 'speed', mode: 'PIT_BOARD' },
-        { wordId: 2, word: 'brake', mode: 'PIT_BOARD' },
+        createQuestion(1, 'speed'),
+        createQuestion(2, 'brake'),
       ]);
       sessionManager.saveAnswer({ questionIndex: 0, correct: true, mode: 'PIT_BOARD' });
 
@@ -137,7 +155,7 @@ describe('QuizSessionManager', () => {
 
     it('should return false after completion', () => {
       sessionManager.startDailySession();
-      sessionManager.setQuestions([{ wordId: 1, word: 'speed', mode: 'PIT_BOARD' }]);
+      sessionManager.setQuestions([createQuestion(1, 'speed')]);
       sessionManager.saveAnswer({ questionIndex: 0, correct: true, mode: 'PIT_BOARD' });
       sessionManager.completeQuiz();
 
@@ -214,8 +232,8 @@ describe('QuizSessionManager', () => {
     beforeEach(() => {
       sessionManager.startDailySession();
       sessionManager.setQuestions([
-        { wordId: 1, word: 'speed', mode: 'PIT_BOARD' },
-        { wordId: 2, word: 'brake', mode: 'PIT_BOARD' },
+        createQuestion(1, 'speed'),
+        createQuestion(2, 'brake'),
       ]);
     });
 
@@ -266,9 +284,7 @@ describe('QuizSessionManager', () => {
   describe('getComboReward', () => {
     beforeEach(() => {
       sessionManager.startDailySession();
-      sessionManager.setQuestions(Array(10).fill(null).map((_, i) => ({
-        wordId: i, word: `word${i}`, mode: 'PIT_BOARD'
-      })));
+      sessionManager.setQuestions(Array(10).fill(null).map((_, i) => createQuestion(i, `word${i}`)));
     });
 
     it('should return no reward for combo < 3', () => {
@@ -311,7 +327,7 @@ describe('QuizSessionManager', () => {
 
     it('should update after quiz completion', () => {
       sessionManager.startDailySession();
-      sessionManager.setQuestions([{ wordId: 1, word: 'speed', mode: 'PIT_BOARD' }]);
+      sessionManager.setQuestions([createQuestion(1, 'speed')]);
       sessionManager.saveAnswer({ questionIndex: 0, correct: true, mode: 'PIT_BOARD' });
       sessionManager.completeQuiz();
 
@@ -327,8 +343,8 @@ describe('QuizSessionManager', () => {
     it('should get current question index', () => {
       sessionManager.startDailySession();
       sessionManager.setQuestions([
-        { wordId: 1, word: 'speed', mode: 'PIT_BOARD' },
-        { wordId: 2, word: 'brake', mode: 'PIT_BOARD' },
+        createQuestion(1, 'speed'),
+        createQuestion(2, 'brake'),
       ]);
 
       expect(sessionManager.getCurrentQuestionIndex()).toBe(0);
@@ -340,8 +356,8 @@ describe('QuizSessionManager', () => {
     it('should get progress percentage', () => {
       sessionManager.startDailySession();
       sessionManager.setQuestions([
-        { wordId: 1, word: 'speed', mode: 'PIT_BOARD' },
-        { wordId: 2, word: 'brake', mode: 'PIT_BOARD' },
+        createQuestion(1, 'speed'),
+        createQuestion(2, 'brake'),
       ]);
 
       expect(sessionManager.getProgressPercentage()).toBe(0);
@@ -393,7 +409,7 @@ describe('QuizSessionManager', () => {
   describe('persistence', () => {
     it('should save session to localStorage', () => {
       sessionManager.startDailySession();
-      sessionManager.setQuestions([{ wordId: 1, word: 'speed', mode: 'PIT_BOARD' }]);
+      sessionManager.setQuestions([createQuestion(1, 'speed')]);
       sessionManager.saveAnswer({ questionIndex: 0, correct: true, mode: 'PIT_BOARD' });
 
       const saved = JSON.parse(localStorage.getItem('wr_quiz_session'));
@@ -401,20 +417,47 @@ describe('QuizSessionManager', () => {
       expect(saved.answers.length).toBe(1);
     });
 
-    it('should load session on construction', () => {
+    it('should persist complete question data for real resume', () => {
       sessionManager.startDailySession();
       sessionManager.setQuestions([
-        { wordId: 1, word: 'speed', mode: 'PIT_BOARD' },
-        { wordId: 2, word: 'brake', mode: 'PIT_BOARD' },
+        createQuestion(1, 'speed', { isReview: true, originalMode: 'STRATEGY' }),
       ]);
+
+      const saved = JSON.parse(localStorage.getItem('wr_quiz_session'));
+      const question = saved.questions[0];
+
+      expect(question.options).toEqual(['选项A', '选项B', '选项C', '词1']);
+      expect(question.correctIndex).toBe(3);
+      expect(question.prompt).toBe('speed');
+      expect(question.promptSub).toBe('/wɜːrd1/');
+      expect(question.sentence).toBe('This is speed.');
+      expect(question.correctWord).toBe('speed');
+      expect(question.correctMeaning).toBe('词1');
+      expect(question.isReview).toBe(true);
+      expect(question.originalMode).toBe('STRATEGY');
+    });
+
+    it('should save completed=true to localStorage after quiz completion', () => {
+      sessionManager.startDailySession();
+      sessionManager.setQuestions([createQuestion(1, 'speed')]);
       sessionManager.saveAnswer({ questionIndex: 0, correct: true, mode: 'PIT_BOARD' });
 
-      // Create new manager
-      const newManager = new QuizSessionManager(eventBus, dailyManager, progressTracker);
-      const session = newManager.getCurrentSession();
+      sessionManager.completeQuiz();
 
-      expect(session).not.toBeNull();
-      expect(session.answers.length).toBe(1);
+      const saved = JSON.parse(localStorage.getItem('wr_quiz_session'));
+      expect(saved.completed).toBe(true);
+
+      const newManager = new QuizSessionManager(eventBus, dailyManager, progressTracker);
+      expect(newManager.hasUnfinishedSession()).toBe(false);
+    });
+
+    it('should treat old lossy sessions as non-resumable', () => {
+      sessionManager.startDailySession();
+      sessionManager.setQuestions([{ wordId: 1, word: 'speed', mode: 'PIT_BOARD' }]);
+      sessionManager.saveAnswer({ questionIndex: 0, correct: false, mode: 'PIT_BOARD' });
+
+      const newManager = new QuizSessionManager(eventBus, dailyManager, progressTracker);
+      expect(newManager.hasUnfinishedSession()).toBe(false);
     });
   });
 });

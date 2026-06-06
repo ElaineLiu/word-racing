@@ -12,11 +12,13 @@ import { Car } from './car.js';
 import { VocabularyQuiz } from './quiz.js';
 import { ECONOMY, DISPLAY, GAME, UPGRADES } from '../config/game-config.js';
 import { EventBus } from '../core/event-bus.js';
+import { GameState } from '../core/game-state.js';
 import { ShopSystem } from '../systems/shop-system.js';
 import { RenderSystem } from '../rendering/render-system.js';
+import { TRACK_REGISTRY } from '../config/track-registry.js';
 
 export class Game {
-    constructor(canvas) {
+    constructor(canvas, gameState = null) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.scale = 1;
@@ -26,11 +28,12 @@ export class Game {
         this.selectedLaps = GAME.MIN_LAPS;
         this.totalLaps = GAME.MIN_LAPS;
 
-        // Player resources
+        // Core systems (EventBus 先建好，GameState 可注入或自建)
+        this._eventBus = new EventBus();
+        this._gameState = gameState || new GameState(this._eventBus);
+
+        // Player resources (非赛道相关字段，Phase 3.1b 再迁移)
         this.coins = 0;
-        // --- 双货币系统 ---
-        this.fuelCoins = 0;      // 燃油币（橙色图标 🪙）
-        this.gearCoins = 0;      // 装备币（蓝色图标 ⚙️）
         this.maxFuel = ECONOMY.MAX_FUEL;
         this.fuel = ECONOMY.INITIAL_FUEL;
         this.fuelPerLap = ECONOMY.FUEL_PER_LAP;
@@ -66,8 +69,7 @@ export class Game {
         this.onExitRace = null;
         this.onResultsContinueCb = null;
 
-        // Core systems
-        this._eventBus = new EventBus();
+        // Render & Shop systems
         this._shopSystem = new ShopSystem(this._eventBus, null);
         this._renderSystem = new RenderSystem(canvas);
 
@@ -90,6 +92,23 @@ export class Game {
     get _shopItems() {
         return this._shopSystem.getItems();
     }
+
+    // ==================== GameState 同步字段（Phase 3.1a） ====================
+    // 这些字段背后由 GameState 单一管理，确保与 LearningController / AchievementManager 共享同一份数据。
+
+    get gameState() { return this._gameState; }
+
+    get fuelCoins() { return this._gameState.get('fuelCoins') || 0; }
+    set fuelCoins(value) { this._gameState.set('fuelCoins', value); }
+
+    get gearCoins() { return this._gameState.get('gearCoins') || 0; }
+    set gearCoins(value) { this._gameState.set('gearCoins', value); }
+
+    get unlockedTracks() { return this._gameState.get('unlockedTracks') || []; }
+    // 不提供 setter：解锁逻辑统一走 AchievementManager
+
+    get selectedTrackId() { return this._gameState.get('selectedTrackId') || 'shanghai-2d'; }
+    set selectedTrackId(value) { this._gameState.set('selectedTrackId', value); }
 
     // ==================== Leaderboard ====================
     _loadLeaderboard() {
@@ -520,6 +539,79 @@ export class Game {
             this.onResultsContinueCb();
         }
         return 'QUIZ';
+    }
+
+    /**
+     * 选择赛道（UC-02）
+     * 验证赛道是否存在、是否解锁、金币是否足够，然后持久化到 GameState。
+     * @param {string} trackId
+     * @throws {Error} Unknown track / Track not unlocked / Insufficient fuel coins
+     */
+    selectTrack(trackId) {
+        const track = TRACK_REGISTRY[trackId];
+        if (!track) throw new Error('Unknown track');
+
+        const unlocked = this._gameState.get('unlockedTracks') || [];
+        if (!unlocked.includes(trackId)) throw new Error('Track not unlocked');
+
+        const fuelCoins = this._gameState.get('fuelCoins') || 0;
+        if (fuelCoins < track.cost) throw new Error('Insufficient fuel coins');
+
+        this.selectedTrackId = trackId;
+    }
+
+    /**
+     * 开始比赛（UC-03）
+     * 扣除赛道 cost，创建赛道实例并切换到 COUNTDOWN。
+     * @throws {Error} Unknown track / Insufficient fuel coins / 3D track not implemented yet
+     */
+    startRace() {
+        const trackId = this.selectedTrackId;
+        const trackDef = TRACK_REGISTRY[trackId];
+        if (!trackDef) throw new Error('Unknown track');
+
+        const fuelCoins = this._gameState.get('fuelCoins') || 0;
+        if (fuelCoins < trackDef.cost) throw new Error('Insufficient fuel coins');
+
+        // 创建赛道实例（先建好再扣金币，避免扣完后建失败造成数据不一致）
+        let newTrack;
+        if (trackDef.type === '2d') {
+            newTrack = new Track(trackDef.waypoints, trackDef.trackWidth);
+        } else if (trackDef.type === '3d') {
+            throw new Error('3D track not implemented yet');
+        } else {
+            throw new Error('Unknown track type: ' + trackDef.type);
+        }
+
+        // 扣金币
+        this._gameState.modify('fuelCoins', -trackDef.cost);
+
+        // 替换赛道实例
+        this.track = newTrack;
+        this._renderSystem.setTrack(this.track);
+
+        // 重置赛车到新赛道起点
+        this.car.reset(this.track.startPos.x, this.track.startPos.y, this.track.startPos.angle);
+
+        // 进入倒计时
+        this.totalLaps = this.selectedLaps;
+        this.state = GAME.STATES.COUNTDOWN;
+        this.countdownTimer = 240;
+    }
+
+    /**
+     * 获取所有赛道及其解锁/可购买状态（供 ShopView 渲染）
+     * @returns {Array<Object>}
+     */
+    getAvailableTracks() {
+        const unlocked = this._gameState.get('unlockedTracks') || [];
+        const fuelCoins = this._gameState.get('fuelCoins') || 0;
+
+        return Object.values(TRACK_REGISTRY).map(track => ({
+            ...track,
+            unlocked: unlocked.includes(track.id),
+            canAfford: fuelCoins >= track.cost
+        }));
     }
 
     /**

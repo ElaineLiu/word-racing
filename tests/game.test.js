@@ -50,6 +50,8 @@ describe('Game', () => {
   let mockCanvas;
 
   beforeEach(async () => {
+    // 清理 localStorage，避免测试间共享 GameState 持久化（ISSUE_LOG #003）
+    localStorage.clear();
     mockCanvas = new MockCanvas();
     game = new Game(mockCanvas);
     await game.init();

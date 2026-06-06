@@ -67,10 +67,7 @@ export class ViewManager {
 
     // Listen for quiz start
     this.#eventBus.on(Events.QUIZ_START, ({ source }) => {
-      this.#game.startNewQuiz();
       this.switchTo('quiz');
-      const quizView = this.#views.get('quiz');
-      quizView?.showQuestion?.();
     });
 
     // Listen for race start

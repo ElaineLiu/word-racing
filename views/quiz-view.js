@@ -36,20 +36,20 @@ export class QuizView extends BaseView {
   #initializeQuiz() {
     if (!this.#learningController) return;
 
-    // 检查是否有未完成的会话
-    if (this.#learningController.sessionManager?.hasUnfinishedSession?.()) {
-      const questions = this.#learningController.resumeSession();
-      if (questions && questions.length > 0) {
-        this.showQuestion();
-        return;
-      }
-    }
-
-    // 检查当前是否有有效题目
+    // 检查当前是否有有效题目（用户已主动开始或刚选择继续/重开）
     const currentQuestion = this.#learningController.getCurrentQuestion();
     if (currentQuestion && currentQuestion.options) {
       this.showQuestion();
       return;
+    }
+
+    // 方案 B：只有进入 Quiz 页时才提示是否继续未完成会话，首页初始化不弹窗
+    if (this.#learningController.hasUnfinishedSession?.()) {
+      const prompted = this.#learningController.promptResumeQuiz?.({
+        onContinue: () => this.showQuestion(),
+        onRestart: () => this.showQuestion(),
+      });
+      if (prompted) return;
     }
 
     // 自动开始新题目
