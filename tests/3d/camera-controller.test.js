@@ -75,6 +75,19 @@ describe('CameraController', () => {
     expect(forward.x).toBeGreaterThan(0.8); // strongly +x
   });
 
+  it('cockpit mode looks along the heading, not back at the car', () => {
+    controller.setMode('cockpit');
+    const car = { x: 0, y: 0, angle: 0 };
+    settle(controller, car);
+
+    // Cockpit sits at ~(1, 3, 0) facing along +x. The forward vector
+    // must point ahead (+x), NOT back at the chassis (-x). The bug
+    // that caused the box to fill the screen was: forward.x < 0.
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+    expect(forward.x).toBeGreaterThan(0.9);
+    expect(Math.abs(forward.y)).toBeLessThan(0.1); // roughly horizontal
+  });
+
   it('a single update does not snap to target (lerp factor applies)', () => {
     const car = { x: 0, y: 0, angle: 0 };
     // Move camera to a known non-target spot first

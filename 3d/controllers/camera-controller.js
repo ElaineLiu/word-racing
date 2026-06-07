@@ -4,6 +4,7 @@ const CHASE_DISTANCE = 50;
 const CHASE_HEIGHT = 20;
 const COCKPIT_FORWARD = 1;
 const COCKPIT_HEIGHT = 3;
+const LOOK_AHEAD_DISTANCE = 50;
 
 const VALID_MODES = ['chase', 'cockpit'];
 
@@ -43,7 +44,20 @@ export class CameraController {
     this._targetPositionFor(this._mode, car, _target);
     this._camera.position.lerp(_target, this._lerp);
 
-    _lookAt.set(car.x, 0, car.y);
+    // Chase: look at the car. Cockpit: look ahead along the heading
+    // (otherwise a camera placed inside the car ends up looking back
+    // at the chassis, which fills the screen).
+    if (this._mode === 'cockpit') {
+      const cos = Math.cos(car.angle);
+      const sin = Math.sin(car.angle);
+      _lookAt.set(
+        car.x + cos * LOOK_AHEAD_DISTANCE,
+        COCKPIT_HEIGHT,
+        car.y + sin * LOOK_AHEAD_DISTANCE,
+      );
+    } else {
+      _lookAt.set(car.x, 0, car.y);
+    }
     this._camera.lookAt(_lookAt);
   }
 

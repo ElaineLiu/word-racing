@@ -162,11 +162,14 @@
     scene3d.scene.add(ground);
 
     // ---------- Placeholder box car (TEMP for Epic 1; replaced by Car3D in Epic 3) ----------
+    // Box is intentionally tall (height 4) so the cockpit camera at y=3
+    // sits INSIDE the chassis; back-face culling then hides the box from
+    // the inside view. Real Car3D in Epic 3 will replace this.
     const boxMesh = new THREE.Mesh(
-      new THREE.BoxGeometry(4, 2, 8),
+      new THREE.BoxGeometry(4, 4, 8),
       new THREE.MeshStandardMaterial({ color: 0xe53935, roughness: 0.5, metalness: 0.1 }),
     );
-    boxMesh.position.y = 1;
+    boxMesh.position.y = 2;
     scene3d.scene.add(boxMesh);
 
     // Car-like state shared with CameraController.
