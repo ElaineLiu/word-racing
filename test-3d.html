@@ -161,6 +161,12 @@
     ground.rotation.x = -Math.PI / 2;
     scene3d.scene.add(ground);
 
+    // Grid overlay so forward motion is visible (the camera follows the car,
+    // so without a reference grid the world looks static while moving).
+    const grid = new THREE.GridHelper(10000, 500, 0x88c9a3, 0x2d6b48);
+    grid.position.y = 0.01; // avoid z-fighting with the ground
+    scene3d.scene.add(grid);
+
     // ---------- Placeholder box car (TEMP for Epic 1; replaced by Car3D in Epic 3) ----------
     // Box is intentionally tall (height 4) so the cockpit camera at y=3
     // sits INSIDE the chassis; back-face culling then hides the box from
