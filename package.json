@@ -15,11 +15,20 @@
     "start": "npx serve ."
   },
   "devDependencies": {
-    "vitest": "^1.6.0",
-    "jsdom": "^24.0.0",
     "@vitest/coverage-v8": "^1.6.0",
-    "serve": "^14.2.0"
+    "jsdom": "^24.0.0",
+    "serve": "^14.2.0",
+    "vitest": "^1.6.0"
   },
-  "keywords": ["game", "education", "vocabulary", "f1", "racing"],
-  "license": "MIT"
+  "keywords": [
+    "game",
+    "education",
+    "vocabulary",
+    "f1",
+    "racing"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "three": "^0.184.0"
+  }
 }
