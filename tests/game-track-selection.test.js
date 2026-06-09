@@ -48,6 +48,15 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
     game = new Game(canvas, gameState);
   });
 
+  describe('initial track rendering', () => {
+    it('should initialize the visible track from selectedTrackId registry data', () => {
+      const shanghai = TRACK_REGISTRY['shanghai-2d'];
+
+      expect(game.track.trackWidth).toBe(shanghai.trackWidth);
+      expect(game.track.waypoints).toEqual(shanghai.waypoints);
+    });
+  });
+
   // ==================== selectTrack ====================
   describe('selectTrack(trackId) - UC-02', () => {
     it('Main: 选择已解锁且金币足够的赛道，应更新 selectedTrackId 到 GameState', () => {

@@ -109,6 +109,45 @@ function getPointToSegmentDistance(p, a, b) {
   return Math.hypot(p.x - (a.x + vx * t), p.y - (a.y + vy * t));
 }
 
+function getTurnDirectionCounts(points) {
+  let left = 0;
+  let right = 0;
+  for (let i = 0; i < points.length; i++) {
+    const prev = points[(i - 2 + points.length) % points.length];
+    const current = points[i];
+    const next = points[(i + 2) % points.length];
+    const ax = current.x - prev.x;
+    const ay = current.y - prev.y;
+    const bx = next.x - current.x;
+    const by = next.y - current.y;
+    const cross = ax * by - ay * bx;
+    if (cross > 0.1) left++;
+    if (cross < -0.1) right++;
+  }
+  return { left, right };
+}
+
+function getDirectionChanges(points) {
+  let previous = 0;
+  let changes = 0;
+  for (let i = 0; i < points.length; i++) {
+    const prev = points[(i - 2 + points.length) % points.length];
+    const current = points[i];
+    const next = points[(i + 2) % points.length];
+    const ax = current.x - prev.x;
+    const ay = current.y - prev.y;
+    const bx = next.x - current.x;
+    const by = next.y - current.y;
+    const cross = ax * by - ay * bx;
+    const direction = cross > 0.1 ? 1 : cross < -0.1 ? -1 : 0;
+    if (direction !== 0) {
+      if (previous !== 0 && previous !== direction) changes++;
+      previous = direction;
+    }
+  }
+  return changes;
+}
+
 describe('Track Registry', () => {
   describe('赛道数据完整性', () => {
     it('应该定义所有必需字段', () => {
@@ -265,6 +304,15 @@ describe('Track Registry', () => {
 
       expect(hasCenterlineIntersection(points, track.waypoints.length)).toBe(false);
       expect(getMinimumNonAdjacentSegmentDistance(points, track.waypoints.length)).toBeGreaterThan(track.trackWidth);
+    });
+    it.each(['shanghai-2d', 'shanghai-3d'])('%s 应该有明显左右转变化', (trackId) => {
+      const track = TRACK_REGISTRY[trackId];
+      const points = generateSmoothCurve(track.waypoints);
+      const turns = getTurnDirectionCounts(points);
+
+      expect(turns.left).toBeGreaterThan(points.length * 0.2);
+      expect(turns.right).toBeGreaterThan(points.length * 0.2);
+      expect(getDirectionChanges(points)).toBeGreaterThanOrEqual(4);
     });
   });
 
