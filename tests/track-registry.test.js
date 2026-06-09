@@ -7,6 +7,108 @@
 import { describe, it, expect } from 'vitest';
 import { TRACK_REGISTRY } from '../config/track-registry.js';
 
+const SAMPLES_PER_SEGMENT = 24;
+
+function generateSmoothCurve(waypoints) {
+  const points = [];
+  const n = waypoints.length;
+  for (let i = 0; i < n; i++) {
+    const p0 = waypoints[(i - 1 + n) % n];
+    const p1 = waypoints[i];
+    const p2 = waypoints[(i + 1) % n];
+    const p3 = waypoints[(i + 2) % n];
+    for (let j = 0; j < SAMPLES_PER_SEGMENT; j++) {
+      const t = j / SAMPLES_PER_SEGMENT;
+      points.push({
+        x: catmullRom(p0.x, p1.x, p2.x, p3.x, t),
+        y: catmullRom(p0.y, p1.y, p2.y, p3.y, t),
+        segment: i,
+      });
+    }
+  }
+  return points;
+}
+
+function catmullRom(p0, p1, p2, p3, t) {
+  const t2 = t * t;
+  const t3 = t2 * t;
+  return 0.5 * (
+    (2 * p1) +
+    (-p0 + p2) * t +
+    (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 +
+    (-p0 + 3 * p1 - 3 * p2 + p3) * t3
+  );
+}
+
+function hasCenterlineIntersection(points, waypointCount) {
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i];
+    const b = points[(i + 1) % points.length];
+    for (let j = i + 2; j < points.length; j++) {
+      if (i === 0 && j === points.length - 1) continue;
+      const c = points[j];
+      const d = points[(j + 1) % points.length];
+      const gap = Math.abs(a.segment - c.segment);
+      const cyclicGap = Math.min(gap, waypointCount - gap);
+      if (cyclicGap <= 1) continue;
+      if (segmentsIntersect(a, b, c, d)) return true;
+    }
+  }
+  return false;
+}
+
+function getMinimumNonAdjacentSegmentDistance(points, waypointCount) {
+  let min = Infinity;
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i];
+    const b = points[(i + 1) % points.length];
+    for (let j = i + 2; j < points.length; j++) {
+      if (i === 0 && j === points.length - 1) continue;
+      const c = points[j];
+      const d = points[(j + 1) % points.length];
+      const gap = Math.abs(a.segment - c.segment);
+      const cyclicGap = Math.min(gap, waypointCount - gap);
+      if (cyclicGap <= 1) continue;
+      min = Math.min(min, getSegmentDistance(a, b, c, d));
+    }
+  }
+  return min;
+}
+
+function segmentsIntersect(a, b, c, d) {
+  const o1 = orientation(a, b, c);
+  const o2 = orientation(a, b, d);
+  const o3 = orientation(c, d, a);
+  const o4 = orientation(c, d, b);
+  return o1 !== o2 && o3 !== o4;
+}
+
+function orientation(a, b, c) {
+  const value = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+  if (Math.abs(value) < 1e-9) return 0;
+  return Math.sign(value);
+}
+
+function getSegmentDistance(a, b, c, d) {
+  if (segmentsIntersect(a, b, c, d)) return 0;
+  return Math.min(
+    getPointToSegmentDistance(a, c, d),
+    getPointToSegmentDistance(b, c, d),
+    getPointToSegmentDistance(c, a, b),
+    getPointToSegmentDistance(d, a, b),
+  );
+}
+
+function getPointToSegmentDistance(p, a, b) {
+  const vx = b.x - a.x;
+  const vy = b.y - a.y;
+  const wx = p.x - a.x;
+  const wy = p.y - a.y;
+  const lengthSquared = vx * vx + vy * vy || 1;
+  const t = Math.max(0, Math.min(1, (wx * vx + wy * vy) / lengthSquared));
+  return Math.hypot(p.x - (a.x + vx * t), p.y - (a.y + vy * t));
+}
+
 describe('Track Registry', () => {
   describe('赛道数据完整性', () => {
     it('应该定义所有必需字段', () => {
@@ -153,6 +255,16 @@ describe('Track Registry', () => {
         expect(track.sceneConfig.camera).toBeDefined();
         expect(track.sceneConfig.lighting).toBeDefined();
       });
+    });
+  });
+
+  describe('上海赛道几何安全', () => {
+    it.each(['shanghai-2d', 'shanghai-3d'])('%s 中心线不应该自交或过近', (trackId) => {
+      const track = TRACK_REGISTRY[trackId];
+      const points = generateSmoothCurve(track.waypoints);
+
+      expect(hasCenterlineIntersection(points, track.waypoints.length)).toBe(false);
+      expect(getMinimumNonAdjacentSegmentDistance(points, track.waypoints.length)).toBeGreaterThan(track.trackWidth);
     });
   });
 
