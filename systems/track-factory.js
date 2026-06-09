@@ -12,7 +12,6 @@
  */
 
 import { Track } from '../js/track.js';
-import { Track3D } from '../3d/core/track-3d.js';
 import { TRACK_REGISTRY } from '../config/track-registry.js';
 import { FeatureFlags } from '../config/feature-flags.js';
 import { TrackUnlockManager } from './track-unlock-manager.js';
@@ -47,17 +46,33 @@ export class TrackFactory {
       throw new Error(`Unknown track: ${trackId}`);
     }
 
-    // 根据赛道类型选择实现
     if (trackData.type === '3d') {
       if (!this.isAvailable(trackId)) {
         throw new Error(`Track not available: ${trackId}`);
       }
-      return new Track3D(trackData, this.#eventBus, this.#gameState, this.#track3DOptions);
+      throw new Error('Use createAsync for 3D tracks');
     } else if (trackData.type === '2d') {
       return new Track(trackData.waypoints, trackData.trackWidth);
     } else {
       throw new Error(`Unknown track type: ${trackData.type}`);
     }
+  }
+
+  async createAsync(trackId) {
+    const trackData = TRACK_REGISTRY[trackId];
+    if (!trackData) {
+      throw new Error(`Unknown track: ${trackId}`);
+    }
+
+    if (trackData.type === '3d') {
+      if (!this.isAvailable(trackId)) {
+        throw new Error(`Track not available: ${trackId}`);
+      }
+      const { Track3D } = await import('../3d/core/track-3d.js');
+      return new Track3D(trackData, this.#eventBus, this.#gameState, this.#track3DOptions);
+    }
+
+    return this.create(trackId);
   }
 
   _isComplete3DTrack(track) {

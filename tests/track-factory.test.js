@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TrackFactory } from '../systems/track-factory.js';
 import { Track } from '../js/track.js';
-import { Track3D } from '../3d/core/track-3d.js';
 import { GameState } from '../core/game-state.js';
 import { EventBus } from '../core/event-bus.js';
 import { FeatureFlags } from '../config/feature-flags.js';
@@ -89,12 +88,19 @@ describe('TrackFactory', () => {
         .toThrow('Track not available: shanghai-3d');
     });
 
-    it('should create 3D track when feature enabled', () => {
+    it('should tell callers to use async creation for 3D tracks', () => {
       FeatureFlags.enable('3d-track');
 
-      const track = createFactoryWith3DOptions().create('shanghai-3d');
-      expect(track).toBeInstanceOf(Track3D);
+      expect(() => createFactoryWith3DOptions().create('shanghai-3d'))
+        .toThrow('Use createAsync for 3D tracks');
+    });
+
+    it('should create 3D track asynchronously when feature enabled', async () => {
+      FeatureFlags.enable('3d-track');
+
+      const track = await createFactoryWith3DOptions().createAsync('shanghai-3d');
       expect(track.type).toBe('3d');
+      expect(track.id).toBe('shanghai-3d');
     });
 
     it('should throw error for night-race-3d (incomplete track)', () => {
