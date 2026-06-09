@@ -98,8 +98,8 @@
   <canvas id="three-canvas"></canvas>
 
   <div id="top-banner">
-    <strong>EPIC 2</strong> · Track3D geometry + decorations ·
-    arrow keys drive the placeholder box, <strong>C</strong> toggles camera
+    <strong>EPIC 3</strong> · Car3D physics + gears/RPM + collision penalty ·
+    WASD/arrow keys to drive, <strong>C</strong> toggles camera, <strong>R</strong> resets
   </div>
 
   <div id="debug-panel">
@@ -109,21 +109,27 @@
     <div class="debug-row"><span class="k">Track</span><span class="v" id="dbg-track">—</span></div>
     <div class="debug-row"><span class="k">Objects</span><span class="v" id="dbg-objects">—</span></div>
     <div class="debug-row"><span class="k">Camera mode</span><span class="v" id="dbg-mode">—</span></div>
-    <div class="debug-row"><span class="k">Car position</span><span class="v" id="dbg-pos">—</span></div>
-    <div class="debug-row"><span class="k">Car angle</span><span class="v" id="dbg-angle">—</span></div>
+    <div class="debug-row"><span class="k">Car speed</span><span class="v" id="dbg-speed">—</span></div>
+    <div class="debug-row"><span class="k">Gear</span><span class="v" id="dbg-gear">—</span></div>
+    <div class="debug-row"><span class="k">RPM</span><span class="v" id="dbg-rpm">—</span></div>
+    <div class="debug-row"><span class="k">Position</span><span class="v" id="dbg-pos">—</span></div>
+    <div class="debug-row"><span class="k">Collision</span><span class="v" id="dbg-collision">—</span></div>
   </div>
 
   <div id="key-hints">
-    <div><span class="key">↑↓</span><span class="active">forward / back (TEMP, removed in Epic 3)</span></div>
-    <div><span class="key">←→</span><span class="active">turn (TEMP, removed in Epic 3)</span></div>
+    <div><span class="key">W</span> / <span class="key">↑</span><span class="active">accelerate</span></div>
+    <div><span class="key">S</span> / <span class="key">↓</span><span class="active">brake / reverse</span></div>
+    <div><span class="key">A</span> / <span class="key">←</span><span class="active">turn left</span></div>
+    <div><span class="key">D</span> / <span class="key">→</span><span class="active">turn right</span></div>
     <div><span class="key">C</span><span class="active">toggle camera (chase / cockpit)</span></div>
-    <div><span class="key">R</span><span class="pending">reset car (Epic 3)</span></div>
+    <div><span class="key">R</span><span class="active">reset car to start</span></div>
     <div><span class="key">Tab</span><span class="pending">auto mode (Epic 4)</span></div>
   </div>
 
   <script type="module">
     import * as THREE from 'three';
     import { Track3D } from './3d/core/track-3d.js';
+    import { Car3D } from './3d/core/car-3d.js';
     import { EventBus } from './core/event-bus.js';
     import { CameraController } from './3d/controllers/camera-controller.js';
     import { TRACK_REGISTRY } from './config/track-registry.js';
@@ -131,12 +137,13 @@
 
     // ---------- Mock GameState ----------
     const mock = createMockGameState();
+    const eventBus = new EventBus();
 
     // ---------- Build Track3D ----------
     const canvas = document.getElementById('three-canvas');
     const track = new Track3D(
       TRACK_REGISTRY['shanghai-3d'],
-      new EventBus(),
+      eventBus,
       mock,
       {
         rendererFactory: (cfg) => {
@@ -153,16 +160,20 @@
     document.getElementById('dbg-objects').textContent = track.scene.children.length;
     document.getElementById('dbg-three-version').textContent = THREE.REVISION;
 
-    // ---------- Placeholder box car (TEMP for Epic 1/2; replaced by Car3D in Epic 3) ----------
-    const boxMesh = new THREE.Mesh(
-      new THREE.BoxGeometry(4, 4, 8),
-      new THREE.MeshStandardMaterial({ color: 0xe53935, roughness: 0.5, metalness: 0.1 }),
+    // ---------- Car3D (REAL) ----------
+    const car3D = new Car3D(
+      track.startPos.x,
+      track.startPos.y,
+      track.startPos.angle,
+      track.scene
     );
-    boxMesh.position.y = 2;
-    track.scene.add(boxMesh);
+    car3D.eventBus = eventBus;
 
-    // Car state starts on track.
-    const car = { x: track.startPos.x, y: track.startPos.y, angle: track.startPos.angle };
+    // Collision indicator
+    let collisionFlash = 0;
+    eventBus.on('car:collision', () => {
+      collisionFlash = 0.3;
+    });
 
     // ---------- Camera controller ----------
     const cameraCtrl = new CameraController(track.camera);
@@ -176,12 +187,21 @@
         document.getElementById('dbg-mode').textContent = cameraCtrl.mode;
         return;
       }
+      if (e.key === 'r' || e.key === 'R') {
+        car3D.reset(track.startPos.x, track.startPos.y, track.startPos.angle);
+        return;
+      }
       keys.add(e.key);
     });
     window.addEventListener('keyup', (e) => keys.delete(e.key));
 
-    const MOVE_SPEED = 200;
-    const TURN_SPEED = 1.8;
+    // Map keys to car input
+    function updateInput() {
+      car3D.input.up = keys.has('w') || keys.has('W') || keys.has('ArrowUp');
+      car3D.input.down = keys.has('s') || keys.has('S') || keys.has('ArrowDown');
+      car3D.input.left = keys.has('a') || keys.has('A') || keys.has('ArrowLeft');
+      car3D.input.right = keys.has('d') || keys.has('D') || keys.has('ArrowRight');
+    }
 
     // ---------- Resize ----------
     window.addEventListener('resize', () => {
@@ -192,8 +212,11 @@
 
     // ---------- Render loop ----------
     const fpsEl = document.getElementById('dbg-fps');
+    const speedEl = document.getElementById('dbg-speed');
+    const gearEl = document.getElementById('dbg-gear');
+    const rpmEl = document.getElementById('dbg-rpm');
     const posEl = document.getElementById('dbg-pos');
-    const angleEl = document.getElementById('dbg-angle');
+    const collisionEl = document.getElementById('dbg-collision');
     let last = performance.now();
     let frames = 0;
     let acc = 0;
@@ -202,27 +225,28 @@
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
 
-      // Drive the placeholder box.
-      if (keys.has('ArrowLeft'))  car.angle -= TURN_SPEED * dt;
-      if (keys.has('ArrowRight')) car.angle += TURN_SPEED * dt;
-      const fwd = (keys.has('ArrowUp') ? 1 : 0) - (keys.has('ArrowDown') ? 1 : 0);
-      car.x += Math.cos(car.angle) * MOVE_SPEED * fwd * dt;
-      car.y += Math.sin(car.angle) * MOVE_SPEED * fwd * dt;
+      updateInput();
+      car3D.update(track, 3, dt);
 
-      boxMesh.position.x = car.x;
-      boxMesh.position.z = car.y;
-      boxMesh.rotation.y = -car.angle;
-
-      cameraCtrl.update(car);
+      cameraCtrl.update({ x: car3D.x, y: car3D.y, angle: car3D.angle });
       track.update(dt);
-      track.render(null, car, mock);
+      track.render(null, { x: car3D.x, y: car3D.y, angle: car3D.angle }, mock);
+
+      // Update collision flash
+      if (collisionFlash > 0) {
+        collisionFlash -= dt;
+        collisionEl.textContent = collisionFlash > 0 ? 'HIT!' : '—';
+        collisionEl.style.color = collisionFlash > 0 ? '#ff4444' : '#ffffff';
+      }
 
       frames += 1;
       acc += dt;
       if (acc >= 0.5) {
         fpsEl.textContent = Math.round(frames / acc);
-        posEl.textContent = `${car.x.toFixed(1)}, ${car.y.toFixed(1)}`;
-        angleEl.textContent = `${(car.angle * 180 / Math.PI).toFixed(0)}°`;
+        speedEl.textContent = `${car3D.getDisplaySpeed()} km/h`;
+        gearEl.textContent = car3D.getGear();
+        rpmEl.textContent = `${Math.round(car3D.getRPM())} RPM`;
+        posEl.textContent = `${car3D.x.toFixed(1)}, ${car3D.y.toFixed(1)}`;
         frames = 0;
         acc = 0;
       }

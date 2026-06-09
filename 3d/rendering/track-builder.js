@@ -61,7 +61,7 @@ export class TrackBuilder {
     this._requireTrack();
     const geometry = new THREE.BoxGeometry(8, 4, 4);
     const material = new THREE.MeshStandardMaterial({ color: 0xffffff, flatShading: true });
-    for (let i = 0; i < this.edgePoints.length; i += 16) {
+    for (let i = 0; i < this.edgePoints.length; i += 2) {
       const edge = this.edgePoints[i];
       this._addBox('barrier', geometry, material, edge.left.x, 2, edge.left.y);
       this._addBox('barrier', geometry, material, edge.right.x, 2, edge.right.y);

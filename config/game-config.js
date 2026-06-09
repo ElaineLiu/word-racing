@@ -37,6 +37,12 @@ export const PHYSICS = {
   // Off-track rescue
   OFF_TRACK_RESCUE_THRESHOLD: 180, // frames (~3 seconds) before auto-rescue
   OFF_TRACK_MAX_DISTANCE: 30,    // pixels beyond track edge = instant rescue
+
+  // 3D Weight Feel (for Car3D)
+  WEIGHT_FACTOR: {
+    accelerationRamp: 120,        // frames to reach max speed (~2s @ 60fps)
+    turnResponseAtMaxSpeed: 0.6   // turning reduced to 60% at max speed
+  }
 };
 
 // ============================================================================
