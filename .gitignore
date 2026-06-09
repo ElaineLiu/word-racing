@@ -30,6 +30,9 @@ Desktop.ini
 # Claude Code local settings
 .claude/settings.local.json
 
+# Git-ignored local workspace
+.gitignored/
+
 # 构建输出
 dist/
 build/
