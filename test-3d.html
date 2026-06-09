@@ -98,7 +98,7 @@
   <canvas id="three-canvas"></canvas>
 
   <div id="top-banner">
-    <strong>EPIC 1</strong> · Scene3D + CameraController follow ·
+    <strong>EPIC 2</strong> · Track3D geometry + decorations ·
     arrow keys drive the placeholder box, <strong>C</strong> toggles camera
   </div>
 
@@ -106,11 +106,11 @@
     <h4>Debug</h4>
     <div class="debug-row"><span class="k">FPS</span><span class="v" id="dbg-fps">—</span></div>
     <div class="debug-row"><span class="k">Three.js</span><span class="v" id="dbg-three-version">—</span></div>
+    <div class="debug-row"><span class="k">Track</span><span class="v" id="dbg-track">—</span></div>
+    <div class="debug-row"><span class="k">Objects</span><span class="v" id="dbg-objects">—</span></div>
     <div class="debug-row"><span class="k">Camera mode</span><span class="v" id="dbg-mode">—</span></div>
-    <div class="debug-row"><span class="k">Box position</span><span class="v" id="dbg-pos">—</span></div>
-    <div class="debug-row"><span class="k">Box angle</span><span class="v" id="dbg-angle">—</span></div>
-    <div class="debug-row"><span class="k">Mock mastered</span><span class="v" id="dbg-mastered">—</span></div>
-    <div class="debug-row"><span class="k">Mock fuelCoins</span><span class="v" id="dbg-coins">—</span></div>
+    <div class="debug-row"><span class="k">Car position</span><span class="v" id="dbg-pos">—</span></div>
+    <div class="debug-row"><span class="k">Car angle</span><span class="v" id="dbg-angle">—</span></div>
   </div>
 
   <div id="key-hints">
@@ -123,69 +123,52 @@
 
   <script type="module">
     import * as THREE from 'three';
-    import { Scene3D } from './3d/core/scene-3d.js';
+    import { Track3D } from './3d/core/track-3d.js';
+    import { EventBus } from './core/event-bus.js';
     import { CameraController } from './3d/controllers/camera-controller.js';
+    import { TRACK_REGISTRY } from './config/track-registry.js';
     import { createMockGameState } from './3d/utils/test-fixtures.js';
 
-    // ---------- Mock GameState into debug panel ----------
+    // ---------- Mock GameState ----------
     const mock = createMockGameState();
-    document.getElementById('dbg-mastered').textContent = mock.learning.totalWordsMastered;
-    document.getElementById('dbg-coins').textContent = mock.fuelCoins;
+
+    // ---------- Build Track3D ----------
+    const canvas = document.getElementById('three-canvas');
+    const track = new Track3D(
+      TRACK_REGISTRY['shanghai-3d'],
+      new EventBus(),
+      mock,
+      {
+        rendererFactory: (cfg) => {
+          const r = new THREE.WebGLRenderer({ canvas, antialias: true });
+          r.setPixelRatio(window.devicePixelRatio || 1);
+          r.setSize(window.innerWidth, window.innerHeight, false);
+          r.setClearColor(cfg.clearColor, 1);
+          return r;
+        },
+      },
+    );
+
+    document.getElementById('dbg-track').textContent = track.id;
+    document.getElementById('dbg-objects').textContent = track.scene.children.length;
     document.getElementById('dbg-three-version').textContent = THREE.REVISION;
 
-    // ---------- Scene3D ----------
-    const canvas = document.getElementById('three-canvas');
-    const scene3d = new Scene3D({
-      camera: {
-        fov: 60,
-        near: 0.1,
-        far: 5000,
-        aspect: window.innerWidth / window.innerHeight,
-        position: [0, 20, -50],
-      },
-    }, {
-      rendererFactory: (cfg) => {
-        const r = new THREE.WebGLRenderer({ canvas, antialias: true });
-        r.setPixelRatio(window.devicePixelRatio || 1);
-        r.setSize(window.innerWidth, window.innerHeight, false);
-        r.setClearColor(cfg.clearColor, 1);
-        return r;
-      },
-    });
-
-    // ---------- Ground reference plane ----------
-    const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(10000, 10000),
-      new THREE.MeshStandardMaterial({ color: 0x1f5d34, roughness: 0.95 }),
-    );
-    ground.rotation.x = -Math.PI / 2;
-    scene3d.scene.add(ground);
-
-    // Grid overlay so forward motion is visible (the camera follows the car,
-    // so without a reference grid the world looks static while moving).
-    const grid = new THREE.GridHelper(10000, 500, 0x88c9a3, 0x2d6b48);
-    grid.position.y = 0.01; // avoid z-fighting with the ground
-    scene3d.scene.add(grid);
-
-    // ---------- Placeholder box car (TEMP for Epic 1; replaced by Car3D in Epic 3) ----------
-    // Box is intentionally tall (height 4) so the cockpit camera at y=3
-    // sits INSIDE the chassis; back-face culling then hides the box from
-    // the inside view. Real Car3D in Epic 3 will replace this.
+    // ---------- Placeholder box car (TEMP for Epic 1/2; replaced by Car3D in Epic 3) ----------
     const boxMesh = new THREE.Mesh(
       new THREE.BoxGeometry(4, 4, 8),
       new THREE.MeshStandardMaterial({ color: 0xe53935, roughness: 0.5, metalness: 0.1 }),
     );
     boxMesh.position.y = 2;
-    scene3d.scene.add(boxMesh);
+    track.scene.add(boxMesh);
 
-    // Car-like state shared with CameraController.
-    const car = { x: 0, y: 0, angle: 0 };
+    // Car state starts on track.
+    const car = { x: track.startPos.x, y: track.startPos.y, angle: track.startPos.angle };
 
     // ---------- Camera controller ----------
-    const cameraCtrl = new CameraController(scene3d.camera);
+    const cameraCtrl = new CameraController(track.camera);
     document.getElementById('dbg-mode').textContent = cameraCtrl.mode;
 
-    // ---------- Input (TEMP for Epic 1 only, replaced by Car3D in Epic 3) ----------
+    // ---------- Input ----------
     const keys = new Set();
     window.addEventListener('keydown', (e) => {
       if (e.key === 'c' || e.key === 'C') {
@@ -197,12 +180,14 @@
     });
     window.addEventListener('keyup', (e) => keys.delete(e.key));
 
-    const MOVE_SPEED = 40;   // units / sec
-    const TURN_SPEED = 1.8;  // rad / sec
+    const MOVE_SPEED = 200;
+    const TURN_SPEED = 1.8;
 
     // ---------- Resize ----------
     window.addEventListener('resize', () => {
-      scene3d.resize(window.innerWidth, window.innerHeight);
+      track.renderer.setSize(window.innerWidth, window.innerHeight, false);
+      track.camera.aspect = window.innerWidth / window.innerHeight;
+      track.camera.updateProjectionMatrix();
     });
 
     // ---------- Render loop ----------
@@ -224,15 +209,13 @@
       car.x += Math.cos(car.angle) * MOVE_SPEED * fwd * dt;
       car.y += Math.sin(car.angle) * MOVE_SPEED * fwd * dt;
 
-      // Mirror car state into the mesh (2D y → 3D z; flip rotation sign so
-      // visual heading matches the angle convention used by CameraController).
       boxMesh.position.x = car.x;
       boxMesh.position.z = car.y;
       boxMesh.rotation.y = -car.angle;
 
       cameraCtrl.update(car);
-      scene3d.update(dt);
-      scene3d.render();
+      track.update(dt);
+      track.render(null, car, mock);
 
       frames += 1;
       acc += dt;

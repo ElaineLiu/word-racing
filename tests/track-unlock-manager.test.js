@@ -77,13 +77,14 @@ describe('TrackUnlockManager', () => {
       expect(progress.requirements).toBeDefined();
     });
 
-    it('should return cost for expensive 3D track', () => {
+    it('should return cost for shanghai-3d', () => {
       const progress = manager.getUnlockProgress('shanghai-3d');
 
       expect(progress.unlocked).toBe(false);
-      expect(progress.cost).toBe(30);
+      expect(progress.cost).toBe(10);
       expect(progress.type).toBe('3d');
       expect(progress.requirements).toBeDefined();
+      expect(progress.requirements.masteryCount.required).toBe(200);
     });
 
     it('should return null for unknown track', () => {

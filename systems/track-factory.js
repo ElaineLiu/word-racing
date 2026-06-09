@@ -12,6 +12,7 @@
  */
 
 import { Track } from '../js/track.js';
+import { Track3D } from '../3d/core/track-3d.js';
 import { TRACK_REGISTRY } from '../config/track-registry.js';
 import { FeatureFlags } from '../config/feature-flags.js';
 import { TrackUnlockManager } from './track-unlock-manager.js';
@@ -19,17 +20,19 @@ import { TrackUnlockManager } from './track-unlock-manager.js';
 export class TrackFactory {
   #eventBus;
   #gameState;
+  #track3DOptions;
 
   /**
    * @param {EventBus} eventBus
    * @param {GameState} gameState
    */
-  constructor(eventBus, gameState) {
+  constructor(eventBus, gameState, { track3DOptions = {} } = {}) {
     if (!eventBus) throw new Error('EventBus is required');
     if (!gameState) throw new Error('GameState is required');
 
     this.#eventBus = eventBus;
     this.#gameState = gameState;
+    this.#track3DOptions = track3DOptions;
   }
 
   /**
@@ -46,13 +49,19 @@ export class TrackFactory {
 
     // 根据赛道类型选择实现
     if (trackData.type === '3d') {
-      // 3D赛道暂未实现
-      throw new Error('3D track not implemented yet');
+      if (!this.isAvailable(trackId)) {
+        throw new Error(`Track not available: ${trackId}`);
+      }
+      return new Track3D(trackData, this.#eventBus, this.#gameState, this.#track3DOptions);
     } else if (trackData.type === '2d') {
       return new Track(trackData.waypoints, trackData.trackWidth);
     } else {
       throw new Error(`Unknown track type: ${trackData.type}`);
     }
+  }
+
+  _isComplete3DTrack(track) {
+    return Array.isArray(track.waypoints) && track.waypoints.length > 0 && track.trackWidth > 0;
   }
 
   /**
@@ -66,6 +75,9 @@ export class TrackFactory {
         return false;
       }
       if (track.type === '2d' && !FeatureFlags.isEnabled('2d-track')) {
+        return false;
+      }
+      if (track.type === '3d' && !this._isComplete3DTrack(track)) {
         return false;
       }
       return true;
@@ -86,6 +98,11 @@ export class TrackFactory {
       return false;
     }
     if (track.type === '2d' && !FeatureFlags.isEnabled('2d-track')) {
+      return false;
+    }
+
+    // 不完整的 3D 赛道视为不可用
+    if (track.type === '3d' && !this._isComplete3DTrack(track)) {
       return false;
     }
 

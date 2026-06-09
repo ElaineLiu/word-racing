@@ -110,6 +110,50 @@ describe('Track Registry', () => {
         }
       });
     });
+
+    describe('shanghai-3d', () => {
+      it('应该有正确的元数据', () => {
+        const track = TRACK_REGISTRY['shanghai-3d'];
+        expect(track).toBeDefined();
+        expect(track.id).toBe('shanghai-3d');
+        expect(track.type).toBe('3d');
+        expect(track.cost).toBe(10);
+      });
+
+      it('应该有 waypoints 数据', () => {
+        const track = TRACK_REGISTRY['shanghai-3d'];
+        expect(Array.isArray(track.waypoints)).toBe(true);
+        expect(track.waypoints.length).toBeGreaterThan(0);
+      });
+
+      it('waypoints 应该包含有效的坐标对象', () => {
+        const track = TRACK_REGISTRY['shanghai-3d'];
+        track.waypoints.forEach(wp => {
+          expect(wp).toHaveProperty('x');
+          expect(wp).toHaveProperty('y');
+          expect(typeof wp.x).toBe('number');
+          expect(typeof wp.y).toBe('number');
+        });
+      });
+
+      it('应该有 trackWidth', () => {
+        const track = TRACK_REGISTRY['shanghai-3d'];
+        expect(track.trackWidth).toBe(90);
+      });
+
+      it('应该有 masteryCount 解锁要求', () => {
+        const track = TRACK_REGISTRY['shanghai-3d'];
+        expect(track.unlockRequirements).toBeDefined();
+        expect(track.unlockRequirements.masteryCount).toBe(200);
+      });
+
+      it('应该有有效的 sceneConfig', () => {
+        const track = TRACK_REGISTRY['shanghai-3d'];
+        expect(track.sceneConfig).toBeDefined();
+        expect(track.sceneConfig.camera).toBeDefined();
+        expect(track.sceneConfig.lighting).toBeDefined();
+      });
+    });
   });
 
   describe('赛道成本', () => {

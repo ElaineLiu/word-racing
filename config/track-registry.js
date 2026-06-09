@@ -194,26 +194,57 @@ export const TRACK_REGISTRY = {
 
   /**
    * 上海国际赛车场 3D
-   * 沉浸式3D驾驶体验（待实现）
+   * 沉浸式3D驾驶体验
    */
   'shanghai-3d': {
     id: 'shanghai-3d',
     name: '上海国际赛车场 3D',
     type: '3d',
     description: '沉浸式3D驾驶体验',
-    cost: 30,
+    cost: 10,
+    waypoints: [
+      { x: 500, y: 110 },
+      { x: 700, y: 110 },
+      { x: 900, y: 115 },
+      { x: 1100, y: 130 },
+      { x: 1240, y: 200 },
+      { x: 1300, y: 340 },
+      { x: 1230, y: 480 },
+      { x: 1050, y: 560 },
+      { x: 780, y: 575 },
+      { x: 500, y: 575 },
+      { x: 280, y: 580 },
+      { x: 180, y: 660 },
+      { x: 280, y: 740 },
+      { x: 420, y: 730 },
+      { x: 560, y: 700 },
+      { x: 680, y: 620 },
+      { x: 780, y: 480 },
+      { x: 760, y: 340 },
+      { x: 660, y: 240 },
+      { x: 500, y: 200 },
+      { x: 340, y: 180 },
+      { x: 200, y: 150 },
+      { x: 80, y: 125 },
+      { x: 120, y: 120 },
+      { x: 300, y: 115 },
+    ],
+    trackWidth: 90,
+    unlockRequirements: {
+      masteryCount: 200
+    },
     sceneConfig: {
-      // Three.js 场景配置（待实现）
       camera: {
         fov: 75,
         near: 0.1,
-        far: 1000
+        far: 2000,
+        position: [700, 650, 900]
       },
       lighting: {
-        ambient: 0x404040,
-        directional: 0xffffff
-      },
-      // 其他3D配置...
+        ambientColor: 0x606060,
+        directionalColor: 0xffffff,
+        directionalPosition: [300, 600, 400]
+      }
     }
   },
 
