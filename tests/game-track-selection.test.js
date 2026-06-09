@@ -48,6 +48,15 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
     game = new Game(canvas, gameState);
   });
 
+  describe('initial track rendering', () => {
+    it('should initialize the visible track from selectedTrackId registry data', () => {
+      const shanghai = TRACK_REGISTRY['shanghai-2d'];
+
+      expect(game.track.trackWidth).toBe(shanghai.trackWidth);
+      expect(game.track.waypoints).toEqual(shanghai.waypoints);
+    });
+  });
+
   // ==================== selectTrack ====================
   describe('selectTrack(trackId) - UC-02', () => {
     it('Main: 选择已解锁且金币足够的赛道，应更新 selectedTrackId 到 GameState', () => {
@@ -148,12 +157,12 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
       expect(gameState.get('fuelCoins')).toBe(5); // 不扣
     });
 
-    it('3D 赛道应抛出 not implemented yet（Phase 5 才实现）', () => {
+    it('3D 赛道在 feature flag 关闭时不可用', () => {
       gameState.set('unlockedTracks', ['shanghai-3d']);
       gameState.set('fuelCoins', 100);
       gameState.set('selectedTrackId', 'shanghai-3d');
 
-      expect(() => game.startRace()).toThrow(/3D track not implemented/);
+      expect(() => game.startRace()).toThrow('Track not available: shanghai-3d');
     });
 
     it('未知赛道应抛出 Unknown track', () => {

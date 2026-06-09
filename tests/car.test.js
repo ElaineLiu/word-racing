@@ -288,4 +288,107 @@ describe('Car', () => {
       expect(car.getDisplaySpeed()).toBe(75); // |-1.5| * 50
     });
   });
+
+  describe('time-based physics', () => {
+    it('should produce similar results at 60fps and 120fps', () => {
+      const car60 = new Car(0, 0, 0);
+      const car120 = new Car(0, 0, 0);
+
+      car60.input.up = true;
+      car120.input.up = true;
+
+      // Simulate 1 second: 60 frames @ 60fps, 120 frames @ 120fps
+      for (let i = 0; i < 60; i++) {
+        car60.update(mockTrack, 3, 1/60);
+      }
+      for (let i = 0; i < 120; i++) {
+        car120.update(mockTrack, 3, 1/120);
+      }
+
+      // Both should have similar speed and position (within 10% tolerance due to floating point accumulation)
+      const speedDiff = Math.abs(car60.speed - car120.speed);
+      const avgSpeed = (car60.speed + car120.speed) / 2;
+      expect(speedDiff / avgSpeed).toBeLessThan(0.1); // Within 10% relative error
+
+      const posDiff = Math.sqrt(Math.pow(car60.x - car120.x, 2) + Math.pow(car60.y - car120.y, 2));
+      const avgPos = (Math.abs(car60.x) + Math.abs(car120.x)) / 2;
+      if (avgPos > 0.01) {
+        expect(posDiff / avgPos).toBeLessThan(0.1); // Within 10% relative error
+      }
+    });
+
+    it('should use default deltaTime of 1/60 when not specified', () => {
+      const car1 = new Car(0, 0, 0);
+      const car2 = new Car(0, 0, 0);
+
+      car1.input.up = true;
+      car2.input.up = true;
+
+      car1.update(mockTrack); // No deltaTime
+      car2.update(mockTrack, 3, 1/60); // Explicit deltaTime
+
+      expect(car1.speed).toBeCloseTo(car2.speed, 6);
+      expect(car1.x).toBeCloseTo(car2.x, 6);
+    });
+
+    it('should handle varying deltaTime values', () => {
+      const car = new Car(0, 0, 0);
+      car.input.up = true;
+
+      // Simulate 1 second with varying frame rates
+      const frameTimes = [
+        1/30, 1/30, 1/30, // 3 frames @ 30fps = 0.1s
+        1/60, 1/60, 1/60, 1/60, 1/60, 1/60, // 6 frames @ 60fps = 0.1s
+        1/120, 1/120, 1/120, 1/120, 1/120, 1/120, 1/120, 1/120, 1/120, 1/120, 1/120, 1/120, // 12 frames @ 120fps = 0.1s
+        1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60, 1/60 // 42 frames @ 60fps = 0.7s
+      ];
+
+      let totalTime = 0;
+      for (const dt of frameTimes) {
+        car.update(mockTrack, 3, dt);
+        totalTime += dt;
+      }
+
+      // Should have accelerated for approximately 1 second
+      expect(totalTime).toBeCloseTo(1, 2);
+      expect(car.speed).toBeGreaterThan(0);
+    });
+
+    it('should scale nitro timer with deltaTime', () => {
+      const car = new Car(0, 0, 0);
+      car.nitroActive = true;
+      car.nitroTimer = 180; // 3 seconds @ 60fps
+
+      // Update at 60fps for 1 second
+      for (let i = 0; i < 60; i++) {
+        car.update(mockTrack, 3, 1/60);
+      }
+
+      // Timer should decrease by 60 frames
+      expect(car.nitroTimer).toBeCloseTo(120, 1);
+    });
+
+    it('should scale particle lifetime with deltaTime', () => {
+      const car = new Car(0, 0, 0);
+      car.speed = 2.0;
+      car.nitroActive = true;
+      car.nitroTimer = 180;
+
+      // Update once to generate particles
+      car.update(mockTrack, 3, 1/60);
+      const initialParticleCount = car.particles.length;
+      expect(initialParticleCount).toBeGreaterThan(0);
+
+      // Record initial life
+      const initialLife = car.particles[0].life;
+
+      // Update again
+      car.update(mockTrack, 3, 1/60);
+
+      // Particle life should decrease
+      if (car.particles.length > 0) {
+        expect(car.particles[0].life).toBeLessThan(initialLife);
+      }
+    });
+  });
 });

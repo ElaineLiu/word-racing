@@ -7,7 +7,6 @@
  * Phase 2.2 - Integrated ShopSystem
  * Phase 2.1 - Integrated RenderSystem
  */
-import { Track } from './track.js';
 import { Car } from './car.js';
 import { VocabularyQuiz } from './quiz.js';
 import { ECONOMY, DISPLAY, GAME, UPGRADES } from '../config/game-config.js';
@@ -80,7 +79,7 @@ export class Game {
         this._renderSystem = new RenderSystem(canvas);
 
         // Subsystems
-        this.track = new Track();
+        this.track = this._trackFactory.create(this.selectedTrackId);
         this.car = new Car(
             this.track.startPos.x,
             this.track.startPos.y,

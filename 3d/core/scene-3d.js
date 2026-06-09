@@ -15,7 +15,7 @@ const DEFAULTS = Object.freeze({
     directionalIntensity: 1.0,
     directionalPosition: [3, 5, 4],
   },
-  clearColor: 0x0b1622,
+  clearColor: 0x228B22,
   alpha: true,
 });
 

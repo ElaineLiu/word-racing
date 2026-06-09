@@ -119,5 +119,27 @@ describe('TrackUnlockManager - 解锁进度', () => {
 
       expect(progress.unlocked).toBe(true);
     });
+
+    it('shanghai-3d 应该有 masteryCount 解锁要求', () => {
+      gameState.set('learning.totalWordsMastered', 150);
+
+      const progress = manager.getUnlockProgress('shanghai-3d');
+
+      expect(progress.unlocked).toBe(false);
+      expect(progress.cost).toBe(10);
+      expect(progress.type).toBe('3d');
+      expect(progress.requirements.masteryCount).toEqual({
+        current: 150,
+        required: 200
+      });
+    });
+
+    it('shanghai-3d 已解锁时返回 unlocked: true', () => {
+      gameState.set('unlockedTracks', ['shanghai-2d', 'shanghai-3d']);
+
+      const progress = manager.getUnlockProgress('shanghai-3d');
+
+      expect(progress).toEqual({ unlocked: true });
+    });
   });
 });

@@ -138,9 +138,14 @@ export class Car {
 
     /**
      * Main update - physics and input
+     * @param {Track} track - the track object
+     * @param {number} totalLaps - total laps to complete
+     * @param {number} deltaTime - time step in seconds (default 1/60 for backward compatibility)
      */
-    update(track, totalLaps = 3) {
+    update(track, totalLaps = 3, deltaTime = 1/60) {
         if (this.finished) return;
+
+        const frameScale = deltaTime * 60;
 
         // Handle nitro
         if (this.input.nitro && !this.nitroActive) {
@@ -148,7 +153,7 @@ export class Car {
         }
 
         if (this.nitroActive) {
-            this.nitroTimer--;
+            this.nitroTimer -= frameScale;
             if (this.nitroTimer <= 0) {
                 this.nitroActive = false;
             }
@@ -159,45 +164,46 @@ export class Car {
 
         // Acceleration
         if (this.input.up) {
-            this.speed = Math.min(this.speed + accel, maxSpd);
+            this.speed = Math.min(this.speed + accel * frameScale, maxSpd);
         }
 
         // Braking
         if (this.input.down) {
-            this.speed -= this.brakeForce;
+            this.speed -= this.brakeForce * frameScale;
             if (this.speed < PHYSICS.REVERSE_MAX_SPEED) this.speed = PHYSICS.REVERSE_MAX_SPEED;
         }
 
         // Steering: more responsive at low speeds
         const turnFactor = Math.min(Math.abs(this.speed) / PHYSICS.TURN_FACTOR_DIVISOR, 1);
         if (this.input.left) {
-            this.angle -= this.turnSpeed * turnFactor;
+            this.angle -= this.turnSpeed * turnFactor * frameScale;
         }
         if (this.input.right) {
-            this.angle += this.turnSpeed * turnFactor;
+            this.angle += this.turnSpeed * turnFactor * frameScale;
         }
 
         // Apply friction
         const onTrack = track.isOnTrack(this.x, this.y);
         const friction = onTrack ? this.friction : this.offTrackFriction;
-        this.speed *= friction;
+        this.speed *= Math.pow(friction, frameScale);
 
         // 松开方向键时强摩擦——快速停止，增强操控感
         if (!this.input.up && !this.input.down) {
-            this.speed *= PHYSICS.IDLE_FRICTION;
+            this.speed *= Math.pow(PHYSICS.IDLE_FRICTION, frameScale);
         }
 
         // Very slow speeds: stop completely
-        if (Math.abs(this.speed) < PHYSICS.STOP_THRESHOLD) this.speed = 0;
+        const stopThreshold = PHYSICS.STOP_THRESHOLD * frameScale;
+        if (Math.abs(this.speed) < stopThreshold) this.speed = 0;
 
         // Move car
-        this.x += Math.cos(this.angle) * this.speed;
-        this.y += Math.sin(this.angle) * this.speed;
+        this.x += Math.cos(this.angle) * this.speed * frameScale;
+        this.y += Math.sin(this.angle) * this.speed * frameScale;
 
         // Off-track handling: track how long car has been off-track
         if (!onTrack) {
-            this.offTrackTimer++;
-            this.speed *= PHYSICS.OFF_TRACK_EXTRA_FRICTION;
+            this.offTrackTimer += frameScale;
+            this.speed *= Math.pow(PHYSICS.OFF_TRACK_EXTRA_FRICTION, frameScale);
 
             // Progressive rescue: if off-track for too long, auto-rescue
             if (this.offTrackTimer > this.offTrackRescueThreshold) {
@@ -228,7 +234,7 @@ export class Car {
 
         // Fade old skid marks
         for (let i = this.skidMarks.length - 1; i >= 0; i--) {
-            this.skidMarks[i].alpha -= DISPLAY.SKID_FADE_RATE;
+            this.skidMarks[i].alpha -= DISPLAY.SKID_FADE_RATE * frameScale;
             if (this.skidMarks[i].alpha <= 0) {
                 this.skidMarks.splice(i, 1);
             }
@@ -256,10 +262,10 @@ export class Car {
         // Update particles
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
-            p.x += p.vx;
-            p.y += p.vy;
-            p.life--;
-            p.size *= 0.96;
+            p.x += p.vx * frameScale;
+            p.y += p.vy * frameScale;
+            p.life -= frameScale;
+            p.size *= Math.pow(0.96, frameScale);
             if (p.life <= 0) this.particles.splice(i, 1);
         }
 

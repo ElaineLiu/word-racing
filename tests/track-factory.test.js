@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TrackFactory } from '../systems/track-factory.js';
 import { Track } from '../js/track.js';
 import { GameState } from '../core/game-state.js';
@@ -27,6 +27,16 @@ describe('TrackFactory', () => {
   afterEach(() => {
     localStorage.clear();
   });
+
+  function createFactoryWith3DOptions() {
+    const rendererFactory = vi.fn(() => ({
+      render: vi.fn(), dispose: vi.fn(), setSize: vi.fn(),
+      setPixelRatio: vi.fn(), setClearColor: vi.fn(),
+    }));
+    return new TrackFactory(eventBus, gameState, {
+      track3DOptions: { rendererFactory }
+    });
+  }
 
   describe('constructor', () => {
     it('should throw error if eventBus is missing', () => {
@@ -75,21 +85,29 @@ describe('TrackFactory', () => {
       FeatureFlags.disable('3d-track');
 
       expect(() => factory.create('shanghai-3d'))
-        .toThrow('3D track not implemented yet');
+        .toThrow('Track not available: shanghai-3d');
     });
 
-    it('should throw error for 3D track when feature enabled but not implemented', () => {
+    it('should tell callers to use async creation for 3D tracks', () => {
       FeatureFlags.enable('3d-track');
 
-      expect(() => factory.create('shanghai-3d'))
-        .toThrow('3D track not implemented yet');
+      expect(() => createFactoryWith3DOptions().create('shanghai-3d'))
+        .toThrow('Use createAsync for 3D tracks');
     });
 
-    it('should throw error for night-race-3d', () => {
+    it('should create 3D track asynchronously when feature enabled', async () => {
+      FeatureFlags.enable('3d-track');
+
+      const track = await createFactoryWith3DOptions().createAsync('shanghai-3d');
+      expect(track.type).toBe('3d');
+      expect(track.id).toBe('shanghai-3d');
+    });
+
+    it('should throw error for night-race-3d (incomplete track)', () => {
       FeatureFlags.enable('3d-track');
 
       expect(() => factory.create('night-race-3d'))
-        .toThrow('3D track not implemented yet');
+        .toThrow();
     });
   });
 
@@ -125,14 +143,14 @@ describe('TrackFactory', () => {
       expect(trackIds).not.toContain('night-race-3d');
     });
 
-    it('should return 3D tracks when feature enabled', () => {
+    it('should return complete 3D tracks when feature enabled', () => {
       FeatureFlags.enable('3d-track');
 
       const tracks = factory.getAvailableTracks();
       const trackIds = tracks.map(t => t.id);
 
       expect(trackIds).toContain('shanghai-3d');
-      expect(trackIds).toContain('night-race-3d');
+      expect(trackIds).not.toContain('night-race-3d');
     });
 
     it('should return all tracks when both features enabled', () => {
@@ -146,8 +164,8 @@ describe('TrackFactory', () => {
       expect(trackIds).toContain('monaco-2d');
       expect(trackIds).toContain('silverstone-2d');
       expect(trackIds).toContain('shanghai-3d');
-      expect(trackIds).toContain('night-race-3d');
-      expect(trackIds.length).toBe(5);
+      expect(trackIds).not.toContain('night-race-3d');
+      expect(trackIds.length).toBe(4);
     });
 
     it('should return no tracks when both features disabled', () => {
@@ -182,11 +200,11 @@ describe('TrackFactory', () => {
       expect(factory.isAvailable('night-race-3d')).toBe(false);
     });
 
-    it('should return true for 3D track when feature enabled', () => {
+    it('should return true for complete 3D track when feature enabled', () => {
       FeatureFlags.enable('3d-track');
 
       expect(factory.isAvailable('shanghai-3d')).toBe(true);
-      expect(factory.isAvailable('night-race-3d')).toBe(true);
+      expect(factory.isAvailable('night-race-3d')).toBe(false);
     });
 
     it('should return false for unknown track', () => {

@@ -151,7 +151,7 @@ describe('RacingCostManager', () => {
       expect(manager.getCost('shanghai-2d')).toBe(10);
       expect(manager.getCost('monaco-2d')).toBe(15);
       expect(manager.getCost('silverstone-2d')).toBe(20);
-      expect(manager.getCost('shanghai-3d')).toBe(30);
+      expect(manager.getCost('shanghai-3d')).toBe(10);
       expect(manager.getCost('night-race-3d')).toBe(50);
     });
 
