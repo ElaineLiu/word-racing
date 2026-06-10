@@ -64,6 +64,7 @@ export class Track3D extends TrackInterface {
 
   get startPos() { return { ...this.#geometryTrack.startPos }; }
   get waypoints() { return this.#trackData.waypoints.map(wp => ({ ...wp })); }
+  get centerline() { return this.#geometryTrack.centerline; }
   get trackWidth() { return this.#trackData.trackWidth; }
 
   // ========== Three.js accessors ==========

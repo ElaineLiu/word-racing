@@ -94,8 +94,8 @@ export class Car3D extends Car {
         const normal = track.getTrackNormal(this.x, this.y);
         const reboundSpeed = Math.min(impactSpeed * 0.35, this.maxSpeed * 0.35);
 
-        this.x = previousState.x + normal.x * 1.5;
-        this.y = previousState.y + normal.y * 1.5;
+        this.x = previousState.x - normal.x * 1.5;
+        this.y = previousState.y - normal.y * 1.5;
         this.angle = previousState.angle + Math.PI;
         this.speed = -reboundSpeed;
 
