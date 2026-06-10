@@ -5,7 +5,10 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AIController } from '../../3d/controllers/ai-controller.js';
+import { Car3D } from '../../3d/core/car-3d.js';
 import { AI_CONFIG } from '../../config/ai-config.js';
+import { TRACK_REGISTRY } from '../../config/track-registry.js';
+import { Track } from '../../js/track.js';
 
 describe('AIController', () => {
   let mockCar;
@@ -191,6 +194,38 @@ describe('AIController', () => {
       // 恢复期间，油门应该不那么激进
       // （具体实现可能不同，这里验证行为状态）
       expect(controller.currentBehavior).toBe('recovering');
+
+      mockRandom.mockRestore();
+    });
+  });
+
+
+  describe('Closed-loop driving', () => {
+    it('should keep one AI opponent moving on track for the opening seconds', () => {
+      const trackData = TRACK_REGISTRY['shanghai-3d'];
+      const realTrack = new Track(trackData.waypoints, trackData.trackWidth);
+      realTrack.checkCollision = car => realTrack.getNearestDistance(car.x, car.y) >= realTrack.trackWidth / 2;
+
+      const aiCar = new Car3D(
+        realTrack.startPos.x + 20,
+        realTrack.startPos.y,
+        realTrack.startPos.angle,
+        null
+      );
+
+      const mockRandom = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+      const controller = new AIController(aiCar, realTrack, AI_CONFIG.PERSONALITIES.balanced);
+
+      for (let frame = 0; frame < 300; frame++) {
+        controller.update(1 / 60);
+        aiCar.update(realTrack, 3, 1 / 60);
+      }
+
+      const distanceFromCenter = realTrack.getNearestDistance(aiCar.x, aiCar.y);
+
+      expect(distanceFromCenter).toBeLessThan(realTrack.trackWidth / 2 - 4);
+      expect(aiCar.speed).toBeGreaterThan(0.5);
+      expect(realTrack.getProgress(aiCar.x, aiCar.y)).toBeGreaterThan(0.05);
 
       mockRandom.mockRestore();
     });

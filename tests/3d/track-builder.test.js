@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import { TrackBuilder } from '../../3d/rendering/track-builder.js';
+import { TRACK_REGISTRY } from '../../config/track-registry.js';
 
 const TEST_WAYPOINTS = [
   { x: 0, y: 0 },
@@ -77,6 +78,22 @@ describe('TrackBuilder', () => {
       );
       expect(barriers.length).toBeGreaterThan(0);
     });
+
+    it('should leave the start-finish area clear on closed tracks', () => {
+      const scene = new THREE.Scene();
+      const builder = new TrackBuilder(scene);
+      const track = TRACK_REGISTRY['shanghai-3d'];
+      builder.buildTrack(track.waypoints, track.trackWidth);
+      builder.addBarriers();
+
+      const start = new THREE.Vector2(track.waypoints[0].x, track.waypoints[0].y);
+      const barriersNearStart = scene.children.filter(c => {
+        if (c.type !== 'Mesh' || c.name !== 'barrier') return false;
+        return new THREE.Vector2(c.position.x, c.position.z).distanceTo(start) < track.trackWidth;
+      });
+
+      expect(barriersNearStart).toHaveLength(0);
+    });
   });
 
   describe('addKerbs', () => {
@@ -91,10 +108,26 @@ describe('TrackBuilder', () => {
       );
       expect(kerbs.length).toBeGreaterThan(0);
     });
+
+    it('should leave the start-finish area clear of kerb blocks on closed tracks', () => {
+      const scene = new THREE.Scene();
+      const builder = new TrackBuilder(scene);
+      const track = TRACK_REGISTRY['shanghai-3d'];
+      builder.buildTrack(track.waypoints, track.trackWidth);
+      builder.addKerbs();
+
+      const start = new THREE.Vector2(track.waypoints[0].x, track.waypoints[0].y);
+      const kerbsNearStart = scene.children.filter(c => {
+        if (c.type !== 'Mesh' || c.name !== 'kerb') return false;
+        return new THREE.Vector2(c.position.x, c.position.z).distanceTo(start) < track.trackWidth;
+      });
+
+      expect(kerbsNearStart).toHaveLength(0);
+    });
   });
 
   describe('addStartFinishLine', () => {
-    it('should add start-finish meshes', () => {
+    it('should add one textured start-finish mesh above the road', () => {
       const scene = new THREE.Scene();
       const builder = new TrackBuilder(scene);
       builder.buildTrack(TEST_WAYPOINTS, TEST_TRACK_WIDTH);
@@ -103,7 +136,16 @@ describe('TrackBuilder', () => {
       const startFinish = scene.children.filter(
         c => c.type === 'Mesh' && c.name === 'start-finish'
       );
-      expect(startFinish.length).toBeGreaterThan(0);
+      expect(startFinish).toHaveLength(1);
+      expect(startFinish[0].material.map).toBeInstanceOf(THREE.CanvasTexture);
+
+      const positions = startFinish[0].geometry.attributes.position;
+      expect(positions.getY(0)).toBeGreaterThan(0.2);
+      const firstEdge = new THREE.Vector2(
+        positions.getX(1) - positions.getX(0),
+        positions.getZ(1) - positions.getZ(0)
+      ).normalize();
+      expect(Math.abs(firstEdge.y)).toBeGreaterThan(0.7);
     });
   });
 

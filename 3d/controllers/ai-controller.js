@@ -29,7 +29,8 @@ export class AIController {
 
     // 创建 PathFollower
     const lookahead = this.#personality.lookaheadDistance || AI_CONFIG.PATH_FOLLOWING.lookaheadDistance;
-    this.#pathFollower = new PathFollower(track.waypoints, lookahead);
+    const pathPoints = track.centerline || track.waypoints;
+    this.#pathFollower = new PathFollower(pathPoints, lookahead);
 
     // 应用随机偏移，让 AI 不完全重叠
     const offset = (Math.random() - 0.5) * AI_CONFIG.PATH_FOLLOWING.offsetRange;
@@ -110,7 +111,10 @@ export class AIController {
 
     // 油门
     if (this.#currentBehavior === 'racing') {
-      this.#car.input.up = true;
+      const speedRatio = this.#car.maxSpeed ? Math.abs(this.#car.speed || 0) / this.#car.maxSpeed : 0;
+      const steeringLoad = Math.abs(steering);
+      this.#car.input.up = steeringLoad < 0.35 || speedRatio < 0.45;
+      this.#car.input.down = steeringLoad > 0.6 && speedRatio > 0.65;
     } else {
       // 恢复期间减速（随机间断加油）
       this.#car.input.up = Math.random() > AI_CONFIG.RECOVERY.speedReduction;

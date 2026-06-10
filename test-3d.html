@@ -58,6 +58,21 @@
     .debug-row { display: flex; justify-content: space-between; }
     .debug-row .k { color: #8aa4bd; }
     .debug-row .v { color: #ffffff; }
+    #countdown-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(11, 22, 34, 0.25);
+      color: #ffffff;
+      font-size: clamp(96px, 18vw, 220px);
+      font-weight: 800;
+      letter-spacing: 4px;
+      text-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+      pointer-events: none;
+    }
+    #countdown-overlay.hidden { display: none; }
     #key-hints {
       position: absolute;
       left: 16px;
@@ -128,6 +143,8 @@
     <div><span class="key">Tab</span><span class="active">toggle AUTO mode (AI drives)</span></div>
     <div><span class="key">R</span><span class="active">reset all cars to start</span></div>
   </div>
+
+  <div id="countdown-overlay">3</div>
 
   <script type="module">
     import * as THREE from 'three';
@@ -266,6 +283,7 @@
         aiCars.forEach((aiCar, i) => {
           aiCar.reset(track.startPos.x + (i + 1) * 20, track.startPos.y, track.startPos.angle);
         });
+        restartCountdown();
         return;
       }
       if (e.key === 'Tab') {
@@ -285,6 +303,12 @@
       playerCar.input.right = keys.has('d') || keys.has('D') || keys.has('ArrowRight');
     }
 
+    function clearInputs() {
+      allCars.forEach(car => {
+        car.input = { up: false, down: false, left: false, right: false, nitro: false };
+      });
+    }
+
     // ---------- Resize ----------
     window.addEventListener('resize', () => {
       track.renderer.setSize(window.innerWidth, window.innerHeight, false);
@@ -299,30 +323,62 @@
     const rpmEl = document.getElementById('dbg-rpm');
     const posEl = document.getElementById('dbg-pos');
     const collisionEl = document.getElementById('dbg-collision');
+    const countdownEl = document.getElementById('countdown-overlay');
     const totalLaps = 3;
+    const countdownDuration = 3;
+    let countdownRemaining = countdownDuration;
+    let raceStarted = false;
     let last = performance.now();
     let frames = 0;
     let acc = 0;
+
+    function restartCountdown() {
+      countdownRemaining = countdownDuration;
+      raceStarted = false;
+      countdownEl.textContent = '3';
+      countdownEl.classList.remove('hidden');
+      clearInputs();
+    }
+
+    function updateCountdown(dt) {
+      if (raceStarted) return;
+
+      countdownRemaining -= dt;
+      if (countdownRemaining > 0) {
+        countdownEl.textContent = String(Math.ceil(countdownRemaining));
+        return;
+      }
+
+      raceStarted = true;
+      countdownEl.textContent = 'GO';
+      setTimeout(() => countdownEl.classList.add('hidden'), 450);
+    }
 
     function tick(now) {
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
 
-      // Update player input (AUTO mode or manual)
-      if (autoMode && playerAIController) {
-        playerAIController.update(dt);
+      updateCountdown(dt);
+
+      if (raceStarted) {
+        // Update player input (AUTO mode or manual)
+        if (autoMode && playerAIController) {
+          playerAIController.update(dt);
+        } else {
+          updateInput();
+        }
+
+        // Update AI cars
+        aiControllers.forEach(ctrl => ctrl.update(dt));
+
+        // Update all cars physics
+        allCars.forEach(car => car.update(track, totalLaps, dt));
+
+        // Update ranking
+        rankingSystem.update();
       } else {
-        updateInput();
+        clearInputs();
       }
-
-      // Update AI cars
-      aiControllers.forEach(ctrl => ctrl.update(dt));
-
-      // Update all cars physics
-      allCars.forEach(car => car.update(track, totalLaps, dt));
-
-      // Update ranking
-      rankingSystem.update();
 
       // Update camera (follow player)
       cameraCtrl.update({ x: playerCar.x, y: playerCar.y, angle: playerCar.angle });

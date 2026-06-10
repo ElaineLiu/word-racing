@@ -34,7 +34,7 @@ describe('3D decorations', () => {
   });
 
   describe('TrackBuilder.addDecorations', () => {
-    it('should add tree instances, buildings, and streetlights', () => {
+    it('should add tree instances and streetlights without building blocks', () => {
       const scene = new THREE.Scene();
       const builder = new TrackBuilder(scene);
       builder.buildTrack(TEST_WAYPOINTS, 20);
@@ -46,8 +46,7 @@ describe('3D decorations', () => {
 
       expect(trees.length).toBeGreaterThanOrEqual(50);
       expect(trees.length).toBeLessThanOrEqual(100);
-      expect(buildings.length).toBeGreaterThanOrEqual(5);
-      expect(buildings.length).toBeLessThanOrEqual(10);
+      expect(buildings).toHaveLength(0);
       expect(streetlights.length).toBeGreaterThanOrEqual(20);
       expect(streetlights.length).toBeLessThanOrEqual(30);
     });

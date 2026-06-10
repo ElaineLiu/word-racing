@@ -21,6 +21,10 @@ export class Track {
         this._calculateStartPos();
     }
 
+    get centerline() {
+        return this.points.map(p => ({ ...p }));
+    }
+
     /**
      * Catmull-Rom spline interpolation
      */
