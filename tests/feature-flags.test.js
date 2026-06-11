@@ -4,12 +4,7 @@ import { FeatureFlags } from '../config/feature-flags.js';
 describe('FeatureFlags', () => {
   beforeEach(() => {
     localStorage.clear();
-    // 重置为默认值
-    FeatureFlags.flags = {
-      '2d-track': true,
-      '3d-track': false,
-      'multiple-tracks': true,
-    };
+    FeatureFlags.reset();
   });
 
   afterEach(() => {
@@ -22,8 +17,8 @@ describe('FeatureFlags', () => {
       expect(FeatureFlags.isEnabled('multiple-tracks')).toBe(true);
     });
 
-    it('should return false for disabled flag', () => {
-      expect(FeatureFlags.isEnabled('3d-track')).toBe(false);
+    it('should enable 3D track by default for Epic 5', () => {
+      expect(FeatureFlags.isEnabled('3d-track')).toBe(true);
     });
 
     it('should return false for unknown flag', () => {
@@ -53,16 +48,26 @@ describe('FeatureFlags', () => {
   describe('load', () => {
     it('should load flags from localStorage', () => {
       localStorage.setItem('wr_feature_flags', JSON.stringify({
-        '3d-track': true,
+        '3d-track': false,
         'custom-flag': true
       }));
 
       FeatureFlags.load();
 
-      expect(FeatureFlags.isEnabled('3d-track')).toBe(true);
+      expect(FeatureFlags.isEnabled('3d-track')).toBe(false);
       expect(FeatureFlags.isEnabled('custom-flag')).toBe(true);
       // 默认值仍然存在
       expect(FeatureFlags.isEnabled('2d-track')).toBe(true);
+    });
+
+    it('should load legacy console key featureFlags for manual testing', () => {
+      localStorage.setItem('featureFlags', JSON.stringify({
+        '3d-track': false,
+      }));
+
+      FeatureFlags.load();
+
+      expect(FeatureFlags.isEnabled('3d-track')).toBe(false);
     });
 
     it('should not crash on invalid JSON', () => {
@@ -71,11 +76,13 @@ describe('FeatureFlags', () => {
       expect(() => FeatureFlags.load()).not.toThrow();
       // 默认值保持
       expect(FeatureFlags.isEnabled('2d-track')).toBe(true);
+      expect(FeatureFlags.isEnabled('3d-track')).toBe(true);
     });
 
     it('should handle empty localStorage', () => {
       expect(() => FeatureFlags.load()).not.toThrow();
       expect(FeatureFlags.isEnabled('2d-track')).toBe(true);
+      expect(FeatureFlags.isEnabled('3d-track')).toBe(true);
     });
   });
 
@@ -98,6 +105,20 @@ describe('FeatureFlags', () => {
     });
   });
 
+  describe('reset', () => {
+    it('should restore default feature flags', () => {
+      FeatureFlags.disable('2d-track');
+      FeatureFlags.disable('3d-track');
+      FeatureFlags.disable('multiple-tracks');
+
+      FeatureFlags.reset();
+
+      expect(FeatureFlags.isEnabled('2d-track')).toBe(true);
+      expect(FeatureFlags.isEnabled('3d-track')).toBe(true);
+      expect(FeatureFlags.isEnabled('multiple-tracks')).toBe(true);
+    });
+  });
+
   describe('persistence workflow', () => {
     it('should persist changes across load/save cycles', () => {
       // 修改并保存
@@ -105,11 +126,7 @@ describe('FeatureFlags', () => {
       FeatureFlags.save();
 
       // 重置到默认值
-      FeatureFlags.flags = {
-        '2d-track': true,
-        '3d-track': false,
-        'multiple-tracks': true,
-      };
+      FeatureFlags.reset();
 
       // 加载
       FeatureFlags.load();

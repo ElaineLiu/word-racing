@@ -75,7 +75,13 @@ export class RenderSystem {
       return;
     }
 
-    ctx.clearRect(0, 0, W, H);
+    // 3D 模式：清除 canvas 以确保 HUD 可见
+    if (this.#track?.type === '3d') {
+      ctx.clearRect(0, 0, W, H);
+    } else {
+      ctx.clearRect(0, 0, W, H);
+    }
+
     ctx.save();
     ctx.scale(scale, scale);
 
@@ -102,6 +108,7 @@ export class RenderSystem {
 
   #renderTrackAndCars(scale) {
     if (!this.#track || !this.#car) return;
+    if (this.#track.type === '3d') return;
 
     const W = this.#canvas.width;
     const H = this.#canvas.height;
@@ -172,8 +179,12 @@ export class RenderSystem {
 
   #renderCountdown(text, scale) {
     const ctx = this.#ctx;
-    ctx.fillStyle = 'rgba(0,0,0,0.55)';
-    ctx.fillRect(0, 0, DISPLAY.CANVAS_WIDTH, DISPLAY.CANVAS_HEIGHT);
+
+    // 3D 模式下不绘制背景遮罩，避免遮挡 Three.js 渲染的场景
+    if (this.#track?.type !== '3d') {
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillRect(0, 0, DISPLAY.CANVAS_WIDTH, DISPLAY.CANVAS_HEIGHT);
+    }
 
     ctx.fillStyle = text === 'GO!' ? '#00C853' : '#FFD700';
     ctx.font = `bold ${text === 'GO!' ? 90 : 110}px Arial`;
@@ -192,9 +203,12 @@ export class RenderSystem {
     const centerX = W / 2;
     const rightX = W - 110 - padding; // right panels (width 110)
 
-    // LAP panel
-    this.#drawPanel(ctx, padding, padding, 110, 48, 'LAP',
-      `${Math.min(gameState.lap + 1, gameState.totalLaps)} / ${gameState.totalLaps}`, '#FFD700');
+    // LAP / RANK panel
+    this.#drawPanel(ctx, padding, padding, 110, 48, gameState.trackType === '3d' ? 'RANK' : 'LAP',
+      gameState.trackType === '3d'
+        ? `${this.#formatOrdinal(gameState.finalRank || 1)} / ${gameState.ranking?.length || 4}`
+        : `${Math.min(gameState.lap + 1, gameState.totalLaps)} / ${gameState.totalLaps}`,
+      '#FFD700');
 
     // TIME panel (centered)
     this.#drawPanel(ctx, centerX - 85, padding, 170, 48, 'TIME',
@@ -414,9 +428,12 @@ export class RenderSystem {
     ctx.textBaseline = 'middle';
     ctx.fillText('RACE COMPLETE!', centerX, by + 45);
 
+    const placementText = gameState.trackType === '3d'
+      ? `${this.#formatOrdinal(gameState.finalRank || 1)} Place`
+      : '1st Place!';
     ctx.fillStyle = '#00C853';
     ctx.font = 'bold 22px Arial';
-    ctx.fillText('1st Place!', centerX, by + 82);
+    ctx.fillText(placementText, centerX, by + 82);
 
     ctx.strokeStyle = 'rgba(255,255,255,0.08)';
     ctx.lineWidth = 1;
@@ -446,6 +463,21 @@ export class RenderSystem {
       ctx.textAlign = 'right';
       ctx.fillText(stat.value, bx + bw - 40, sy);
     });
+
+    if (gameState.trackType === '3d' && Array.isArray(gameState.ranking)) {
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.font = '13px Arial';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Ranking', bx + 40, by + 338);
+      ctx.fillStyle = '#FFF';
+      ctx.font = 'bold 13px Arial';
+      ctx.textAlign = 'right';
+      const rankingText = gameState.ranking
+        .map(entry => `${entry.isPlayer ? 'You' : 'AI'} ${this.#formatOrdinal(entry.rank)}`)
+        .join('  ');
+      ctx.fillText(rankingText, bx + bw - 40, by + 338);
+    }
 
     if (gameState.wrongWords && gameState.wrongWords.length > 0) {
       ctx.fillStyle = '#FF6D00';
@@ -516,5 +548,11 @@ export class RenderSystem {
     const sec = totalSec % 60;
     const millis = Math.floor((ms % 1000) / 10);
     return `${min}:${sec.toString().padStart(2, '0')}.${millis.toString().padStart(2, '0')}`;
+  }
+
+  #formatOrdinal(n) {
+    const value = Number(n) || 1;
+    const suffix = value === 1 ? 'st' : value === 2 ? 'nd' : value === 3 ? 'rd' : 'th';
+    return `${value}${suffix}`;
   }
 }

@@ -3,12 +3,14 @@
  * 用于动态启用/禁用功能，无需重新部署
  */
 
+const DEFAULT_FLAGS = {
+  '2d-track': true,
+  '3d-track': true,
+  'multiple-tracks': true,
+};
+
 export const FeatureFlags = {
-  flags: {
-    '2d-track': true,           // 2D赛道总开关
-    '3d-track': false,          // 3D赛道总开关（开发完成后启用）
-    'multiple-tracks': true,    // 多赛道功能
-  },
+  flags: { ...DEFAULT_FLAGS },
 
   /**
    * 检查功能是否启用
@@ -40,7 +42,7 @@ export const FeatureFlags = {
    */
   load() {
     try {
-      const saved = localStorage.getItem('wr_feature_flags');
+      const saved = localStorage.getItem('wr_feature_flags') || localStorage.getItem('featureFlags');
       if (saved) {
         this.flags = { ...this.flags, ...JSON.parse(saved) };
       }
@@ -54,5 +56,9 @@ export const FeatureFlags = {
    */
   save() {
     localStorage.setItem('wr_feature_flags', JSON.stringify(this.flags));
+  },
+
+  reset() {
+    this.flags = { ...DEFAULT_FLAGS };
   }
 };

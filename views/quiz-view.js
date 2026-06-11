@@ -479,16 +479,20 @@ export class QuizView extends BaseView {
     });
 
     // Complete screen buttons
-    this.onClick('#quiz-start-btn', () => {
+    this.onClick('#quiz-start-btn', async () => {
+      const button = this.$('#quiz-start-btn');
       if (this.#game.fuel <= 0) {
         alert('Insufficient fuel! Buy fuel in the shop first.');
         return;
       }
       try {
-        this.#game.continueToRace();
+        if (button) button.disabled = true;
+        await this.#game.continueToRace();
         this.emit(Events.RACE_START, { source: 'quiz' });
       } catch (err) {
         alert(err.message);
+      } finally {
+        if (button) button.disabled = false;
       }
     });
 

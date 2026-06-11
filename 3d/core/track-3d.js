@@ -8,7 +8,7 @@
 import { TrackInterface } from '../../core/track-interface.js';
 import { Track } from '../../js/track.js';
 import { Scene3D } from './scene-3d.js';
-import { TrackBuilder } from '../rendering/track-builder.js';
+import { TrackBuilder } from '../rendering/track-builder.js?v=epic5-fixed-right-chevron-v3';
 import { Events } from '../../core/event-bus.js';
 
 export class Track3D extends TrackInterface {

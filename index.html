@@ -189,6 +189,7 @@
 
     <!-- Page 4: Race -->
     <div id="page-race" class="page">
+        <canvas id="threeCanvas" hidden></canvas>
         <canvas id="gameCanvas"></canvas>
         <div id="touch-controls">
             <div class="touch-btn-group">
@@ -252,6 +253,13 @@
     </div>
 
     <!-- Scripts (ES6 Module) -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "./node_modules/three/build/three.module.js"
+        }
+    }
+    </script>
     <script type="module" src="js/main-v2.js"></script>
 </body>
 </html>

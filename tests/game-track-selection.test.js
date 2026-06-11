@@ -12,12 +12,13 @@
  *   - #005: 走完整调用链，验证 GameState 副作用
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Game } from '../js/game.js';
 import { GameState } from '../core/game-state.js';
 import { EventBus } from '../core/event-bus.js';
 import { Track } from '../js/track.js';
 import { TRACK_REGISTRY } from '../config/track-registry.js';
+import { FeatureFlags } from '../config/feature-flags.js';
 
 class MockCanvas {
   constructor() {
@@ -42,10 +43,15 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
 
   beforeEach(() => {
     localStorage.clear();
+    FeatureFlags.reset();
     canvas = new MockCanvas();
     eventBus = new EventBus();
     gameState = new GameState(eventBus);
-    game = new Game(canvas, gameState);
+    game = new Game(canvas, gameState, eventBus);
+  });
+
+  afterEach(() => {
+    FeatureFlags.reset();
   });
 
   describe('initial track rendering', () => {
@@ -158,6 +164,7 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
     });
 
     it('3D 赛道在 feature flag 关闭时不可用', () => {
+      FeatureFlags.disable('3d-track');
       gameState.set('unlockedTracks', ['shanghai-3d']);
       gameState.set('fuelCoins', 100);
       gameState.set('selectedTrackId', 'shanghai-3d');
@@ -175,10 +182,10 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
   describe('getAvailableTracks()', () => {
     it('应返回 FeatureFlags 启用的赛道', () => {
       const tracks = game.getAvailableTracks();
-      // 默认 FeatureFlags: 2d-track=true, 3d-track=false
-      // 应该返回 3 条 2D 赛道
-      expect(tracks.length).toBe(3);
-      expect(tracks.every(t => t.type === '2d')).toBe(true);
+      // Epic 5 默认启用完整 3D 赛道，不完整的 3D 赛道仍过滤
+      expect(tracks.length).toBe(4);
+      expect(tracks.map(t => t.id)).toContain('shanghai-3d');
+      expect(tracks.map(t => t.id)).not.toContain('night-race-3d');
     });
 
     it('应正确标记 unlocked 状态', () => {

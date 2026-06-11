@@ -254,13 +254,17 @@ export class ShopView extends BaseView {
       this.emit(Events.VIEW_CHANGE, { view: 'home' });
     });
 
-    this.onClick('#shop-race-btn', () => {
+    this.onClick('#shop-race-btn', async () => {
+      const button = this.$('#shop-race-btn');
       if (this.#game.fuel > 0) {
         try {
-          this.#game.continueToRace();
+          if (button) button.disabled = true;
+          await this.#game.continueToRace();
           this.emit(Events.RACE_START, { source: 'shop' });
         } catch (err) {
           alert(err.message);
+        } finally {
+          if (button) button.disabled = false;
         }
       } else {
         alert('Need fuel! Go to quiz to earn fuel coins.');

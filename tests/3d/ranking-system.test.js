@@ -110,6 +110,37 @@ describe('RankingSystem', () => {
       expect(ranking[1].lap).toBe(2);
       expect(ranking[2].lap).toBe(1);
     });
+    it('should rank finished cars by finish order before unfinished cars', () => {
+      const cars = [
+        { lap: 1, progress: 0.9, lastProgress: 0.9, isPlayer: true, finished: true, finishOrder: 2 },
+        { lap: 1, progress: 0.2, lastProgress: 0.2, isPlayer: false, finished: true, finishOrder: 1 },
+        { lap: 1, progress: 0.99, lastProgress: 0.99, isPlayer: false, finished: false },
+      ];
+      const system = new RankingSystem(cars, eventBus);
+
+      const ranking = system.calculateRanking();
+
+      expect(ranking[0].car).toBe(cars[1]);
+      expect(ranking[0].rank).toBe(1);
+      expect(ranking[1].car).toBe(cars[0]);
+      expect(ranking[1].rank).toBe(2);
+      expect(ranking[2].car).toBe(cars[2]);
+      expect(ranking[2].rank).toBe(3);
+    });
+
+    it('should prefer lastProgress when ranking real Car instances', () => {
+      const cars = [
+        { lap: 0, progress: undefined, lastProgress: 0.1, isPlayer: true },
+        { lap: 0, progress: undefined, lastProgress: 0.8, isPlayer: false },
+      ];
+      const system = new RankingSystem(cars, eventBus);
+
+      const ranking = system.calculateRanking();
+
+      expect(ranking[0].car).toBe(cars[1]);
+      expect(ranking[0].progress).toBe(0.8);
+      expect(system.getPlayerRank(ranking)).toBe(2);
+    });
   });
 
   describe('getPlayerRank', () => {

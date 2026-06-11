@@ -58,7 +58,7 @@ export class TrackFactory {
     }
   }
 
-  async createAsync(trackId) {
+  async createAsync(trackId, optionsOverride = {}) {
     const trackData = TRACK_REGISTRY[trackId];
     if (!trackData) {
       throw new Error(`Unknown track: ${trackId}`);
@@ -69,7 +69,10 @@ export class TrackFactory {
         throw new Error(`Track not available: ${trackId}`);
       }
       const { Track3D } = await import('../3d/core/track-3d.js');
-      return new Track3D(trackData, this.#eventBus, this.#gameState, this.#track3DOptions);
+      return new Track3D(trackData, this.#eventBus, this.#gameState, {
+        ...this.#track3DOptions,
+        ...optionsOverride,
+      });
     }
 
     return this.create(trackId);

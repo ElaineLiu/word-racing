@@ -35,6 +35,7 @@ export class CarModel {
         // Main body - red (scaled up 5x for better visibility)
         const bodyGeometry = new THREE.BoxGeometry(12, 3, 6);
         const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0xE53935 });
+        bodyMaterial.name = 'body';
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
         body.position.set(0, 1.5, 0);
         this.group.add(body);
@@ -42,6 +43,7 @@ export class CarModel {
         // Hood (front section)
         const hoodGeometry = new THREE.BoxGeometry(4, 1.5, 5);
         const hoodMaterial = new THREE.MeshLambertMaterial({ color: 0xE53935 });
+        hoodMaterial.name = 'body';
         const hood = new THREE.Mesh(hoodGeometry, hoodMaterial);
         hood.position.set(6, 2.25, 0);
         this.group.add(hood);
