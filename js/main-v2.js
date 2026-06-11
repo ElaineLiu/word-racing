@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 先创建 LearningController，传入共享 EventBus
   // 它会自建 GameState，然后把这个 GameState 注入给 Game，确保单一数据源（Phase 3.1a）
   const learningController = new LearningController(eventBus);
-  const game = new Game(canvas, learningController.gameState);
+  const game = new Game(canvas, learningController.gameState, eventBus);
   window.game = game;
   window.learningController = learningController;
 
@@ -60,10 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Set up callbacks (now that viewManager exists)
     game.onExitRace = () => {
-      viewManager.switchTo('home');
+      void viewManager.switchTo('home');
     };
     game.onResultsContinueCb = () => {
-      viewManager.switchTo('home');
+      void viewManager.switchTo('home');
     };
 
     // Initial stats update
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             learningController.sessionManager?.clearSession?.();
           }
           alert('Progress reset with test resources!');
-          viewManager.switchTo('home');
+          void viewManager.switchTo('home');
         }
       });
     }

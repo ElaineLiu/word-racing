@@ -51,40 +51,40 @@ export class ViewManager {
     this.#navBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const page = btn.dataset.page;
-        this.switchTo(page);
+        void this.switchTo(page);
       });
     });
 
     // Start on home page
-    this.switchTo('home');
+    void this.switchTo('home');
   }
 
   #setupEventListeners() {
     // Listen for view change requests
     this.#eventBus.on(Events.VIEW_CHANGE, ({ view }) => {
-      this.switchTo(view);
+      void this.switchTo(view);
     });
 
     // Listen for quiz start
     this.#eventBus.on(Events.QUIZ_START, ({ source }) => {
-      this.switchTo('quiz');
+      void this.switchTo('quiz');
     });
 
     // Listen for race start
     this.#eventBus.on(Events.RACE_START, ({ source }) => {
-      this.switchTo('race');
+      void this.switchTo('race');
     });
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.#game.state === 'RACING') {
         this.#game.exitRace();
-        this.switchTo('home');
+        void this.switchTo('home');
       }
     });
   }
 
-  switchTo(viewName) {
+  async switchTo(viewName) {
     // Validate race access
     if (viewName === 'race') {
       if (this.#game.fuel <= 0) {
@@ -92,7 +92,7 @@ export class ViewManager {
         viewName = 'home';
       } else if (![GAME.STATES.COUNTDOWN, GAME.STATES.RACING, GAME.STATES.RESULTS].includes(this.#game.state)) {
         try {
-          this.#game.continueToRace();
+          await this.#game.continueToRace();
         } catch (err) {
           // 友好提示：赛道未解锁 / 金币不足等
           alert(err.message);

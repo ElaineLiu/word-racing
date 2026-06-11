@@ -10,7 +10,7 @@
 import { Car } from './car.js';
 import { VocabularyQuiz } from './quiz.js';
 import { ECONOMY, DISPLAY, GAME, UPGRADES } from '../config/game-config.js';
-import { EventBus } from '../core/event-bus.js';
+import { EventBus, Events } from '../core/event-bus.js';
 import { GameState } from '../core/game-state.js';
 import { ShopSystem } from '../systems/shop-system.js';
 import { RenderSystem } from '../rendering/render-system.js';
@@ -21,10 +21,14 @@ import { RacingCostManager } from '../systems/racing-cost-manager.js';
 import { TrackFactory } from '../systems/track-factory.js';
 
 export class Game {
-    constructor(canvas, gameState = null) {
+    constructor(canvas, gameState = null, eventBus = null, options = {}) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.scale = 1;
+        this._track3DOptions = options.track3DOptions || {};
+        this._raceSession3D = null;
+        this._raceStartPending = null;
+        this._lastUpdateTime = 0;
 
         // Game state
         this.state = GAME.STATES.MENU;
@@ -32,7 +36,7 @@ export class Game {
         this.totalLaps = GAME.MIN_LAPS;
 
         // Core systems (EventBus 先建好，GameState 可注入或自建)
-        this._eventBus = new EventBus();
+        this._eventBus = eventBus || new EventBus();
         this._gameState = gameState || new GameState(this._eventBus);
 
         // Load feature flags
@@ -41,7 +45,9 @@ export class Game {
         // Manager instances
         this._trackUnlockManager = new TrackUnlockManager(this._eventBus, this._gameState);
         this._racingCostManager = new RacingCostManager(this._eventBus, this._gameState);
-        this._trackFactory = new TrackFactory(this._eventBus, this._gameState);
+        this._trackFactory = new TrackFactory(this._eventBus, this._gameState, {
+            track3DOptions: this._track3DOptions
+        });
 
         // Player resources (legacy 'coins' counter, not persisted — kept for UI compatibility)
         this.coins = 0;
@@ -79,7 +85,9 @@ export class Game {
         this._renderSystem = new RenderSystem(canvas);
 
         // Subsystems
-        this.track = this._trackFactory.create(this.selectedTrackId);
+        // 构造函数始终创建默认 2D 赛道，避免同步创建 3D
+        // 真正的赛道在 startRace() 时按 selectedTrackId 创建
+        this.track = this._trackFactory.create('shanghai-2d');
         this.car = new Car(
             this.track.startPos.x,
             this.track.startPos.y,
@@ -189,6 +197,13 @@ export class Game {
      * Initialize and start
      */
     async init() {
+        // 验证 selectedTrackId 是否可用（比如 feature flag 禁用 3D）
+        const currentTrackId = this.selectedTrackId;
+        if (!this._trackFactory.isAvailable(currentTrackId)) {
+            // 重置为默认 2D 赛道
+            this.selectedTrackId = 'shanghai-2d';
+        }
+
         this._resizeCanvas();
         window.addEventListener('resize', () => this._resizeCanvas());
         await this.quiz.loadWords();
@@ -295,6 +310,9 @@ export class Game {
      * Main update
      */
     _update(timestamp) {
+        const deltaTime = this._lastUpdateTime ? (timestamp - this._lastUpdateTime) / 1000 : 1 / 60;
+        this._lastUpdateTime = timestamp;
+
         switch (this.state) {
             case 'MENU':
                 break;
@@ -308,7 +326,7 @@ export class Game {
                 this._updateCountdown();
                 break;
             case 'RACING':
-                this._updateRacing();
+                this._updateRacing(deltaTime);
                 break;
             case 'RESULTS':
                 break;
@@ -335,9 +353,13 @@ export class Game {
     /**
      * Update racing state
      */
-    _updateRacing() {
-        this.car.input = this._getCarInput();
-        this.car.update(this.track, this.totalLaps);
+    _updateRacing(deltaTime = 1 / 60) {
+        if (this.isCurrentTrack3D()) {
+            this._raceSession3D.update(this._getCarInput(), deltaTime, this.totalLaps);
+        } else {
+            this.car.input = this._getCarInput();
+            this.car.update(this.track, this.totalLaps);
+        }
 
         // nitro 运行时单一源是 Car；持久化到 GameState 由比赛结束/退出统一处理
 
@@ -346,7 +368,7 @@ export class Game {
         // 燃油不在每圈扣除，改为比赛结束时统一结算（在 _showResults / exitRace 中）
         // 圈数达标则完赛
         if (this.car.finished) {
-            setTimeout(() => this._showResults(), 1000);
+            this._showResults();
             this.state = 'RESULTS';
         }
     }
@@ -363,6 +385,10 @@ export class Game {
      * Main render - delegates to RenderSystem
      */
     _render() {
+        if (this.isCurrentTrack3D()) {
+            this._raceSession3D.render();
+        }
+
         // Update render system scale
         this._renderSystem.setScale(this.scale);
 
@@ -379,7 +405,8 @@ export class Game {
             maxFuel: this.maxFuel,
             displaySpeed: Math.round(this.car.speed * DISPLAY.SPEED_DISPLAY_MULTIPLIER) || 0,
             nitroStatus: this.car.getNitroStatus(),
-            wrongWords: this.quizResults?.wrong || []
+            wrongWords: this.quizResults?.wrong || [],
+            ...(this._raceSession3D ? this._raceSession3D.getResult() : {})
         };
 
         this._renderSystem.render(this.state, gameState);
@@ -496,12 +523,19 @@ export class Game {
      * 如果当前已处于 COUNTDOWN/RACING/RESULTS，则不做任何事。
      * 否则委托给 startRace() 走完整流程：扣金币 + 用 TrackFactory 创建赛道。
      */
-    continueToRace() {
+    async continueToRace() {
         // 已在比赛生命周期内，避免重复扣金币（修复刷新/导航导致 fuelCoins 清零）
         if ([GAME.STATES.COUNTDOWN, GAME.STATES.RACING, GAME.STATES.RESULTS].includes(this.state)) {
             return;
         }
-        this.startRace();
+        if (this._raceStartPending) {
+            return this._raceStartPending;
+        }
+
+        this._raceStartPending = this.startRace().finally(() => {
+            this._raceStartPending = null;
+        });
+        return this._raceStartPending;
     }
 
     /**
@@ -509,7 +543,7 @@ export class Game {
      */
     startRaceFromShop() {
         if (this.fuel <= 0) return; // safety guard
-        this.continueToRace();
+        return this.continueToRace();
     }
 
     _showResults() {
@@ -530,6 +564,7 @@ export class Game {
             this.saveLapTime(this.car.bestLapTime, this.totalLaps);
         }
         this.state = 'RESULTS';
+        this._eventBus.emit(Events.RACE_FINISH, this._buildRaceResultPayload());
     }
 
     /**
@@ -550,14 +585,24 @@ export class Game {
         // 同步赛车运行时 nitro 到持久化层
         this._gameState.set('nitroCharges', this.car.nitroCharges);
 
+        const exitPayload = {
+            trackId: this.selectedTrackId,
+            trackType: this.getCurrentTrackType(),
+        };
+
         // 赛车回起点
-        this.car.reset(this.track.startPos.x, this.track.startPos.y, this.track.startPos.angle);
+        if (this._raceSession3D) {
+            this._disposeRaceSession3D();
+        } else {
+            this.car.reset(this.track.startPos.x, this.track.startPos.y, this.track.startPos.angle);
+        }
         this.raceTime = 0;
         this._floatingTexts = [];
         this._lastLap = 0;
 
         // 返回 HOME 状态
         this.state = 'HOME';
+        this._eventBus.emit(Events.RACE_EXIT, exitPayload);
         return 'HOME';
     }
 
@@ -605,6 +650,9 @@ export class Game {
         const trackId = this.selectedTrackId;
         const trackDef = TRACK_REGISTRY[trackId];
         if (!trackDef) throw new Error('Unknown track');
+        if (trackDef.type === '3d' && !this._trackFactory.isAvailable(trackId)) {
+            throw new Error(`Track not available: ${trackId}`);
+        }
 
         // 使用 RacingCostManager 扣除金币
         const result = this._racingCostManager.deductCost(trackId);
@@ -612,27 +660,96 @@ export class Game {
             throw new Error(result.error);
         }
 
-        // 使用 TrackFactory 创建赛道实例
-        let newTrack;
+        return this._prepareRaceAfterCost(trackId, trackDef);
+    }
+
+    async _prepareRaceAfterCost(trackId, trackDef) {
         try {
-            newTrack = this._trackFactory.create(trackId);
+            this._disposeRaceSession3D();
+
+            if (trackDef.type === '3d') {
+                const { RaceSession3D } = await import('../3d/runtime/race-session-3d.js?v=epic5-fixed-right-chevron');
+                this._raceSession3D = new RaceSession3D({
+                    trackData: trackDef,
+                    canvas: this._getThreeCanvas(),
+                    eventBus: this._eventBus,
+                    gameState: this._gameState,
+                    ...this._track3DOptions,
+                });
+                this.track = this._raceSession3D.track;
+                this.car = this._raceSession3D.playerCar;
+            } else {
+                this.track = this._trackFactory.create(trackId);
+                if (this.car instanceof Car) {
+                    this.car.reset(this.track.startPos.x, this.track.startPos.y, this.track.startPos.angle);
+                } else {
+                    this.car = new Car(
+                        this.track.startPos.x,
+                        this.track.startPos.y,
+                        this.track.startPos.angle
+                    );
+                    this.car.applyUpgrades(this.upgrades);
+                    this.car.nitroCharges = this._gameState.get('nitroCharges') || 0;
+                }
+            }
         } catch (error) {
             // 创建失败，退款
             this._racingCostManager.refund(trackId);
+            this._disposeRaceSession3D();
             throw error;
         }
 
         // 替换赛道实例
-        this.track = newTrack;
         this._renderSystem.setTrack(this.track);
-
-        // 重置赛车到新赛道起点
-        this.car.reset(this.track.startPos.x, this.track.startPos.y, this.track.startPos.angle);
+        this._renderSystem.setCar(this.car);
 
         // 进入倒计时
         this.totalLaps = this.selectedLaps;
         this.state = GAME.STATES.COUNTDOWN;
         this.countdownTimer = 240;
+    }
+
+    _getThreeCanvas() {
+        const canvas = document.getElementById('threeCanvas');
+        if (!canvas) throw new Error('threeCanvas is required');
+        return canvas;
+    }
+
+    _disposeRaceSession3D() {
+        if (!this._raceSession3D) return;
+        this._raceSession3D.dispose();
+        this._raceSession3D = null;
+    }
+
+    isCurrentTrack3D() {
+        return this._raceSession3D !== null && this.track?.type === '3d';
+    }
+
+    getCurrentTrackType() {
+        return this.track?.type || '2d';
+    }
+
+    get3DRaceSession() {
+        return this._raceSession3D;
+    }
+
+    resize3D() {
+        if (!this._raceSession3D) return;
+        this._raceSession3D.resize(this.canvas.width, this.canvas.height);
+    }
+
+    _buildRaceResultPayload() {
+        return {
+            trackId: this.selectedTrackId,
+            trackType: this.getCurrentTrackType(),
+            raceTime: this.raceTime,
+            bestLapTime: this.car.bestLapTime,
+            totalLaps: this.totalLaps,
+            fuel: this.fuel,
+            maxFuel: this.maxFuel,
+            nitroCharges: this.nitroCharges,
+            ...(this._raceSession3D ? this._raceSession3D.getResult() : {}),
+        };
     }
 
     /**

@@ -106,13 +106,34 @@ html, body {
     justify-content: center;
 }
 
-#gameCanvas {
+#gameCanvas,
+#threeCanvas {
     display: block;
     max-width: 100%;
     max-height: 100%;
     border-radius: var(--radius-md);
     border: 2px solid var(--accent-gold);
     box-shadow: 0 0 30px rgba(255,215,0,0.15);
+}
+
+#threeCanvas[hidden] {
+    display: none;
+}
+
+#gameCanvas.canvas-overlay {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    pointer-events: auto;
+}
+
+#threeCanvas:not([hidden]) {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
 }
 
 /* ========================================================================
@@ -1185,6 +1206,7 @@ html, body {
    ======================================================================== */
 #page-race {
     background: radial-gradient(ellipse at center, #0F1923 0%, #0D1117 60%, #070A0F 100%);
+    position: fixed;
 }
 
 #page-race.active {

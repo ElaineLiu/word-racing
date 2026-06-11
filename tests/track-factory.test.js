@@ -16,23 +16,22 @@ describe('TrackFactory', () => {
     gameState = new GameState(eventBus);
     factory = new TrackFactory(eventBus, gameState);
 
-    // 重置 FeatureFlags 到默认值
-    FeatureFlags.flags = {
-      '2d-track': true,
-      '3d-track': false,
-      'multiple-tracks': true,
-    };
+    FeatureFlags.reset();
   });
 
   afterEach(() => {
     localStorage.clear();
   });
 
-  function createFactoryWith3DOptions() {
-    const rendererFactory = vi.fn(() => ({
+  function createRendererFactory() {
+    return vi.fn(() => ({
       render: vi.fn(), dispose: vi.fn(), setSize: vi.fn(),
       setPixelRatio: vi.fn(), setClearColor: vi.fn(),
     }));
+  }
+
+  function createFactoryWith3DOptions() {
+    const rendererFactory = createRendererFactory();
     return new TrackFactory(eventBus, gameState, {
       track3DOptions: { rendererFactory }
     });
@@ -103,6 +102,22 @@ describe('TrackFactory', () => {
       expect(track.id).toBe('shanghai-3d');
     });
 
+    it('should merge per-call 3D options when creating async track', async () => {
+      const constructorRendererFactory = createRendererFactory();
+      const perCallRendererFactory = createRendererFactory();
+      const factoryWithOptions = new TrackFactory(eventBus, gameState, {
+        track3DOptions: { rendererFactory: constructorRendererFactory }
+      });
+
+      const track = await factoryWithOptions.createAsync('shanghai-3d', {
+        rendererFactory: perCallRendererFactory
+      });
+
+      expect(track.type).toBe('3d');
+      expect(constructorRendererFactory).not.toHaveBeenCalled();
+      expect(perCallRendererFactory).toHaveBeenCalled();
+    });
+
     it('should throw error for night-race-3d (incomplete track)', () => {
       FeatureFlags.enable('3d-track');
 
@@ -112,6 +127,14 @@ describe('TrackFactory', () => {
   });
 
   describe('getAvailableTracks', () => {
+    it('should include complete 3D tracks by default in Epic 5', () => {
+      const tracks = factory.getAvailableTracks();
+      const trackIds = tracks.map(t => t.id);
+
+      expect(trackIds).toContain('shanghai-3d');
+      expect(trackIds).not.toContain('night-race-3d');
+    });
+
     it('should return 2D tracks when feature enabled', () => {
       FeatureFlags.enable('2d-track');
 

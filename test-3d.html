@@ -64,12 +64,12 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(11, 22, 34, 0.25);
+      background: transparent;
       color: #ffffff;
       font-size: clamp(96px, 18vw, 220px);
       font-weight: 800;
       letter-spacing: 4px;
-      text-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+      text-shadow: 0 6px 24px rgba(0, 0, 0, 0.8);
       pointer-events: none;
     }
     #countdown-overlay.hidden { display: none; }
@@ -246,6 +246,9 @@
     const cameraCtrl = new CameraController(track.camera);
     document.getElementById('dbg-mode').textContent = cameraCtrl.mode;
 
+    // Snap camera to initial position immediately (skip lerp)
+    cameraCtrl.snapTo({ x: playerCar.x, y: playerCar.y, angle: playerCar.angle });
+
     // ---------- AUTO Mode ----------
     let autoMode = false;
     let playerAIController = null;
@@ -338,6 +341,9 @@
       countdownEl.textContent = '3';
       countdownEl.classList.remove('hidden');
       clearInputs();
+
+      // Snap camera to start position immediately
+      cameraCtrl.snapTo({ x: playerCar.x, y: playerCar.y, angle: playerCar.angle });
     }
 
     function updateCountdown(dt) {

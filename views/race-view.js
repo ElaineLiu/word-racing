@@ -8,6 +8,7 @@ import { Events } from '../core/event-bus.js';
 export class RaceView extends BaseView {
   #game;
   #isTouchDevice = false;
+  #touchListeners = [];
 
   constructor(eventBus, game) {
     super('page-race', eventBus);
@@ -17,13 +18,21 @@ export class RaceView extends BaseView {
   mount() {
     super.mount();
     this.#detectTouchDevice();
+    this.#syncCanvasMode();
     this.#setupTouchControls();
     this.#subscribeToEvents();
 
     // Ensure canvas is properly sized
     requestAnimationFrame(() => {
       this.#game._resizeCanvas?.() || this.#resizeCanvas();
+      this.#syncCanvasMode();
+      this.#game.resize3D?.();
     });
+  }
+
+  unmount() {
+    this.#cleanupTouchControls();
+    super.unmount();
   }
 
   render() {
@@ -35,6 +44,7 @@ export class RaceView extends BaseView {
   }
 
   #setupTouchControls() {
+    this.#cleanupTouchControls();
     if (!this.#isTouchDevice) return;
 
     const touchControls = this.$('#touch-controls');
@@ -60,15 +70,41 @@ export class RaceView extends BaseView {
         this.#game.setTouchInput(inputState);
       };
 
-      btn.addEventListener('touchstart', start, { passive: false });
-      btn.addEventListener('touchend', end, { passive: false });
-      btn.addEventListener('touchcancel', end, { passive: false });
-      btn.addEventListener('mousedown', start);
-      btn.addEventListener('mouseup', end);
-      btn.addEventListener('mouseleave', end);
+      this.#addTouchListener(btn, 'touchstart', start, { passive: false });
+      this.#addTouchListener(btn, 'touchend', end, { passive: false });
+      this.#addTouchListener(btn, 'touchcancel', end, { passive: false });
+      this.#addTouchListener(btn, 'mousedown', start);
+      this.#addTouchListener(btn, 'mouseup', end);
+      this.#addTouchListener(btn, 'mouseleave', end);
     });
 
     touchControls.classList.add('active');
+  }
+
+  #addTouchListener(element, event, handler, options) {
+    element.addEventListener(event, handler, options);
+    this.#touchListeners.push({ element, event, handler });
+  }
+
+  #cleanupTouchControls() {
+    this.#touchListeners.forEach(({ element, event, handler }) => {
+      element.removeEventListener(event, handler);
+    });
+    this.#touchListeners = [];
+  }
+
+  #syncCanvasMode() {
+    const gameCanvas = this.$('#gameCanvas');
+    const threeCanvas = this.$('#threeCanvas');
+    if (!gameCanvas || !threeCanvas) return;
+
+    const is3D = this.#game.getCurrentTrackType?.() === '3d';
+    threeCanvas.hidden = !is3D;
+    gameCanvas.classList.toggle('canvas-overlay', is3D);
+    if (is3D) {
+      threeCanvas.width = gameCanvas.width;
+      threeCanvas.height = gameCanvas.height;
+    }
   }
 
   #resizeCanvas() {
