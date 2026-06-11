@@ -59,12 +59,32 @@ export class TrackBuilder {
   addBarriers() {
     this._requireTrack();
     const geometry = new THREE.BoxGeometry(8, 4, 4);
-    const material = new THREE.MeshStandardMaterial({ color: 0xffffff, flatShading: true });
+    const chevronMaterials = createBarrierChevronMaterials();
     for (let i = 0; i < this.edgePoints.length; i += 2) {
       if (this._isStartFinishClearZone(i)) continue;
       const edge = this.edgePoints[i];
-      this._addBox('barrier', geometry, material, edge.left.x, 2, edge.left.y);
-      this._addBox('barrier', geometry, material, edge.right.x, 2, edge.right.y);
+      const left = this._addBox('barrier', geometry, chevronMaterials.left, edge.left.x, 2, edge.left.y);
+      const right = this._addBox('barrier', geometry, chevronMaterials.right, edge.right.x, 2, edge.right.y);
+      const prev = this.centerPoints[(i - 2 + this.centerPoints.length) % this.centerPoints.length];
+      const next = this.centerPoints[(i + 2) % this.centerPoints.length];
+      const angle = Math.atan2(next.y - prev.y, next.x - prev.x);
+
+      console.log(`[TrackBuilder] Barrier ${i}:`, {
+        angle: angle.toFixed(3),
+        leftPos: `(${edge.left.x.toFixed(1)}, ${edge.left.y.toFixed(1)})`,
+        rightPos: `(${edge.right.x.toFixed(1)}, ${edge.right.y.toFixed(1)})`,
+        leftFace1: left.material[1].userData.chevronDirection,  // -X面
+        rightFace0: right.material[0].userData.chevronDirection, // +X面
+      });
+
+      left.rotation.y = -angle;
+      right.rotation.y = -angle;
+      left.userData.chevronSide = 'left';
+      right.userData.chevronSide = 'right';
+      left.userData.trackForwardAngle = angle;
+      right.userData.trackForwardAngle = angle;
+      left.userData.chevronForwardAngle = angle;
+      right.userData.chevronForwardAngle = angle;
     }
   }
 
@@ -231,6 +251,55 @@ export class TrackBuilder {
     const start = this.centerPoints[0];
     return Math.hypot(point.x - start.x, point.y - start.y) < this.trackWidth;
   }
+}
+
+function createBarrierChevronMaterials() {
+  const base = new THREE.MeshStandardMaterial({ color: 0xffffff, flatShading: true });
+  const forward = new THREE.MeshBasicMaterial({ map: createChevronTexture(false) });
+  forward.userData.chevronDirection = 'forward';
+  const mirrored = new THREE.MeshBasicMaterial({ map: createChevronTexture(true) });
+  mirrored.userData.chevronDirection = 'mirrored';
+
+ 
+
+  return {
+  
+    left: [base, base, base, base, mirrored, forward],                                                                                                                                                                       
+    right: [base, base, base, base, mirrored, forward],
+  };
+}
+
+function createChevronTexture(mirrored = false) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 64;
+  const ctx = canvas.getContext?.('2d');
+
+  if (ctx) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = '#111111';
+    ctx.lineWidth = 10;
+    ctx.lineCap = 'square';
+
+    if (mirrored) {
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+    }
+
+    for (const x of [32, 76]) {
+      ctx.beginPath();
+      ctx.moveTo(x + 18, 10);
+      ctx.lineTo(x - 8, 32);
+      ctx.lineTo(x + 18, 54);
+      ctx.stroke();
+    }
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
 }
 
 function createStartFinishTexture() {

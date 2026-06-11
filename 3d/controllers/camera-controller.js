@@ -40,6 +40,28 @@ export class CameraController {
     this._mode = this._mode === 'chase' ? 'cockpit' : 'chase';
   }
 
+  /**
+   * Immediately snap camera to target position (skip lerp)
+   * @param {Object} car - car-like object with {x, y, angle}
+   */
+  snapTo(car) {
+    this._targetPositionFor(this._mode, car, _target);
+    this._camera.position.copy(_target);
+
+    if (this._mode === 'cockpit') {
+      const cos = Math.cos(car.angle);
+      const sin = Math.sin(car.angle);
+      _lookAt.set(
+        car.x + cos * LOOK_AHEAD_DISTANCE,
+        COCKPIT_HEIGHT,
+        car.y + sin * LOOK_AHEAD_DISTANCE,
+      );
+    } else {
+      _lookAt.set(car.x, 0, car.y);
+    }
+    this._camera.lookAt(_lookAt);
+  }
+
   update(car) {
     this._targetPositionFor(this._mode, car, _target);
     this._camera.position.lerp(_target, this._lerp);

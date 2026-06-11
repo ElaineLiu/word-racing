@@ -41,10 +41,18 @@ export class RankingSystem {
    * @returns {Array<{car: Object, rank: number, lap: number, progress: number}>}
    */
   calculateRanking() {
-    // 排序规则：先按圈数倒序，再按进度倒序
+    // 排序规则：已完赛车辆按完赛顺序排在前面；未完赛车辆按圈数和进度排序
     const sorted = [...this.#cars].sort((a, b) => {
+      if (a.finished && b.finished) {
+        return (a.finishOrder ?? Infinity) - (b.finishOrder ?? Infinity);
+      }
+      if (a.finished) return -1;
+      if (b.finished) return 1;
+
       if (b.lap !== a.lap) return b.lap - a.lap;
-      return b.progress - a.progress;
+      const aProgress = a.raceProgress ?? a.lastProgress ?? a.progress ?? 0;
+      const bProgress = b.raceProgress ?? b.lastProgress ?? b.progress ?? 0;
+      return bProgress - aProgress;
     });
 
     // 添加排名信息
@@ -52,7 +60,7 @@ export class RankingSystem {
       car,
       rank: index + 1,
       lap: car.lap,
-      progress: car.progress,
+      progress: car.raceProgress ?? car.lastProgress ?? car.progress ?? 0,
     }));
   }
 

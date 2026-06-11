@@ -101,4 +101,31 @@ describe('CameraController', () => {
     expect(camera.position.y).toBeGreaterThan(0);
     expect(camera.position.y).toBeLessThan(20);
   });
+
+  it('snapTo() immediately positions camera at target (no lerp)', () => {
+    const car = { x: 0, y: 0, angle: 0 };
+    // Move camera to a known non-target spot first
+    camera.position.set(0, 0, 0);
+
+    // snapTo should immediately jump to target position
+    controller.snapTo(car);
+
+    // In chase mode: 50 units behind, 20 units high
+    expect(camera.position.x).toBeCloseTo(-50, 0);
+    expect(camera.position.y).toBeCloseTo(20, 0);
+    expect(camera.position.z).toBeCloseTo(0, 0);
+  });
+
+  it('snapTo() works in cockpit mode', () => {
+    controller.setMode('cockpit');
+    const car = { x: 0, y: 0, angle: 0 };
+    camera.position.set(0, 0, 0);
+
+    controller.snapTo(car);
+
+    // Cockpit: 1 unit ahead, height 3
+    expect(camera.position.x).toBeCloseTo(1, 0);
+    expect(camera.position.y).toBeCloseTo(3, 0);
+    expect(camera.position.z).toBeCloseTo(0, 0);
+  });
 });

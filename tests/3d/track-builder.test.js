@@ -149,6 +149,47 @@ describe('TrackBuilder', () => {
     });
   });
 
+  describe('barrier chevrons', () => {
+    it('should render chevrons as barrier material, not standalone scene objects', () => {
+      const scene = new THREE.Scene();
+      const builder = new TrackBuilder(scene);
+      builder.buildTrack(TEST_WAYPOINTS, TEST_TRACK_WIDTH);
+      builder.addBarriers();
+
+      const standaloneDirections = scene.children.filter(c => c.name.includes('chevron') || c.name.includes('direction'));
+      const barriers = scene.children.filter(c => c.name === 'barrier');
+      const texturedBarriers = barriers.filter(c => Array.isArray(c.material));
+
+      expect(standaloneDirections).toHaveLength(0);
+      expect(texturedBarriers).toHaveLength(barriers.length);
+      expect(texturedBarriers[0].material.some(m => m.map instanceof THREE.CanvasTexture)).toBe(true);
+    });
+    it('should orient both left and right inner chevrons toward track forward direction', () => {
+      const scene = new THREE.Scene();
+      const builder = new TrackBuilder(scene);
+      builder.buildTrack(TEST_WAYPOINTS, TEST_TRACK_WIDTH);
+      builder.addBarriers();
+
+      const barriers = scene.children.filter(c => c.name === 'barrier' && c.userData.chevronSide);
+      const left = barriers.find(b => b.userData.chevronSide === 'left');
+      const right = barriers.find(b => b.userData.chevronSide === 'right');
+
+      expect(left).toBeDefined();
+      expect(right).toBeDefined();
+      expect(left.userData.chevronForwardAngle).toBeCloseTo(left.userData.trackForwardAngle, 6);
+      expect(right.userData.chevronForwardAngle).toBeCloseTo(right.userData.trackForwardAngle, 6);
+
+      // 护栏箭头贴在Z面上（索引4=+Z, 索引5=-Z）
+      // 左侧护栏：玩家看到-Z面（索引5），应为forward
+      // 右侧护栏：玩家看到+Z面（索引4），应为forward
+      // 由于纹理坐标系统，左侧需要用mirrored来实现正确的前向箭头
+      expect(left.material[4].userData.chevronDirection).toBe('mirrored');
+      expect(left.material[5].userData.chevronDirection).toBe('forward');
+      expect(right.material[4].userData.chevronDirection).toBe('mirrored');
+      expect(right.material[5].userData.chevronDirection).toBe('forward');
+    });
+  });
+
   describe('update', () => {
     it('should not throw', () => {
       const scene = new THREE.Scene();
