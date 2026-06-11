@@ -34,13 +34,12 @@ function createRendererFactory({ fail = false } = {}) {
 }
 
 function installThreeCanvas(canvas = new MockCanvas()) {
-  const originalGetElementById = document.getElementById;
-  document.getElementById = (id) => {
+  const getElementByIdSpy = vi.spyOn(document, 'getElementById').mockImplementation((id) => {
     if (id === 'threeCanvas') return canvas;
-    return originalGetElementById(id);
-  };
+    return document.__proto__.getElementById.call(document, id);
+  });
   return () => {
-    document.getElementById = originalGetElementById;
+    getElementByIdSpy.mockRestore();
   };
 }
 
