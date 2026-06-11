@@ -1,0 +1,46 @@
+/* ==================== HUD 3D Container ==================== */
+.hud-3d-container * {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ==================== Top Bar ==================== */
+.hud-top-bar {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.hud-panel {
+  background: rgba(13, 17, 23, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 110px;
+}
+
+.hud-panel .label {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.hud-panel .value {
+  color: #FFD700;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.best-lap {
+  position: absolute;
+  top: 66px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(0, 200, 83, 0.8);
+  font-size: 11px;
+  text-align: center;
+}

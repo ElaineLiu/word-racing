@@ -45,57 +45,58 @@ global.fetch = async (url) => {
   throw new Error(`Unknown URL: ${url}`);
 };
 
-// Mock window
-global.window = {
-  localStorage: global.localStorage,
-  addEventListener: () => {},
-  removeEventListener: () => {},
-  requestAnimationFrame: (cb) => setTimeout(cb, 16),
-  cancelAnimationFrame: (id) => clearTimeout(id),
-  Date: Date,
-  Math: Math,
-  console: console,
-  innerWidth: 1024,
-  innerHeight: 768,
-  devicePixelRatio: 1,
-  navigator: { maxTouchPoints: 0 },
-};
+// Mock window (补充 jsdom 不提供的属性)
+if (typeof window !== 'undefined') {
+  window.requestAnimationFrame = window.requestAnimationFrame || ((cb) => setTimeout(cb, 16));
+  window.cancelAnimationFrame = window.cancelAnimationFrame || ((id) => clearTimeout(id));
+}
 
-// Mock document
-global.document = {
-  createElement: (tagName) => ({
-    tagName: tagName.toUpperCase(),
-    className: '',
-    innerHTML: '',
-    textContent: '',
-    style: {},
-    children: [],
-    parentElement: null,
-    appendChild(child) { this.children.push(child); return child; },
-    removeChild(child) { const idx = this.children.indexOf(child); if (idx >= 0) this.children.splice(idx, 1); },
-    querySelectorAll: () => [],
-    querySelector: () => null,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    classList: { add: () => {}, remove: () => {}, contains: () => false, toggle: () => {} },
-    setAttribute: () => {},
-    getAttribute: () => null,
-    dataset: {},
-  }),
-  getElementById: () => ({
-    classList: { add: () => {}, remove: () => {}, contains: () => false },
-    addEventListener: () => {},
-    querySelectorAll: () => [],
-    style: {},
-  }),
-  querySelectorAll: () => [],
-  querySelector: () => null,
-  addEventListener: () => {},
-  removeEventListener: () => {},
-  readyState: 'complete',
-  body: { appendChild: () => {}, style: {} },
-  documentElement: {},
-};
+// Mock Canvas getContext for jsdom
+if (typeof HTMLCanvasElement !== 'undefined') {
+  HTMLCanvasElement.prototype.getContext = function(contextType) {
+    if (contextType === '2d') {
+      return {
+        clearRect: () => {},
+        fillRect: () => {},
+        strokeRect: () => {},
+        beginPath: () => {},
+        closePath: () => {},
+        moveTo: () => {},
+        lineTo: () => {},
+        arc: () => {},
+        fill: () => {},
+        stroke: () => {},
+        save: () => {},
+        restore: () => {},
+        translate: () => {},
+        rotate: () => {},
+        scale: () => {},
+        fillText: () => {},
+        strokeText: () => {},
+        measureText: () => ({ width: 0 }),
+        createLinearGradient: () => ({
+          addColorStop: () => {},
+        }),
+        createRadialGradient: () => ({
+          addColorStop: () => {},
+        }),
+        drawImage: () => {},
+        getImageData: () => ({ data: [] }),
+        putImageData: () => {},
+        createImageData: () => ({ data: [] }),
+        setTransform: () => {},
+        font: '',
+        textAlign: '',
+        textBaseline: '',
+        fillStyle: '',
+        strokeStyle: '',
+        lineWidth: 1,
+        globalAlpha: 1,
+      };
+    }
+    return null;
+  };
+}
 
 // Export for use in tests
 export { MockLocalStorage };

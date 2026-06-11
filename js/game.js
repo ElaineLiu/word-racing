@@ -27,6 +27,7 @@ export class Game {
         this.scale = 1;
         this._track3DOptions = options.track3DOptions || {};
         this._raceSession3D = null;
+        this._hud3DManager = null;
         this._raceStartPending = null;
         this._lastUpdateTime = 0;
 
@@ -547,6 +548,9 @@ export class Game {
     }
 
     _showResults() {
+        // 清理 3D HUD
+        this._disposeHUD3DManager();
+
         // BugFix: Deduct fuel when race completes (real-time based on distance)
         // Same logic as exitRace(): lapsDone * fuelPerLap + partialFuel
         const progress = this.car.lastProgress || 0;
@@ -589,6 +593,9 @@ export class Game {
             trackId: this.selectedTrackId,
             trackType: this.getCurrentTrackType(),
         };
+
+        // 清理 3D HUD 和赛程
+        this._disposeHUD3DManager();
 
         // 赛车回起点
         if (this._raceSession3D) {
@@ -666,6 +673,7 @@ export class Game {
     async _prepareRaceAfterCost(trackId, trackDef) {
         try {
             this._disposeRaceSession3D();
+            this._disposeHUD3DManager();
 
             if (trackDef.type === '3d') {
                 const { RaceSession3D } = await import('../3d/runtime/race-session-3d.js?v=epic5-fixed-right-chevron');
@@ -678,6 +686,11 @@ export class Game {
                 });
                 this.track = this._raceSession3D.track;
                 this.car = this._raceSession3D.playerCar;
+
+                // 初始化 3D HUD
+                const { HUD3DManager } = await import('../ui/hud-3d/hud-manager.js');
+                this._hud3DManager = new HUD3DManager(this._eventBus, this._raceSession3D, this);
+                this._hud3DManager.mount();
             } else {
                 this.track = this._trackFactory.create(trackId);
                 if (this.car instanceof Car) {
@@ -696,6 +709,7 @@ export class Game {
             // 创建失败，退款
             this._racingCostManager.refund(trackId);
             this._disposeRaceSession3D();
+            this._disposeHUD3DManager();
             throw error;
         }
 
@@ -719,6 +733,12 @@ export class Game {
         if (!this._raceSession3D) return;
         this._raceSession3D.dispose();
         this._raceSession3D = null;
+    }
+
+    _disposeHUD3DManager() {
+        if (!this._hud3DManager) return;
+        this._hud3DManager.destroy();
+        this._hud3DManager = null;
     }
 
     isCurrentTrack3D() {
