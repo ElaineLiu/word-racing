@@ -116,15 +116,23 @@ export class Minimap {
       const ax = offsetX + (pos.x - minX) * scale;
       const ay = offsetY + (pos.y - minY) * scale;
       ctx.fillStyle = aiColors[i] || '#4FC3F7';
+      ctx.strokeStyle = '#111';
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(ax, ay, 3, 0, Math.PI * 2);
+      ctx.arc(ax, ay, 4, 0, Math.PI * 2);
       ctx.fill();
+      ctx.stroke();
     });
 
     // 玩家位置
     const px = offsetX + (playerPos.x - minX) * scale;
     const py = offsetY + (playerPos.y - minY) * scale;
     ctx.fillStyle = '#E53935';
-    ctx.fillRect(px - 2, py - 2, 4, 4);
+    ctx.strokeStyle = '#FFF';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(px, py, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
   }
 }

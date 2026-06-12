@@ -13,6 +13,7 @@ export class TopBar {
     this.updateTime(data.raceTime);
     this.updateBestLap(data.bestLapTime);
     this.updateLap(data.lap, data.totalLaps);
+    this.updateScore(data.score);
   }
 
   updateRank(rank, total) {
@@ -25,14 +26,23 @@ export class TopBar {
   }
 
   updateBestLap(ms) {
-    if (ms < Infinity) {
+    if (ms && ms < Infinity) {
       this.#bestLapDisplay.textContent = 'BEST  ' + this.#formatTime(ms);
       this.#bestLapDisplay.style.display = 'block';
+    } else {
+      this.#bestLapDisplay.style.display = 'none';
     }
   }
 
   updateLap(current, total) {
     // 可选：显示圈数进度
+  }
+
+  updateScore(score) {
+    const scorePanel = this.#container.querySelector('#hud-score .value');
+    if (scorePanel) {
+      scorePanel.textContent = score || 0;
+    }
   }
 
   destroy() {

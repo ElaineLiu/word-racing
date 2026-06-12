@@ -236,11 +236,22 @@ export class Game {
      * Setup keyboard and touch input
      */
     _setupInput() {
-        const _preventKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '];
+        const _preventKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Tab'];
         document.addEventListener('keydown', (e) => {
             this.keys[e.key] = true;
             if (_preventKeys.includes(e.key)) {
                 e.preventDefault();
+            }
+
+            // 处理 RACING/PAUSED 状态下的控制键
+            if (this.state === 'RACING' || this.state === 'PAUSED') {
+                if (this.state === 'RACING' && (e.key === 'r' || e.key === 'R')) {
+                    this._resetCar();
+                } else if (this.state === 'RACING' && (e.key === 'c' || e.key === 'C')) {
+                    this._changeCamera();
+                } else if (e.key === 'Tab') {
+                    this._togglePause();
+                }
             }
         }, true);
         document.addEventListener('keyup', (e) => {
@@ -328,6 +339,9 @@ export class Game {
                 break;
             case 'RACING':
                 this._updateRacing(deltaTime);
+                break;
+            case 'PAUSED':
+                // 暂停状态不更新游戏逻辑
                 break;
             case 'RESULTS':
                 break;
@@ -562,6 +576,10 @@ export class Game {
         // 同步赛车运行时 nitro 到持久化层（单一源 Car → GameState）
         this._gameState.set('nitroCharges', this.car.nitroCharges);
 
+        if (this.isCurrentTrack3D() && this.car.bestLapTime === Infinity) {
+            this.car.bestLapTime = this.raceTime;
+        }
+
         this.totalScore = this.raceScore + (this.quizResults ? this.quizResults.score : 0);
         // 保存最快圈速到排行榜
         if (this.car.bestLapTime < Infinity) {
@@ -721,6 +739,47 @@ export class Game {
         this.totalLaps = this.selectedLaps;
         this.state = GAME.STATES.COUNTDOWN;
         this.countdownTimer = 240;
+    }
+
+    /**
+     * 重置赛车位置（R 键）
+     */
+    _resetCar() {
+        if (!this.isCurrentTrack3D()) return;
+
+        // 重置到赛道起点
+        const startPos = this.track.startPos;
+        this.car.x = startPos.x;
+        this.car.y = startPos.y;
+        this.car.angle = startPos.angle;
+        this.car.speed = 0;
+        this.car.steer = 0;
+        this.car.sync3DPosition?.();
+    }
+
+    /**
+     * 切换摄像机视角（C 键）
+     */
+    _changeCamera() {
+        if (!this.isCurrentTrack3D()) return;
+
+        // 在 3D 模式下切换摄像机视角
+        if (this._raceSession3D && this._raceSession3D.track) {
+            this._raceSession3D.track.cameraController?.toggleMode();
+        }
+    }
+
+    /**
+     * 暂停/恢复游戏（Tab 键）
+     */
+    _togglePause() {
+        if (this.state === 'RACING') {
+            this.state = 'PAUSED';
+            this._eventBus.emit('game:paused');
+        } else if (this.state === 'PAUSED') {
+            this.state = 'RACING';
+            this._eventBus.emit('game:resumed');
+        }
     }
 
     _getThreeCanvas() {
