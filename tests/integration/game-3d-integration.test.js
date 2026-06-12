@@ -193,6 +193,22 @@ describe('Game 3D integration', () => {
     expect(game.get3DRaceSession()).toBe(null);
   });
 
+  it('should toggle pause and resume with Tab during 3D race', async () => {
+    const { game, gameState } = createGame();
+    gameState.set('fuelCoins', 100);
+    gameState.set('fuel', 100);
+    gameState.set('unlockedTracks', ['shanghai-2d', 'shanghai-3d']);
+    gameState.set('selectedTrackId', 'shanghai-3d');
+    await game.continueToRace();
+
+    game.state = GAME.STATES.RACING;
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+    expect(game.state).toBe('PAUSED');
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+    expect(game.state).toBe(GAME.STATES.RACING);
+  });
+
   it('should dispose 3D session when exiting race', async () => {
     const { game, gameState } = createGame();
     gameState.set('fuelCoins', 100);

@@ -54,6 +54,9 @@ export class HUD3DManager {
       lap: playerCar.lap,
       totalLaps: this.#game.totalLaps,
 
+      // 分数数据
+      score: this.#game.raceScore,
+
       // 速度数据
       speed: playerCar.getDisplaySpeed(),
       gear: playerCar.getGear(),
@@ -63,8 +66,8 @@ export class HUD3DManager {
       nitro: playerCar.getNitroStatus(),
 
       // 小地图数据
-      playerPos: { x: playerCar.x, y: playerCar.z },
-      aiPositions: this.#raceSession.aiCars.map(car => ({ x: car.x, y: car.z })),
+      playerPos: { x: playerCar.x, y: playerCar.y },
+      aiPositions: this.#raceSession.aiCars.map(car => ({ x: car.x, y: car.y })),
     };
 
     Object.values(this.#components).forEach(c => c.update(data));
@@ -111,8 +114,8 @@ export class HUD3DManager {
     const loop = () => {
       if (this.#container) {
         this.update();
-        this.#updateInterval = requestAnimationFrame(loop);
       }
+      this.#updateInterval = requestAnimationFrame(loop);
     };
     this.#updateInterval = requestAnimationFrame(loop);
   }

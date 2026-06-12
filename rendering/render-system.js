@@ -442,14 +442,21 @@ export class RenderSystem {
     ctx.lineTo(bx + bw - 30, by + 100);
     ctx.stroke();
 
-    const stats = [
-      { label: 'Race Time', value: this.#formatTime(gameState.raceTime) },
-      { label: 'Best Lap', value: gameState.bestLapTime < Infinity ? this.#formatTime(gameState.bestLapTime) : '--' },
-      { label: 'Word Score', value: String(gameState.raceScore) },
-      { label: 'Quiz Score', value: String(gameState.quizScore || 0) },
-      { label: 'Total Score', value: String(gameState.raceScore + (gameState.quizScore || 0)) },
-      { label: 'Fuel Left', value: `${Math.round(gameState.fuel)} / ${gameState.maxFuel}` },
-    ];
+    const bestLapTime = gameState.bestLapTime < Infinity ? gameState.bestLapTime : gameState.raceTime;
+    const stats = gameState.trackType === '3d'
+      ? [
+        { label: 'Race Time', value: this.#formatTime(gameState.raceTime) },
+        { label: 'Best Lap', value: this.#formatTime(bestLapTime) },
+        { label: 'Fuel Left', value: `${Math.round(gameState.fuel)} / ${gameState.maxFuel}` },
+      ]
+      : [
+        { label: 'Race Time', value: this.#formatTime(gameState.raceTime) },
+        { label: 'Best Lap', value: gameState.bestLapTime < Infinity ? this.#formatTime(gameState.bestLapTime) : '--' },
+        { label: 'Word Score', value: String(gameState.raceScore) },
+        { label: 'Quiz Score', value: String(gameState.quizScore || 0) },
+        { label: 'Total Score', value: String(gameState.raceScore + (gameState.quizScore || 0)) },
+        { label: 'Fuel Left', value: `${Math.round(gameState.fuel)} / ${gameState.maxFuel}` },
+      ];
 
     stats.forEach((stat, i) => {
       const sy = by + 120 + i * 36;

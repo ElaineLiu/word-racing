@@ -6,7 +6,8 @@ import { GameState } from '../../core/game-state.js';
 function createMockCar() {
   return {
     x: 0,
-    z: 0,
+    y: 0,
+    z: 999,
     lap: 1,
     bestLapTime: Infinity,
     speed: 0,
