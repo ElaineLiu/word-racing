@@ -46,21 +46,6 @@ export const PHYSICS = {
 };
 
 // ============================================================================
-// UPGRADES - Car upgrade system
-// ============================================================================
-
-export const UPGRADES = {
-  // Upgrade levels
-  MIN_LEVEL: 1,
-  MAX_LEVEL: 4,
-
-  // Per-level multipliers
-  ENGINE_SPEED_BONUS: 0.10,      // +10% max speed per engine level
-  TIRE_GRIP_BONUS: 0.10,         // +10% turn speed per tire level
-  BODY_WEIGHT_BONUS: 0.05,       // +5% acceleration/brake per body level
-};
-
-// ============================================================================
 // ECONOMY - Coins, shop
 // ============================================================================
 

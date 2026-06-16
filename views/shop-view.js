@@ -227,12 +227,6 @@ export class ShopView extends BaseView {
       return this.#game.fuelCoins >= item.cost;
     } else if (item.currency === 'gear') {
       return this.#game.gearCoins >= item.cost;
-      // For upgrades, check if not maxed
-      if (item.upgrade && this.#game.upgrades) {
-        const currentLevel = this.#game.upgrades[item.upgrade] || 1;
-        return canAfford && currentLevel < 4; // MAX_LEVEL = 4
-      }
-      return canAfford;
     }
     return false;
   }
