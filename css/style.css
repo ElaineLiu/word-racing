@@ -2100,3 +2100,197 @@ html, body {
         grid-template-columns: 1fr;
     }
 }
+
+/* ========================================================================
+   Home UX Redesign - New Components
+   ======================================================================== */
+
+/* Hero Section */
+.home-hero {
+    text-align: center;
+    margin-bottom: var(--space-xl);
+}
+
+.home-hero h1 {
+    font-size: 52px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, var(--accent-gold) 0%, #FFA000 50%, var(--accent-red) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--space-xs);
+    text-shadow: none;
+}
+
+.home-hero p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-md);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 300;
+}
+
+/* Primary Action */
+.home-primary-action {
+    text-align: center;
+    margin-bottom: var(--space-2xl);
+}
+
+.home-primary-action #home-start-btn {
+    padding: var(--space-lg) var(--space-2xl);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--accent-red) 0%, #B71C1C 100%);
+    color: var(--text-primary);
+    border: none;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-glow-red);
+    margin-bottom: var(--space-md);
+}
+
+.home-primary-action #home-start-btn:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 30px rgba(225,6,0,0.5);
+}
+
+.home-primary-action #home-start-btn:active {
+    transform: scale(0.98);
+}
+
+.home-goal-hint {
+    font-size: 14px;
+    color: var(--accent-cyan);
+    margin-bottom: var(--space-xs);
+    font-weight: 600;
+}
+
+.home-action-hint {
+    font-size: 13px;
+    color: var(--text-tertiary);
+}
+
+/* Dashboard */
+.home-dashboard {
+    display: grid;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+}
+
+/* Home Cards */
+.home-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-card);
+}
+
+.home-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-md);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.home-stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: var(--space-md);
+}
+
+.home-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.home-stat-icon {
+    font-size: 24px;
+    margin-bottom: var(--space-xs);
+}
+
+.home-stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+    font-variant-numeric: tabular-nums;
+}
+
+.home-stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Secondary Actions Grid */
+.home-secondary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.home-secondary-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.home-secondary-btn:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-active);
+    transform: translateY(-2px);
+}
+
+.home-secondary-btn-small {
+    padding: var(--space-sm);
+}
+
+.home-secondary-icon {
+    font-size: 28px;
+}
+
+.home-secondary-btn-small .home-secondary-icon {
+    font-size: 20px;
+}
+
+.home-secondary-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Mobile responsive for Home cards */
+@media (max-width: 600px) {
+    .home-stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .home-secondary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .home-hero h1 {
+        font-size: 36px;
+    }
+}

@@ -41,13 +41,6 @@ export class ShopSystem {
     let canAfford = false;
     if (item.currency === 'fuel') {
       canAfford = resources.fuelCoins >= item.cost;
-      // For fuel items, check if already full
-      if (canAfford && item.effect?.fuel) {
-        canAfford = resources.fuel < resources.maxFuel;
-        if (!canAfford) {
-          return { canBuy: false, reason: 'Fuel tank is full' };
-        }
-      }
     } else if (item.currency === 'gear') {
       canAfford = resources.gearCoins >= item.cost;
     }
@@ -79,10 +72,7 @@ export class ShopSystem {
       return { success: true, newState: 'QUIZ' };
     }
     if (itemId === 'start_race') {
-      if (context.fuel > 0) {
-        return { success: true, newState: 'COUNTDOWN', countdownFrames: DISPLAY.COUNTDOWN_FRAMES };
-      }
-      return { success: false, error: 'No fuel' };
+      return { success: true, newState: 'COUNTDOWN', countdownFrames: DISPLAY.COUNTDOWN_FRAMES };
     }
 
     // Find item
@@ -107,10 +97,7 @@ export class ShopSystem {
     }
 
     // Apply effect
-    if (itemId.startsWith('fuel')) {
-      const amount = itemId === 'fuel20' ? 20 : 50;
-      context.fuel = Math.min(context.maxFuel, context.fuel + amount);
-    } else if (itemId.startsWith('nitro')) {
+    if (itemId.startsWith('nitro')) {
       const amount = itemId === 'nitro1' ? 1 : 3;
       // 只修改 context；Game 的 setter 会同步到 Car 和 GameState
       context.nitroCharges += amount;

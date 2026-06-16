@@ -61,33 +61,12 @@ export const UPGRADES = {
 };
 
 // ============================================================================
-// ECONOMY - Fuel, coins, shop
+// ECONOMY - Coins, shop
 // ============================================================================
 
 export const ECONOMY = {
-  // Fuel system
-  MAX_FUEL: 100,
-  FUEL_PER_LAP: 20,
-  INITIAL_FUEL: 0,               // must buy fuel in shop!
-
   // Shop items
   SHOP_ITEMS: [
-    {
-      id: 'fuel20',
-      label: 'Fuel +20',
-      cost: 15,
-      currency: 'fuel',
-      effect: { fuel: 20 },
-      description: 'Refuel 20 units',
-    },
-    {
-      id: 'fuel50',
-      label: 'Fuel +50',
-      cost: 30,
-      currency: 'fuel',
-      effect: { fuel: 50 },
-      description: 'Refuel 50 units',
-    },
     {
       id: 'nitro1',
       label: 'Nitro x1',

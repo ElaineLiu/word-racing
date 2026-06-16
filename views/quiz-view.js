@@ -481,10 +481,6 @@ export class QuizView extends BaseView {
     // Complete screen buttons
     this.onClick('#quiz-start-btn', async () => {
       const button = this.$('#quiz-start-btn');
-      if (this.#game.fuel <= 0) {
-        alert('Insufficient fuel! Buy fuel in the shop first.');
-        return;
-      }
       try {
         if (button) button.disabled = true;
         await this.#game.continueToRace();
@@ -524,7 +520,7 @@ export class QuizView extends BaseView {
       } else {
         // 题目生成失败（可能是词库问题）
         console.error('[QuizView] Failed to generate questions:', { questions });
-        alert('无法生成题目，请刷新页面重试。');
+        alert('Failed to generate quiz. Please refresh and try again.');
       }
     } else {
       this.#quiz.generateQuiz(LEARNING.QUIZ_QUESTION_COUNT, maxLevel);

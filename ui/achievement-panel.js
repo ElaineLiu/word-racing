@@ -61,7 +61,7 @@ export class AchievementPanel {
     const achievements = this.#learningController.getAchievements();
 
     if (achievements.length === 0) {
-      this.#list.innerHTML = '<div class="achievement-empty">暂无成就</div>';
+      this.#list.innerHTML = '<div class="achievement-empty">No achievements yet. Complete practice to unlock your first reward.</div>';
       return;
     }
 

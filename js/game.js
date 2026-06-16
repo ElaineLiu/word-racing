@@ -52,7 +52,6 @@ export class Game {
 
         // Player resources (legacy 'coins' counter, not persisted — kept for UI compatibility)
         this.coins = 0;
-        this.fuelPerLap = ECONOMY.FUEL_PER_LAP;
         this.raceScore = 0;
         this.totalScore = 0;
         this.raceStartTime = 0;
@@ -95,7 +94,6 @@ export class Game {
             this.track.startPos.angle
         );
         this.quiz = new VocabularyQuiz();
-        this.car.applyUpgrades(this.upgrades);
         // 同步持久化的 nitroCharges 到 Car（运行时单一源）
         this.car.nitroCharges = this._gameState.get('nitroCharges') || 0;
 
@@ -119,11 +117,6 @@ export class Game {
 
     get gearCoins() { return this._gameState.get('gearCoins') || 0; }
     set gearCoins(value) { this._gameState.set('gearCoins', value); }
-
-    get fuel() { return this._gameState.get('fuel') ?? ECONOMY.INITIAL_FUEL; }
-    set fuel(value) { this._gameState.set('fuel', value); }
-
-    get maxFuel() { return ECONOMY.MAX_FUEL; }
 
     get upgrades() { return this._gameState.get('upgrades'); }
     set upgrades(value) { this._gameState.set('upgrades', value); }
@@ -557,21 +550,12 @@ export class Game {
      * Called when player clicks "Start Race" in SHOP
      */
     startRaceFromShop() {
-        if (this.fuel <= 0) return; // safety guard
         return this.continueToRace();
     }
 
     _showResults() {
         // 清理 3D HUD
         this._disposeHUD3DManager();
-
-        // BugFix: Deduct fuel when race completes (real-time based on distance)
-        // Same logic as exitRace(): lapsDone * fuelPerLap + partialFuel
-        const progress = this.car.lastProgress || 0;
-        const lapsDone = Math.max(0, this.car.lap);
-        const partialFuel = this.fuelPerLap * Math.max(0, progress);
-        const totalFuelUsed = lapsDone * this.fuelPerLap + partialFuel;
-        this.fuel = Math.max(0, this.fuel - totalFuelUsed);
 
         // 同步赛车运行时 nitro 到持久化层（单一源 Car → GameState）
         this._gameState.set('nitroCharges', this.car.nitroCharges);
@@ -597,12 +581,6 @@ export class Game {
         if (this.car.bestLapTime < Infinity) {
             this.saveLapTime(this.car.bestLapTime, this.totalLaps);
         }
-        // 按已完成的圈数 + 当前圈进度比例扣除燃油
-        const progress = this.car.lastProgress || 0;
-        const lapsDone = Math.max(0, this.car.lap); // 已完成的整圈数
-        const partialFuel = this.fuelPerLap * Math.max(0, progress); // 当前圈按比例扣
-        const totalFuelUsed = lapsDone * this.fuelPerLap + partialFuel;
-        this.fuel = Math.max(0, this.fuel - totalFuelUsed);
 
         // 同步赛车运行时 nitro 到持久化层
         this._gameState.set('nitroCharges', this.car.nitroCharges);
