@@ -8,17 +8,9 @@ import { EventBus, Events } from './event-bus.js';
 // Default state structure
 const DEFAULT_STATE = {
   // Resources
-  fuel: 0,  // must buy in shop (match ECONOMY.INITIAL_FUEL)
   fuelCoins: 0,
   gearCoins: 0,
   nitroCharges: 0,
-
-  // Upgrades
-  upgrades: {
-    engine: 1,
-    tire: 1,
-    body: 1,
-  },
 
   // Quiz state
   quizMode: 'basic',
@@ -56,21 +48,22 @@ const DEFAULT_STATE = {
   selectedTrackId: 'shanghai-2d',   // 当前选择的赛道ID
 
   // Meta
-  version: 3,
+  version: 4,
 };
-
-// Storage key
-const STORAGE_KEY = 'wr_game_state';
 
 export class GameState {
   #state;
   #eventBus;
+  #userId;
+  #storageKey;
 
-  constructor(eventBus) {
+  constructor(eventBus, userId = 'default') {
     if (!(eventBus instanceof EventBus)) {
       throw new Error('GameState requires EventBus instance');
     }
     this.#eventBus = eventBus;
+    this.#userId = userId;
+    this.#storageKey = `wr_game_state_${userId}`;
     this.#state = this.#deepClone(DEFAULT_STATE);
     this.#load();
   }
@@ -199,11 +192,6 @@ export class GameState {
    * Set fuel level
    * @param {number} value
    */
-  setFuel(value) {
-    this.set('fuel', value);
-    this.#eventBus.emit(Events.FUEL_CHANGED, { value });
-  }
-
   /**
    * Set nitro charges
    * @param {number} value
@@ -211,21 +199,6 @@ export class GameState {
   setNitro(value) {
     this.set('nitroCharges', value);
     this.#eventBus.emit(Events.NITRO_CHANGED, { value });
-  }
-
-  /**
-   * Upgrade a component
-   * @param {string} component - 'engine' | 'tire' | 'body'
-   * @param {number} maxLevel - maximum allowed level
-   * @returns {number} new level (0 if already maxed)
-   */
-  upgrade(component, maxLevel = 4) {
-    const current = this.get(`upgrades.${component}`);
-    if (current >= maxLevel) return 0;
-    const newLevel = current + 1;
-    this.set(`upgrades.${component}`, newLevel);
-    this.#eventBus.emit(Events.UPGRADE_CHANGED, { component, level: newLevel });
-    return newLevel;
   }
 
   /**
@@ -282,9 +255,44 @@ export class GameState {
 
   #load() {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      let saved = localStorage.getItem(this.#storageKey);
+
+      // Migration: copy old data to new key (for first user only)
+      if (!saved && this.#userId === 'user_001') {
+        const oldData = localStorage.getItem('wr_game_state');
+        if (oldData) {
+          saved = oldData;
+          localStorage.setItem(this.#storageKey, saved);
+          console.log(`[GameState] Migrated old data to ${this.#storageKey}`);
+        }
+      }
+
       if (saved) {
         const parsed = JSON.parse(saved);
+
+        // v3 → v4 迁移：删除燃油和升级系统
+        // 处理缺少 version 字段的旧数据（视为 v3 或更早）
+        let migrated = false;
+        if (!parsed.version || parsed.version < 4) {
+          console.log(`[GameState] Migrating data from v${parsed.version || 'unknown'} to v4`);
+
+          // 删除废弃字段
+          delete parsed.fuel;
+          delete parsed.upgrades;
+
+          // 清理调试数据
+          if (parsed.fuelCoins > 1000) parsed.fuelCoins = 100;
+          if (parsed.gearCoins > 1000) parsed.gearCoins = 50;
+          if (parsed.nitroCharges > 10) parsed.nitroCharges = 0;
+          if (parsed.achievements && parsed.achievements.length > 10) parsed.achievements = [];
+          if (parsed.unlockedTracks && parsed.unlockedTracks.length > 5) parsed.unlockedTracks = ['shanghai-2d'];
+
+          // 设置新版本号
+          parsed.version = 4;
+          migrated = true;
+
+          console.log('[GameState] Migration to v4 completed');
+        }
 
         // 兼容性迁移：确保新字段有默认值
         if (!parsed.achievements) parsed.achievements = [];
@@ -294,6 +302,11 @@ export class GameState {
         if (parsed.learning.lastPerfectQuiz === undefined) parsed.learning.lastPerfectQuiz = false;
 
         this.#state = { ...this.#deepClone(DEFAULT_STATE), ...parsed };
+
+        // 如果发生了迁移，立即保存到 localStorage
+        if (migrated) {
+          this.#save();
+        }
       }
     } catch (e) {
       console.warn('Failed to load game state:', e);
@@ -302,7 +315,7 @@ export class GameState {
 
   #save() {
     try {
-      localStorage.setItem(STORAGE_KEY, this.serialize());
+      localStorage.setItem(this.#storageKey, this.serialize());
     } catch (e) {
       console.warn('Failed to save game state:', e);
     }

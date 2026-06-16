@@ -74,17 +74,22 @@ export class QuizSessionManager {
   #eventBus;
   #dailyManager;
   #progressTracker;
+  #userId;
+  #storageKey;
   #session = null;
 
   /**
    * @param {EventBus} eventBus - 事件总线
    * @param {DailyManager} dailyManager - 每日管理器
    * @param {ProgressTracker} progressTracker - 进度追踪器
+   * @param {string} [userId] - 用户ID
    */
-  constructor(eventBus, dailyManager, progressTracker) {
+  constructor(eventBus, dailyManager, progressTracker, userId = 'default') {
     this.#eventBus = eventBus;
     this.#dailyManager = dailyManager;
     this.#progressTracker = progressTracker;
+    this.#userId = userId;
+    this.#storageKey = `wr_quiz_session_${userId}`;
     this.#loadSession();
   }
 
@@ -416,7 +421,7 @@ export class QuizSessionManager {
     if (!this.#session) return;
 
     try {
-      localStorage.setItem(SESSION_KEY, JSON.stringify(this.#session));
+      localStorage.setItem(this.#storageKey, JSON.stringify(this.#session));
     } catch (e) {
       console.warn('[QuizSessionManager] Failed to save session:', e);
     }
@@ -427,7 +432,18 @@ export class QuizSessionManager {
    */
   #loadSession() {
     try {
-      const raw = localStorage.getItem(SESSION_KEY);
+      let raw = localStorage.getItem(this.#storageKey);
+
+      // Migration: copy old data to new key (for first user only)
+      if (!raw && this.#userId === 'user_001') {
+        const oldData = localStorage.getItem('wr_quiz_session');
+        if (oldData) {
+          raw = oldData;
+          localStorage.setItem(this.#storageKey, raw);
+          console.log(`[QuizSessionManager] Migrated old data to ${this.#storageKey}`);
+        }
+      }
+
       if (raw) {
         this.#session = JSON.parse(raw);
       }
@@ -441,7 +457,7 @@ export class QuizSessionManager {
    */
   clearSession() {
     this.#session = null;
-    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(this.#storageKey);
     this.#eventBus.emit(Events.SESSION_CLEAR, {});
   }
 

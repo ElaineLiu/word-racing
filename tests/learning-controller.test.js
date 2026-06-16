@@ -147,8 +147,8 @@ describe('LearningController', () => {
 
       controller.submitAnswer(question.correctIndex);
 
-      // 验证持久化：从 localStorage 重新加载
-      const stored = localStorage.getItem('wr_word_progress');
+      // 验证持久化：从 localStorage 重新加载（多用户后 key 包含 userId）
+      const stored = localStorage.getItem('wr_word_progress_default');
       expect(stored).not.toBeNull();
 
       const data = JSON.parse(stored);
