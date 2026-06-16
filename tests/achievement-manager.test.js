@@ -123,7 +123,7 @@ describe('AchievementManager', () => {
       expect(handler).toHaveBeenCalledWith({
         achievement: expect.objectContaining({
           id: 'first-quiz',
-          name: '初次上阵'
+          name: 'First Pit Stop'
         })
       });
     });

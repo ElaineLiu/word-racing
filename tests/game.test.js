@@ -63,24 +63,9 @@ describe('Game', () => {
     });
 
     it('should have zero resources initially', () => {
-      expect(game.fuel).toBe(ECONOMY.INITIAL_FUEL);
       expect(game.fuelCoins).toBe(0);
       expect(game.gearCoins).toBe(0);
       expect(game.nitroCharges).toBe(0);
-    });
-
-    it('should have default upgrades at level 1', () => {
-      expect(game.upgrades.engine).toBe(UPGRADES.MIN_LEVEL);
-      expect(game.upgrades.tire).toBe(UPGRADES.MIN_LEVEL);
-      expect(game.upgrades.body).toBe(UPGRADES.MIN_LEVEL);
-    });
-
-    it('should have maxFuel from config', () => {
-      expect(game.maxFuel).toBe(ECONOMY.MAX_FUEL);
-    });
-
-    it('should have fuelPerLap from config', () => {
-      expect(game.fuelPerLap).toBe(ECONOMY.FUEL_PER_LAP);
     });
   });
 
@@ -94,102 +79,25 @@ describe('Game', () => {
   });
 
   describe('shop items', () => {
-    it('should have fuel items', () => {
-      const fuel20 = game._shopItems.find(i => i.id === 'fuel20');
-      expect(fuel20).toBeDefined();
-      expect(fuel20.cost).toBe(15);
-      expect(fuel20.currency).toBe('fuel');
-    });
-
     it('should have nitro items', () => {
       const nitro1 = game._shopItems.find(i => i.id === 'nitro1');
       expect(nitro1).toBeDefined();
       expect(nitro1.cost).toBe(20);
       expect(nitro1.currency).toBe('gear');
     });
-
-    it('should have upgrade items', () => {
-      const engine = game._shopItems.find(i => i.id === 'engine1');
-      expect(engine).toBeDefined();
-      expect(engine.cost).toBe(100);
-      expect(engine.upgrade).toBe('engine');
-    });
   });
 
   describe('shop purchases', () => {
-    it('should buy fuel with fuel coins', () => {
-      game.fuelCoins = 30;
-      game.fuel = 0;
-      game._executeShopAction('fuel20');
-      expect(game.fuelCoins).toBe(15);
-      expect(game.fuel).toBe(20);
-    });
-
-    it('should not buy fuel if not enough coins', () => {
-      game.fuelCoins = 10;
-      game.fuel = 0;
-      const initialState = { fuel: game.fuel, coins: game.fuelCoins };
-      game._executeShopAction('fuel20');
-      expect(game.fuelCoins).toBe(initialState.coins);
-      expect(game.fuel).toBe(initialState.fuel);
-    });
-
-    it('should not exceed maxFuel', () => {
-      game.fuelCoins = 100;
-      game.fuel = 90;
-      game._executeShopAction('fuel20');
-      expect(game.fuel).toBeLessThanOrEqual(ECONOMY.MAX_FUEL);
-    });
-
     it('should buy nitro with gear coins', () => {
       game.gearCoins = 50;
       game._executeShopAction('nitro1');
       expect(game.gearCoins).toBe(30);
       expect(game.nitroCharges).toBe(1);
     });
-
-    it('should upgrade engine', () => {
-      game.gearCoins = 100;
-      game._executeShopAction('engine1');
-      expect(game.gearCoins).toBe(0);
-      expect(game.upgrades.engine).toBe(2);
-    });
-
-    it('should not upgrade beyond max level', () => {
-      game.upgrades.engine = UPGRADES.MAX_LEVEL;
-      game.gearCoins = 100;
-      game._executeShopAction('engine1');
-      expect(game.upgrades.engine).toBe(UPGRADES.MAX_LEVEL);
-      expect(game.gearCoins).toBe(100); // not spent
-    });
-  });
-
-  describe('fuel consumption', () => {
-    it('should deduct fuel on race completion', () => {
-      game.fuel = 100;
-      game.totalLaps = 3;
-      game.car.lap = 3;
-      game.car.finished = true;
-      game.car.lastProgress = 0.5;
-      game._showResults();
-      // 3 laps * 20 fuel/lap = 60 fuel
-      expect(game.fuel).toBeLessThan(100);
-    });
-
-    it('should deduct fuel proportionally on exit', () => {
-      game.fuel = 100;
-      game.totalLaps = 3;
-      game.car.lap = 1;
-      game.car.lastProgress = 0.5;
-      game.exitRace();
-      // 1 lap * 20 + 0.5 * 20 = 30 fuel
-      expect(game.fuel).toBe(70);
-    });
   });
 
   describe('exitRace', () => {
     it('should return to HOME state on exit', () => {
-      game.fuel = 100;
       game.state = GAME.STATES.RACING;
       const newState = game.exitRace();
       expect(newState).toBe('HOME');
@@ -197,7 +105,6 @@ describe('Game', () => {
     });
 
     it('should reset car position on exit', () => {
-      game.fuel = 100;
       game.state = GAME.STATES.RACING;
       game.car.x = 500;
       game.car.y = 300;
@@ -244,7 +151,6 @@ describe('Game', () => {
     });
 
     it('should start COUNTDOWN even without fuel (fuel check is in NavManager)', () => {
-      game.fuel = 0;
       game.fuelCoins = 100; // 比赛需要扣 shanghai cost=10
       game.continueToRace();
       // continueToRace() doesn't check fuel - NavManager does that
@@ -252,14 +158,12 @@ describe('Game', () => {
     });
 
     it('should transition to COUNTDOWN when race starts', () => {
-      game.fuel = 50;
       game.fuelCoins = 100; // 比赛需要扣 shanghai cost=10
       game.continueToRace();
       expect(game.state).toBe(GAME.STATES.COUNTDOWN);
     });
 
     it('should transition from COUNTDOWN to RACING after countdown', () => {
-      game.fuel = 50;
       game.totalLaps = 1;
       game.state = GAME.STATES.COUNTDOWN;
       game.countdownTimer = 0;
@@ -268,7 +172,6 @@ describe('Game', () => {
     });
 
     it('should transition to RESULTS when race finishes', () => {
-      game.fuel = 50;
       game.totalLaps = 1;
       game.car.finished = true;
       game._showResults();
@@ -330,14 +233,6 @@ describe('Game', () => {
       game.saveLapTime(45000, 3);
       const stored = localStorage.getItem('wr_leaderboard');
       expect(stored).not.toBeNull();
-    });
-  });
-
-  describe('car upgrade sync', () => {
-    it('should apply upgrades to car', () => {
-      game.upgrades.engine = 2;
-      game.car.applyUpgrades(game.upgrades);
-      expect(game.car.maxSpeed).toBeGreaterThan(4.0); // 4.0 * 1.1
     });
   });
 

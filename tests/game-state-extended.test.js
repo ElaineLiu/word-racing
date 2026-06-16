@@ -54,7 +54,7 @@ describe('GameState - Achievement & Track Fields', () => {
         }
       };
 
-      localStorage.setItem('wr_game_state', JSON.stringify(oldSave));
+      localStorage.setItem('wr_game_state_default', JSON.stringify(oldSave));
 
       gameState = new GameState(eventBus);
 
@@ -64,8 +64,11 @@ describe('GameState - Achievement & Track Fields', () => {
       expect(gameState.get('selectedTrackId')).toBe('shanghai-2d');
       expect(gameState.get('learning.lastPerfectQuiz')).toBe(false);
 
+      // v4 迁移删除了燃油和升级字段
+      expect(gameState.get('fuel')).toBeUndefined();
+      expect(gameState.get('upgrades')).toBeUndefined();
+
       // 旧字段应该保持不变
-      expect(gameState.get('fuel')).toBe(100);
       expect(gameState.get('fuelCoins')).toBe(50);
       expect(gameState.get('learning.totalQuizzes')).toBe(5);
     });
@@ -96,7 +99,7 @@ describe('GameState - Achievement & Track Fields', () => {
         }
       };
 
-      localStorage.setItem('wr_game_state', JSON.stringify(newSave));
+      localStorage.setItem('wr_game_state_default', JSON.stringify(newSave));
 
       gameState = new GameState(eventBus);
 

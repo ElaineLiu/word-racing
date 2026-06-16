@@ -169,7 +169,7 @@ describe('ShopView - 赛道标签页 (Phase 3.4)', () => {
     it('应显示赛道名称、描述和 cost', () => {
       const { document } = mountShopView(mockGame, eventBus);
       const shanghai = document.querySelector('.shop-track-item[data-track-id="shanghai-2d"]');
-      expect(shanghai.textContent).toContain('上海国际赛车场');
+      expect(shanghai.textContent).toContain('Shanghai International Circuit');
       expect(shanghai.textContent).toContain('10'); // cost
     });
 
