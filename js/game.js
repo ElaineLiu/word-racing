@@ -9,7 +9,7 @@
  */
 import { Car } from './car.js';
 import { VocabularyQuiz } from './quiz.js';
-import { ECONOMY, DISPLAY, GAME, UPGRADES } from '../config/game-config.js';
+import { ECONOMY, DISPLAY, GAME } from '../config/game-config.js';
 import { EventBus, Events } from '../core/event-bus.js';
 import { GameState } from '../core/game-state.js';
 import { ShopSystem } from '../systems/shop-system.js';
@@ -17,7 +17,6 @@ import { RenderSystem } from '../rendering/render-system.js';
 import { TRACK_REGISTRY } from '../config/track-registry.js';
 import { FeatureFlags } from '../config/feature-flags.js';
 import { TrackUnlockManager } from '../systems/track-unlock-manager.js';
-import { RacingCostManager } from '../systems/racing-cost-manager.js';
 import { TrackFactory } from '../systems/track-factory.js';
 
 export class Game {
@@ -45,7 +44,6 @@ export class Game {
 
         // Manager instances
         this._trackUnlockManager = new TrackUnlockManager(this._eventBus, this._gameState);
-        this._racingCostManager = new RacingCostManager(this._eventBus, this._gameState);
         this._trackFactory = new TrackFactory(this._eventBus, this._gameState, {
             track3DOptions: this._track3DOptions
         });
@@ -657,12 +655,6 @@ export class Game {
             throw new Error(`Track not available: ${trackId}`);
         }
 
-        // 使用 RacingCostManager 扣除金币
-        const result = this._racingCostManager.deductCost(trackId);
-        if (!result.success) {
-            throw new Error(result.error);
-        }
-
         return this._prepareRaceAfterCost(trackId, trackDef);
     }
 
@@ -702,8 +694,7 @@ export class Game {
                 }
             }
         } catch (error) {
-            // 创建失败，退款
-            this._racingCostManager.refund(trackId);
+            // 创建失败，清理资源
             this._disposeRaceSession3D();
             this._disposeHUD3DManager();
             throw error;
@@ -819,8 +810,7 @@ export class Game {
 
         return availableTracks.map(track => ({
             ...track,
-            unlocked: this._trackUnlockManager.isUnlocked(track.id),
-            canAfford: this._racingCostManager.canAfford(track.id)
+            unlocked: this._trackUnlockManager.isUnlocked(track.id)
         }));
     }
 

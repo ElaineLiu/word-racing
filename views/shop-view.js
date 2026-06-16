@@ -105,7 +105,7 @@ export class ShopView extends BaseView {
 
       // 基本信息
       let infoHTML = `<strong>${lockIcon}${track.name}</strong>
-        <span class="text-muted">- ${track.description} (${track.cost} Fuel Coins)</span>`;
+        <span class="text-muted">- ${track.description}</span>`;
 
       // 解锁进度（如果未解锁）
       if (!track.unlocked && this.#game._trackUnlockManager) {
@@ -173,12 +173,10 @@ export class ShopView extends BaseView {
         btn.textContent = 'Locked';
       } else if (track.id === selectedId) {
         btn.textContent = 'Selected';
-      } else if (!track.canAfford) {
-        btn.textContent = 'Not enough fuel coins';
       } else {
         btn.textContent = 'Select';
       }
-      btn.disabled = !track.unlocked || !track.canAfford || track.id === selectedId;
+      btn.disabled = !track.unlocked || track.id === selectedId;
       btn.addEventListener('click', () => this.#handleTrackSelect(track.id));
       div.appendChild(btn);
 
@@ -195,10 +193,6 @@ export class ShopView extends BaseView {
       // UC-02 Alternative Scenarios: 用户友好的错误提示
       if (err.message === 'Track not unlocked') {
         alert('This track is locked. Complete the achievement requirements to unlock it.');
-      } else if (err.message === 'Insufficient fuel coins') {
-        const track = this.#game.getAvailableTracks().find(t => t.id === trackId);
-        const cost = track ? track.cost : 0;
-        alert(`Not enough fuel coins. You need ${cost} Fuel Coins.`);
       } else {
         console.warn('selectTrack failed:', err.message);
       }

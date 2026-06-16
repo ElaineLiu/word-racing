@@ -46,7 +46,7 @@ export class TrackUnlockManager {
   /**
    * 获取解锁进度（供UI显示）
    * @param {string} trackId
-   * @returns {Object|null} { unlocked: boolean, cost?: number, type?: string, requirements?: Object }
+   * @returns {Object|null} { unlocked: boolean, type?: string, requirements?: Object }
    */
   getUnlockProgress(trackId) {
     const track = TRACK_REGISTRY[trackId];
@@ -65,7 +65,6 @@ export class TrackUnlockManager {
 
     return {
       unlocked: false,
-      cost: track.cost,
       type: track.type,
       requirements: {
         wordsLearned: {
