@@ -12,25 +12,27 @@
 import { Events } from '../core/event-bus.js';
 import { LEARNING, REWARDS } from '../config/learning-config.js';
 
-// 存储键
-const DAILY_STATS_KEY = LEARNING.STORAGE_KEYS.DAILY_STATS;
-
 /**
  * DailyManager - 每日学习管理器
  */
 export class DailyManager {
   #eventBus;
   #gameState;
+  #userId;
+  #storageKey;
   #todayStats = null;
   #historyStats = null;
 
   /**
    * @param {EventBus} eventBus - 事件总线
    * @param {GameState} gameState - 游戏状态管理器
+   * @param {string} [userId] - 用户ID
    */
-  constructor(eventBus, gameState) {
+  constructor(eventBus, gameState, userId = 'default') {
     this.#eventBus = eventBus;
     this.#gameState = gameState;
+    this.#userId = userId;
+    this.#storageKey = `wr_daily_stats_${userId}`;
     this.#loadHistory();
     this.#checkDayChange();
   }
@@ -350,7 +352,18 @@ export class DailyManager {
    */
   #loadHistory() {
     try {
-      const raw = localStorage.getItem(DAILY_STATS_KEY);
+      let raw = localStorage.getItem(this.#storageKey);
+
+      // Migration: copy old data to new key (for first user only)
+      if (!raw && this.#userId === 'user_001') {
+        const oldData = localStorage.getItem('wr_daily_stats');
+        if (oldData) {
+          raw = oldData;
+          localStorage.setItem(this.#storageKey, raw);
+          console.log(`[DailyManager] Migrated old data to ${this.#storageKey}`);
+        }
+      }
+
       this.#historyStats = raw ? JSON.parse(raw) : {};
     } catch (e) {
       this.#historyStats = {};
@@ -383,7 +396,7 @@ export class DailyManager {
         trimmed[date] = this.#historyStats[date];
       }
       this.#historyStats = trimmed;
-      localStorage.setItem(DAILY_STATS_KEY, JSON.stringify(trimmed));
+      localStorage.setItem(this.#storageKey, JSON.stringify(trimmed));
     } catch (e) {
       console.warn('[DailyManager] Failed to save history:', e);
     }

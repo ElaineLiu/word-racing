@@ -94,12 +94,8 @@ export class EventBus {
 export const Events = {
   // Resource changes
   RESOURCE_CHANGED: 'resource:changed',
-  FUEL_CHANGED: 'fuel:changed',
   COINS_CHANGED: 'coins:changed',
   NITRO_CHANGED: 'nitro:changed',
-
-  // Upgrade system
-  UPGRADE_CHANGED: 'upgrade:changed',
 
   // Quiz system
   QUIZ_START: 'quiz:start',

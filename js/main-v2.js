@@ -12,6 +12,8 @@ import { ViewManager } from '../views/view-manager.js';
 import { LearningController } from '../learning/learning-controller.js';
 import { AchievementToast } from '../ui/achievement-toast.js';
 import { AchievementPanel } from '../ui/achievement-panel.js';
+import { UserManager } from '../core/user-manager.js';
+import { UserSwitcher } from '../ui/user-switcher.js';
 
 // Initialize game when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -30,12 +32,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // 创建共享 EventBus（统一事件总线，避免双重 EventBus 问题）
   const eventBus = new EventBus();
 
-  // 先创建 LearningController，传入共享 EventBus
+  // 初始化 UserManager（自动检测并迁移旧数据）
+  const userManager = new UserManager(eventBus);
+  userManager.init();
+
+  // 获取当前用户
+  const currentUser = userManager.getCurrentUser();
+  if (!currentUser) {
+    throw new Error('No current user found after UserManager.init()');
+  }
+
+  // 先创建 LearningController，传入共享 EventBus 和 userId
   // 它会自建 GameState，然后把这个 GameState 注入给 Game，确保单一数据源（Phase 3.1a）
-  const learningController = new LearningController(eventBus);
+  const learningController = new LearningController(eventBus, currentUser.id);
   const game = new Game(canvas, learningController.gameState, eventBus);
   window.game = game;
   window.learningController = learningController;
+  window.userManager = userManager;
 
   game.init().then(() => {
     // Initialize Learning Controller with loaded wordset
@@ -58,6 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const achievementPanel = new AchievementPanel(learningController);
     achievementPanel.init();
 
+    // Initialize User Switcher (Multi-user support)
+    const userSwitcher = new UserSwitcher(eventBus, userManager);
+    userSwitcher.mount('body');
+
     // Set up callbacks (now that viewManager exists)
     game.onExitRace = () => {
       void viewManager.switchTo('home');
@@ -74,11 +91,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
         if (confirm('Reset all learning progress? This is for testing only.')) {
-          localStorage.removeItem('wr_word_progress');
-          localStorage.removeItem('wr_quiz_session');
-          localStorage.removeItem('wr_daily_progress');
-          localStorage.removeItem('wr_game_state');
-          localStorage.removeItem('wr_wrongWords');
+          // 清除当前用户的所有数据
+          const userId = userManager.getCurrentUser()?.id;
+          if (userId) {
+            localStorage.removeItem(`wr_game_state_${userId}`);
+            localStorage.removeItem(`wr_word_progress_${userId}`);
+            localStorage.removeItem(`wr_daily_stats_${userId}`);
+            localStorage.removeItem(`wr_quiz_session_${userId}`);
+          }
+
           // 给测试用户一些初始资源
           const testState = {
             version: 3,
@@ -88,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
             nitroCharges: 3,
             upgrades: { engine: 1, tire: 1, body: 1 },
           };
-          localStorage.setItem('wr_game_state', JSON.stringify(testState));
+          localStorage.setItem(`wr_game_state_${userId}`, JSON.stringify(testState));
           // 重新加载 GameState，让 Game/LearningController 都看到新数据
           learningController.gameState.deserialize(JSON.stringify(testState));
           // 同步 Game 中尚未迁移的字段（Phase 3.1b 完成后可移除）
