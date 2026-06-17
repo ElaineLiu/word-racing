@@ -253,11 +253,14 @@ export class DailyManager {
     const progress = this.getTodayProgress();
 
     const goals = {
-      allThree: {
-        achieved: progress.quizzesCompleted >= LEARNING.DAILY_QUIZ_COUNT,
-        progress: progress.quizzesCompleted,
-        target: LEARNING.DAILY_QUIZ_COUNT,
-        reward: REWARDS.dailyGoals.allThree,
+      accuracy100: {
+        achieved: progress.totalQuestions > 0 &&
+          (progress.correctAnswers / progress.totalQuestions) >= 1.0,
+        progress: progress.totalQuestions > 0
+          ? Math.round((progress.correctAnswers / progress.totalQuestions) * 100)
+          : 0,
+        target: 100,
+        reward: REWARDS.dailyGoals.accuracy100,
       },
       accuracy80: {
         achieved: progress.totalQuestions > 0 &&
@@ -267,12 +270,6 @@ export class DailyManager {
           : 0,
         target: 80,
         reward: REWARDS.dailyGoals.accuracy80,
-      },
-      newWords10: {
-        achieved: progress.newWordsLearned >= 10,
-        progress: progress.newWordsLearned,
-        target: 10,
-        reward: REWARDS.dailyGoals.newWords10,
       },
     };
 
@@ -288,20 +285,15 @@ export class DailyManager {
     const rewards = { fuel: 0, gear: 0 };
     const achieved = [];
 
-    for (const [name, goal] of Object.entries(goals)) {
-      if (goal.achieved) {
-        rewards.fuel += goal.reward.fuel || 0;
-        rewards.gear += goal.reward.gear || 0;
-        achieved.push(name);
-      }
-    }
-
-    // 更新连击天数
-    if (goals.allThree.achieved) {
-      const currentStreak = this.#gameState.get('daily.streakDays') || 0;
-      const newStreak = currentStreak + 1;
-      this.#gameState.set('daily.streakDays', newStreak);
-      this.#eventBus.emit(Events.DAILY_STREAK_UPDATE, { streak: newStreak });
+    // 取最高奖励（不叠加）
+    if (goals.accuracy100.achieved) {
+      rewards.fuel += goals.accuracy100.reward.fuel || 0;
+      rewards.gear += goals.accuracy100.reward.gear || 0;
+      achieved.push('accuracy100');
+    } else if (goals.accuracy80.achieved) {
+      rewards.fuel += goals.accuracy80.reward.fuel || 0;
+      rewards.gear += goals.accuracy80.reward.gear || 0;
+      achieved.push('accuracy80');
     }
 
     // 标记今日完成

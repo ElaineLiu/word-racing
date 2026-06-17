@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed - Epic 3: Reward Mechanism Adjustment
+- **Answer Rewards**: Adjusted per-question rewards
+  - Simple questions: 5 fuel coins → 3 fuel coins
+  - Complex questions: 0 fuel + 8 gear coins → 5 fuel coins
+- **Accuracy Bonus**: Added new accuracy-based rewards (gear coins)
+  - 100% accuracy: +3 gear coins
+  - 80% accuracy: +2 gear coins
+  - 60% accuracy: +1 gear coin
+- **Removed Rewards**: Deleted outdated reward mechanisms
+  - Quiz completion bonus (10 fuel coins)
+  - Combo rewards (3/5/7/10 consecutive correct)
+- **Daily Goals**: Updated daily goal system
+  - Removed: "Complete 3 quizzes", "Learn 10 new words"
+  - Added: "100% accuracy" (30 fuel coins), "80% accuracy" (20 fuel coins)
+  - Non-cumulative: Only highest reward is given
+- **Race Cost**: Updated race entry fee
+  - Maximum laps: 10 → 5 laps
+  - Dynamic lap selector: Shows grayed-out options when insufficient fuel coins
+- **Nitro Pricing**: Updated nitro purchase cost
+  - Nitro x1: 20 gear coins → 1 gear coin
+  - Nitro x3: 50 gear coins → 3 gear coins
+  - New ratio: 1 gear coin = 1 nitro boost
+
 ### Added - Phase 1 MVP: Quiz Improvement
 - **"I Don't Know" Button**: Added button for words the user doesn't recognize
   - Shows learning panel with word, phonetic, meaning, and example sentence

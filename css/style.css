@@ -826,6 +826,10 @@ html, body {
     font-weight: 700;
 }
 
+#shop-lap-select {
+    margin-bottom: var(--space-lg);
+}
+
 #shop-items {
     background: var(--bg-card);
     padding: var(--space-lg);
@@ -1322,6 +1326,19 @@ html, body {
     color: var(--text-inverse);
     border-color: var(--accent-gold);
     box-shadow: 0 0 12px rgba(255,215,0,0.3);
+}
+
+.lap-btn.disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    border-color: var(--border-subtle);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.lap-btn.disabled:hover {
+    border-color: var(--border-subtle);
+    color: var(--text-muted);
 }
 
 /* ========================================================================
