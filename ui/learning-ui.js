@@ -137,9 +137,8 @@ export class LearningUI {
 
     const goals = this.#dailyManager.checkDailyGoals();
     const goalsList = [
-      { key: 'allThree', name: 'Complete 3 quizzes', achieved: goals.allThree.achieved },
-      { key: 'accuracy80', name: '80%+ accuracy', achieved: goals.accuracy80.achieved },
-      { key: 'newWords10', name: 'Learn 10+ new words', achieved: goals.newWords10.achieved },
+      { key: 'accuracy100', name: '100% accuracy', achieved: goals.accuracy100?.achieved || false },
+      { key: 'accuracy80', name: '80%+ accuracy', achieved: goals.accuracy80?.achieved || false },
     ];
 
     goalsContainer.innerHTML = goalsList.map(g => `
@@ -290,7 +289,7 @@ export class LearningUI {
 
     // 检查是否完成今日目标
     const goals = this.#dailyManager.checkDailyGoals();
-    if (goals.allThree.achieved || goals.accuracy80.achieved || goals.newWords10.achieved) {
+    if (goals.accuracy100?.achieved || goals.accuracy80?.achieved) {
       this.#showGoalCompleteMessage(goals);
     }
   }
@@ -300,9 +299,8 @@ export class LearningUI {
    */
   #showGoalCompleteMessage(goals) {
     const messages = [];
-    if (goals.allThree.achieved) messages.push('3 quizzes completed!');
-    if (goals.accuracy80.achieved) messages.push('80%+ accuracy achieved!');
-    if (goals.newWords10.achieved) messages.push('10+ new words learned!');
+    if (goals.accuracy100?.achieved) messages.push('100% accuracy achieved!');
+    if (goals.accuracy80?.achieved) messages.push('80%+ accuracy achieved!');
 
     // 在完成界面显示
     const completePanel = document.getElementById('quiz-complete');

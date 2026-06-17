@@ -55,7 +55,7 @@ export const ECONOMY = {
     {
       id: 'nitro1',
       label: 'Nitro x1',
-      cost: 20,
+      cost: 1,
       currency: 'gear',
       effect: { nitro: 1 },
       description: '1 Nitro boost',
@@ -63,7 +63,7 @@ export const ECONOMY = {
     {
       id: 'nitro3',
       label: 'Nitro x3',
-      cost: 50,
+      cost: 3,
       currency: 'gear',
       effect: { nitro: 3 },
       description: '3 Nitro boosts',

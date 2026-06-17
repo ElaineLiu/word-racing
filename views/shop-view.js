@@ -6,6 +6,7 @@
 
 import { BaseView } from './base-view.js';
 import { Events } from '../core/event-bus.js';
+import { GAME } from '../config/game-config.js';
 
 export class ShopView extends BaseView {
   #game;
@@ -51,7 +52,7 @@ export class ShopView extends BaseView {
       itemDiv.className = 'shop-item';
 
       const info = document.createElement('div');
-      info.innerHTML = `<strong>${item.label}</strong> <span class="text-muted">- ${item.desc} (${item.cost} ${item.currency === 'fuel' ? 'Fuel Coins' : 'Gear Coins'})</span>`;
+      info.innerHTML = `<strong>${item.label}</strong> <span class="text-muted">- ${item.description} (${item.cost} ${item.currency === 'fuel' ? 'Fuel Coins' : 'Gear Coins'})</span>`;
       itemDiv.appendChild(info);
 
       const buyBtn = document.createElement('button');
@@ -246,14 +247,31 @@ export class ShopView extends BaseView {
     label.className = 'lap-label';
     container.appendChild(label);
 
-    for (let i = 1; i <= 5; i++) {
+    // 获取当前金币数量
+    const fuelCoins = this.#game.fuelCoins || 0;
+    // 每圈消耗 10 金币，计算最大可选圈数
+    const maxAffordableLaps = Math.floor(fuelCoins / 10);
+
+    for (let i = 1; i <= GAME.MAX_LAPS; i++) {
       const btn = document.createElement('button');
       btn.textContent = i;
-      btn.className = 'lap-btn' + (i === this.#game.selectedLaps ? ' active' : '');
-      btn.addEventListener('click', () => {
-        this.#game.setLapCount(i);
-        this.renderLapSelector();
-      });
+
+      const canAfford = i <= maxAffordableLaps;
+      const isSelected = i === this.#game.selectedLaps;
+
+      btn.className = 'lap-btn';
+      if (isSelected && canAfford) btn.className += ' active';
+      if (!canAfford) btn.className += ' disabled';
+
+      if (canAfford) {
+        btn.addEventListener('click', () => {
+          this.#game.setLapCount(i);
+          this.renderLapSelector();
+        });
+      } else {
+        btn.disabled = true;
+      }
+
       container.appendChild(btn);
     }
   }

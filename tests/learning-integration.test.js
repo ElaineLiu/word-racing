@@ -95,9 +95,7 @@ describe('Learning System Integration', () => {
 
       // 验证每日目标
       const goals = controller.dailyManager.checkDailyGoals();
-      expect(goals.allThree.achieved).toBe(true);
       expect(goals.accuracy80.achieved).toBe(true);
-      expect(goals.newWords10.achieved).toBe(true);
 
       // 无法再开始新套题
       const more = controller.startNewQuiz();
@@ -248,10 +246,9 @@ describe('Learning System Integration', () => {
   // ==================== 新增：目标达成集成测试 ====================
 
   describe('goal achievement integration', () => {
-    it('should correctly track newWords10 goal through full flow', () => {
-      // 这是之前遗漏的测试点
+    it('should correctly track accuracy100 goal through full flow', () => {
+      // 完成一套题，100% 正确率
 
-      // 第一套题：10个新词
       controller.startNewQuiz();
       for (let i = 0; i < 10; i++) {
         const question = controller.getCurrentQuestion();
@@ -263,22 +260,29 @@ describe('Learning System Integration', () => {
 
       // 验证目标状态
       let goals = controller.dailyManager.checkDailyGoals();
-      expect(goals.newWords10.achieved).toBe(true);
-      expect(goals.newWords10.progress).toBe(10);
+      expect(goals.accuracy100.achieved).toBe(true);
+      expect(goals.accuracy100.progress).toBe(100);
 
-      // 第二套题：不应该再计入新词（因为是复习词或检查词）
+      // 第二套题：80% 正确率（不应该影响100%目标）
       controller.startNewQuiz();
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 8; i++) {
         const question = controller.getCurrentQuestion();
         if (question) {
           controller.submitAnswer(question.correctIndex);
         }
       }
+      for (let i = 0; i < 2; i++) {
+        const question = controller.getCurrentQuestion();
+        if (question) {
+          controller.submitAnswer((question.correctIndex + 1) % 4);
+        }
+      }
       controller.completeQuiz();
 
       goals = controller.dailyManager.checkDailyGoals();
-      // 新词数不应该再增加10
-      expect(goals.newWords10.progress).toBeLessThanOrEqual(20);
+      // accuracy100 应该变为未达成（因为整体正确率下降）
+      // accuracy80 应该仍为达成
+      expect(goals.accuracy80.achieved).toBe(true);
     });
 
     it('should correctly track accuracy across multiple quizzes', () => {

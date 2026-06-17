@@ -82,16 +82,16 @@ describe('Game', () => {
     it('should have nitro items', () => {
       const nitro1 = game._shopItems.find(i => i.id === 'nitro1');
       expect(nitro1).toBeDefined();
-      expect(nitro1.cost).toBe(20);
+      expect(nitro1.cost).toBe(1);
       expect(nitro1.currency).toBe('gear');
     });
   });
 
   describe('shop purchases', () => {
     it('should buy nitro with gear coins', () => {
-      game.gearCoins = 50;
+      game.gearCoins = 5;
       game._executeShopAction('nitro1');
-      expect(game.gearCoins).toBe(30);
+      expect(game.gearCoins).toBe(4);
       expect(game.nitroCharges).toBe(1);
     });
   });
