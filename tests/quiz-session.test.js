@@ -412,7 +412,7 @@ describe('QuizSessionManager', () => {
       sessionManager.setQuestions([createQuestion(1, 'speed')]);
       sessionManager.saveAnswer({ questionIndex: 0, correct: true, mode: 'PIT_BOARD' });
 
-      const saved = JSON.parse(localStorage.getItem('wr_quiz_session'));
+      const saved = JSON.parse(localStorage.getItem('wr_quiz_session_default'));
       expect(saved).toBeDefined();
       expect(saved.answers.length).toBe(1);
     });
@@ -423,7 +423,7 @@ describe('QuizSessionManager', () => {
         createQuestion(1, 'speed', { isReview: true, originalMode: 'STRATEGY' }),
       ]);
 
-      const saved = JSON.parse(localStorage.getItem('wr_quiz_session'));
+      const saved = JSON.parse(localStorage.getItem('wr_quiz_session_default'));
       const question = saved.questions[0];
 
       expect(question.options).toEqual(['选项A', '选项B', '选项C', '词1']);
@@ -444,7 +444,7 @@ describe('QuizSessionManager', () => {
 
       sessionManager.completeQuiz();
 
-      const saved = JSON.parse(localStorage.getItem('wr_quiz_session'));
+      const saved = JSON.parse(localStorage.getItem('wr_quiz_session_default'));
       expect(saved.completed).toBe(true);
 
       const newManager = new QuizSessionManager(eventBus, dailyManager, progressTracker);

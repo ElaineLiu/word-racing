@@ -21,7 +21,6 @@ export class HomeView extends BaseView {
     this.#setupEventListeners();
     this.#subscribeToEvents();
     this.renderLeaderboard();
-    this.renderLapSelector();
     this.updateLearningUI();
   }
 
@@ -38,7 +37,6 @@ export class HomeView extends BaseView {
 
   updateStats() {
     // 比赛资源
-    this.setText('#home-fuel', Math.round(this.#game.fuel));
     this.setText('#home-nitro', this.#game.nitroCharges);
 
     // 货币资源
@@ -65,11 +63,11 @@ export class HomeView extends BaseView {
 
     // 已掌握单词数
     const mastered = learning.totalWordsMastered || 0;
-    this.setText('#home-words-mastered', `${mastered} 词`);
+    this.setText('#home-words-mastered', `${mastered} words`);
 
     // 连续学习天数
     const streak = daily.streakDays || 0;
-    this.setText('#home-streak', `${streak} 天`);
+    this.setText('#home-streak', `${streak} days`);
   }
 
   updateLearningUI() {
@@ -100,32 +98,14 @@ export class HomeView extends BaseView {
     container.innerHTML = `<div class="leaderboard-title">FASTEST LAPS</div>${html}`;
   }
 
-  renderLapSelector() {
-    const container = this.$('#home-lap-select');
-    if (!container) return;
-
-    container.innerHTML = '';
-
-    const label = document.createElement('span');
-    label.textContent = 'Laps: ';
-    label.className = 'lap-label';
-    container.appendChild(label);
-
-    for (let i = 1; i <= 5; i++) {
-      const btn = document.createElement('button');
-      btn.textContent = i;
-      btn.className = 'lap-btn' + (i === this.#game.selectedLaps ? ' active' : '');
-      btn.addEventListener('click', () => {
-        this.#game.setLapCount(i);
-        this.renderLapSelector();
-      });
-      container.appendChild(btn);
-    }
-  }
-
   #setupEventListeners() {
     this.onClick('#home-start-btn', () => {
       this.emit(Events.QUIZ_START, { source: 'home' });
+    });
+
+    // Navigate to Garage
+    this.onClick('#home-garage-btn', () => {
+      this.emit(Events.VIEW_CHANGE, { view: 'shop' });
     });
 
     // Settings dropdown
@@ -148,7 +128,7 @@ export class HomeView extends BaseView {
 
     // Reset daily limit
     this.onClick('#reset-daily-btn', () => {
-      if (confirm('确定要重置每日答题限制吗？\n\n注意：不会清除单词掌握进度。')) {
+      if (confirm('Reset daily practice limit?\n\nYour word mastery progress will stay unchanged.')) {
         this.#resetDailyLimit();
       }
     });
@@ -173,7 +153,7 @@ export class HomeView extends BaseView {
         this.#learningController.sessionManager?.clearSession?.();
       }
 
-      alert('已重置！可以继续答题。');
+      alert('Daily practice limit reset. You can continue.');
 
       // 关闭下拉菜单
       const dropdown = this.$('#settings-dropdown');
@@ -182,7 +162,7 @@ export class HomeView extends BaseView {
       // 刷新 UI
       this.updateLearningUI();
     } catch (e) {
-      alert('重置失败: ' + e.message);
+      alert('Reset failed: ' + e.message);
     }
   }
 

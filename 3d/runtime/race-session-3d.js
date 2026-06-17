@@ -42,7 +42,6 @@ export class RaceSession3D {
     );
     this.#playerCar.eventBus = eventBus;
     this.#playerCar.isPlayer = true;
-    this.#playerCar.applyUpgrades(gameState.get('upgrades') || { engine: 1, tire: 1, body: 1 });
     this.#playerCar.nitroCharges = gameState.get('nitroCharges') || 0;
 
     this.#aiCars = AI_PERSONALITIES.map((personalityName, index) => {

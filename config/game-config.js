@@ -46,48 +46,12 @@ export const PHYSICS = {
 };
 
 // ============================================================================
-// UPGRADES - Car upgrade system
-// ============================================================================
-
-export const UPGRADES = {
-  // Upgrade levels
-  MIN_LEVEL: 1,
-  MAX_LEVEL: 4,
-
-  // Per-level multipliers
-  ENGINE_SPEED_BONUS: 0.10,      // +10% max speed per engine level
-  TIRE_GRIP_BONUS: 0.10,         // +10% turn speed per tire level
-  BODY_WEIGHT_BONUS: 0.05,       // +5% acceleration/brake per body level
-};
-
-// ============================================================================
-// ECONOMY - Fuel, coins, shop
+// ECONOMY - Coins, shop
 // ============================================================================
 
 export const ECONOMY = {
-  // Fuel system
-  MAX_FUEL: 100,
-  FUEL_PER_LAP: 20,
-  INITIAL_FUEL: 0,               // must buy fuel in shop!
-
   // Shop items
   SHOP_ITEMS: [
-    {
-      id: 'fuel20',
-      label: 'Fuel +20',
-      cost: 15,
-      currency: 'fuel',
-      effect: { fuel: 20 },
-      description: 'Refuel 20 units',
-    },
-    {
-      id: 'fuel50',
-      label: 'Fuel +50',
-      cost: 30,
-      currency: 'fuel',
-      effect: { fuel: 50 },
-      description: 'Refuel 50 units',
-    },
     {
       id: 'nitro1',
       label: 'Nitro x1',

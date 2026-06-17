@@ -27,10 +27,9 @@ export const TRACK_REGISTRY = {
    */
   'shanghai-2d': {
     id: 'shanghai-2d',
-    name: '上海国际赛车场',
+    name: 'Shanghai International Circuit',
     type: '2d',
-    description: '高速F1赛道·超长直道',
-    cost: 10,
+    description: 'High-speed F1 circuit with a long main straight',
     waypoints: [
       // 主直道
       { x: 250, y: 90 },
@@ -73,10 +72,9 @@ export const TRACK_REGISTRY = {
    */
   'monaco-2d': {
     id: 'monaco-2d',
-    name: '蒙特卡洛街道赛',
+    name: 'Monte Carlo Street Circuit',
     type: '2d',
-    description: '街道赛·密集弯道·极窄',
-    cost: 15,
+    description: 'Narrow street circuit with dense corners',
     waypoints: [
       // 起步直道（极短）
       { x: 200, y: 100 },
@@ -147,10 +145,9 @@ export const TRACK_REGISTRY = {
    */
   'silverstone-2d': {
     id: 'silverstone-2d',
-    name: '银石赛道',
+    name: 'Silverstone Circuit',
     type: '2d',
-    description: '高速弯道挑战',
-    cost: 20,
+    description: 'High-speed corner challenge',
     waypoints: [
       { x: 200, y: 200 },  // 起点 - 主直道
       { x: 450, y: 180 },  // 直道中段
@@ -187,10 +184,9 @@ export const TRACK_REGISTRY = {
    */
   'shanghai-3d': {
     id: 'shanghai-3d',
-    name: '上海国际赛车场 3D',
+    name: 'Shanghai International Circuit 3D',
     type: '3d',
-    description: '沉浸式3D驾驶体验',
-    cost: 10,
+    description: 'Immersive 3D driving experience',
     waypoints: [
       { x: 250, y: 90 },
       { x: 560, y: 75 },
@@ -238,10 +234,9 @@ export const TRACK_REGISTRY = {
    */
   'night-race-3d': {
     id: 'night-race-3d',
-    name: '新加坡夜赛 3D',
+    name: 'Singapore Night Circuit 3D',
     type: '3d',
-    description: '夜景灯光秀',
-    cost: 50,
+    description: 'Night race light show',
     sceneConfig: {
       // Three.js 场景配置（待实现）
       camera: {

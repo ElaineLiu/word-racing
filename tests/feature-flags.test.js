@@ -14,7 +14,6 @@ describe('FeatureFlags', () => {
   describe('isEnabled', () => {
     it('should return true for enabled flag', () => {
       expect(FeatureFlags.isEnabled('2d-track')).toBe(true);
-      expect(FeatureFlags.isEnabled('multiple-tracks')).toBe(true);
     });
 
     it('should enable 3D track by default for Epic 5', () => {
@@ -60,16 +59,6 @@ describe('FeatureFlags', () => {
       expect(FeatureFlags.isEnabled('2d-track')).toBe(true);
     });
 
-    it('should load legacy console key featureFlags for manual testing', () => {
-      localStorage.setItem('featureFlags', JSON.stringify({
-        '3d-track': false,
-      }));
-
-      FeatureFlags.load();
-
-      expect(FeatureFlags.isEnabled('3d-track')).toBe(false);
-    });
-
     it('should not crash on invalid JSON', () => {
       localStorage.setItem('wr_feature_flags', 'invalid json');
 
@@ -96,11 +85,11 @@ describe('FeatureFlags', () => {
     });
 
     it('should save all current flags', () => {
-      FeatureFlags.disable('multiple-tracks');
+      FeatureFlags.disable('3d-track');
       FeatureFlags.save();
 
       const saved = JSON.parse(localStorage.getItem('wr_feature_flags'));
-      expect(saved['multiple-tracks']).toBe(false);
+      expect(saved['3d-track']).toBe(false);
       expect(saved['2d-track']).toBe(true);
     });
   });
@@ -109,13 +98,11 @@ describe('FeatureFlags', () => {
     it('should restore default feature flags', () => {
       FeatureFlags.disable('2d-track');
       FeatureFlags.disable('3d-track');
-      FeatureFlags.disable('multiple-tracks');
 
       FeatureFlags.reset();
 
       expect(FeatureFlags.isEnabled('2d-track')).toBe(true);
       expect(FeatureFlags.isEnabled('3d-track')).toBe(true);
-      expect(FeatureFlags.isEnabled('multiple-tracks')).toBe(true);
     });
   });
 

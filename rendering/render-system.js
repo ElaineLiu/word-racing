@@ -227,9 +227,6 @@ export class RenderSystem {
     this.#drawPanel(ctx, rightX, padding, 110, 48, 'SCORE',
       String(gameState.raceScore), '#FFD700');
 
-    // FUEL bar (right, below SCORE)
-    this.#renderFuelBar(ctx, rightX, padding + 54, 110, 18, gameState.fuel, gameState.maxFuel);
-
     // SPEED panel (bottom-left)
     this.#renderSpeedPanel(ctx, padding, H - 88 - padding, 130, 88, gameState.displaySpeed);
 
@@ -269,30 +266,6 @@ export class RenderSystem {
     ctx.font = 'bold 20px Arial';
     ctx.textBaseline = 'top';
     ctx.fillText(value, x + 10, y + 22);
-  }
-
-  #renderFuelBar(ctx, x, y, w, h, fuel, maxFuel) {
-    ctx.fillStyle = 'rgba(13,17,23,0.85)';
-    this.#roundRect(ctx, x, y, w, h, 4);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-    ctx.lineWidth = 1;
-    this.#roundRect(ctx, x, y, w, h, 4);
-    ctx.stroke();
-
-    const ratio = Math.max(0, Math.min(1, fuel / maxFuel));
-    const color = ratio > 0.5 ? '#00C853' : ratio > 0.25 ? '#FF6D00' : '#E10600';
-    if (ratio > 0) {
-      ctx.fillStyle = color;
-      this.#roundRect(ctx, x + 1, y + 1, (w - 2) * ratio, h - 2, 3);
-      ctx.fill();
-    }
-
-    ctx.fillStyle = '#FFF';
-    ctx.font = 'bold 10px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(`FUEL  ${Math.round(fuel)} / ${maxFuel}`, x + w / 2, y + h / 2 + 0.5);
   }
 
   #renderSpeedPanel(ctx, x, y, w, h, displaySpeed) {
@@ -447,7 +420,6 @@ export class RenderSystem {
       ? [
         { label: 'Race Time', value: this.#formatTime(gameState.raceTime) },
         { label: 'Best Lap', value: this.#formatTime(bestLapTime) },
-        { label: 'Fuel Left', value: `${Math.round(gameState.fuel)} / ${gameState.maxFuel}` },
       ]
       : [
         { label: 'Race Time', value: this.#formatTime(gameState.raceTime) },
@@ -455,7 +427,6 @@ export class RenderSystem {
         { label: 'Word Score', value: String(gameState.raceScore) },
         { label: 'Quiz Score', value: String(gameState.quizScore || 0) },
         { label: 'Total Score', value: String(gameState.raceScore + (gameState.quizScore || 0)) },
-        { label: 'Fuel Left', value: `${Math.round(gameState.fuel)} / ${gameState.maxFuel}` },
       ];
 
     stats.forEach((stat, i) => {
@@ -494,8 +465,8 @@ export class RenderSystem {
       ctx.fillText('Review: ' + gameState.wrongWords.map(w => w.word + '(' + w.meaning + ')').join(', '), centerX, by + bh - 72);
     }
 
-    const btnText = gameState.fuel <= 0 ? 'NEED FUEL! QUIZ NOW!' : 'CONTINUE';
-    const btnColor = gameState.fuel <= 0 ? '#FF6D00' : '#00C853';
+    const btnText = 'CONTINUE';
+    const btnColor = '#00C853';
     ctx.fillStyle = this.#hexToRgba(btnColor, 0.12);
     ctx.strokeStyle = btnColor;
     ctx.lineWidth = 1.5;

@@ -4,12 +4,12 @@
 import { BaseView } from './base-view.js';
 
 const STATUS_LABELS = {
-  unlearned: '未学习',
-  exposed: '已接触',
-  simple_passed: '简单题通过',
-  complex_passed: '复杂题通过',
-  mastered: '已掌握',
-  forgotten: '已遗忘'
+  unlearned: 'Not Started',
+  exposed: 'Seen',
+  simple_passed: 'Basic Passed',
+  complex_passed: 'Advanced Passed',
+  mastered: 'Mastered',
+  forgotten: 'Needs Review'
 };
 
 export class ReportView extends BaseView {
@@ -43,11 +43,11 @@ export class ReportView extends BaseView {
       : 0;
 
     container.innerHTML = `
-      <div class="stat-row"><span>完成套数</span><strong>${stats.totalQuizzes || 0}</strong></div>
-      <div class="stat-row"><span>总题目数</span><strong>${stats.totalQuestions || 0}</strong></div>
-      <div class="stat-row"><span>答对数</span><strong>${stats.totalCorrect || 0}</strong></div>
-      <div class="stat-row"><span>正确率</span><strong>${accuracy}%</strong></div>
-      <div class="stat-row"><span>连续学习天数</span><strong>${stats.streak || 0}</strong></div>
+      <div class="stat-row"><span>Quizzes Completed</span><strong>${stats.totalQuizzes || 0}</strong></div>
+      <div class="stat-row"><span>Total Questions</span><strong>${stats.totalQuestions || 0}</strong></div>
+      <div class="stat-row"><span>Correct Answers</span><strong>${stats.totalCorrect || 0}</strong></div>
+      <div class="stat-row"><span>Accuracy</span><strong>${accuracy}%</strong></div>
+      <div class="stat-row"><span>Streak</span><strong>${stats.streak || 0}</strong></div>
     `;
   }
 
@@ -59,21 +59,21 @@ export class ReportView extends BaseView {
     const goals = this.#learningController.dailyManager?.checkDailyGoals?.() || {};
 
     container.innerHTML = `
-      <div class="stat-row"><span>今日套数</span><strong>${progress.quizzesCompleted || 0} / 3</strong></div>
-      <div class="stat-row"><span>今日新词</span><strong>${progress.newWordsLearned || 0}</strong></div>
-      <div class="stat-row"><span>今日复习</span><strong>${progress.wordsReviewed || 0}</strong></div>
-      <div class="stat-row"><span>最大连击</span><strong>${progress.maxCombo || 0}</strong></div>
-      <div class="stat-row"><span>燃油币</span><strong>${progress.fuelCoinsEarned || 0}</strong></div>
-      <div class="stat-row"><span>装备币</span><strong>${progress.gearCoinsEarned || 0}</strong></div>
+      <div class="stat-row"><span>Today's Quizzes</span><strong>${progress.quizzesCompleted || 0} / 3</strong></div>
+      <div class="stat-row"><span>New Words</span><strong>${progress.newWordsLearned || 0}</strong></div>
+      <div class="stat-row"><span>Reviewed Words</span><strong>${progress.wordsReviewed || 0}</strong></div>
+      <div class="stat-row"><span>Best Combo</span><strong>${progress.maxCombo || 0}</strong></div>
+      <div class="stat-row"><span>Fuel Coins</span><strong>${progress.fuelCoinsEarned || 0}</strong></div>
+      <div class="stat-row"><span>Gear Coins</span><strong>${progress.gearCoinsEarned || 0}</strong></div>
       <div class="goals-section">
         <div class="goal ${goals.allThree?.achieved ? 'achieved' : ''}">
-          ${goals.allThree?.achieved ? '✓' : '○'} 完成3套题
+          ${goals.allThree?.achieved ? '✓' : '○'} Complete 3 quizzes
         </div>
         <div class="goal ${goals.accuracy80?.achieved ? 'achieved' : ''}">
-          ${goals.accuracy80?.achieved ? '✓' : '○'} 正确率80%+
+          ${goals.accuracy80?.achieved ? '✓' : '○'} 80% accuracy
         </div>
         <div class="goal ${goals.newWords10?.achieved ? 'achieved' : ''}">
-          ${goals.newWords10?.achieved ? '✓' : '○'} 学习10个新词
+          ${goals.newWords10?.achieved ? '✓' : '○'} Learn 10 new words
         </div>
       </div>
     `;
@@ -90,9 +90,9 @@ export class ReportView extends BaseView {
     const learningPercent = stats.total > 0 ? (stats.learning / stats.total * 100).toFixed(1) : 0;
 
     container.innerHTML = `
-      <div class="stat-row"><span>答过的单词</span><strong>${stats.total || 0}</strong></div>
-      <div class="stat-row"><span>✅ 已掌握</span><strong class="text-success">${stats.mastered || 0} <small>(${masteredPercent}%)</small></strong></div>
-      <div class="stat-row"><span>📖 学习中</span><strong class="text-warning">${stats.learning || 0} <small>(${learningPercent}%)</small></strong></div>
+      <div class="stat-row"><span>Words Attempted</span><strong>${stats.total || 0}</strong></div>
+      <div class="stat-row"><span>✅ Mastered</span><strong class="text-success">${stats.mastered || 0} <small>(${masteredPercent}%)</small></strong></div>
+      <div class="stat-row"><span>📖 Learning</span><strong class="text-warning">${stats.learning || 0} <small>(${learningPercent}%)</small></strong></div>
     `;
   }
 
@@ -103,14 +103,14 @@ export class ReportView extends BaseView {
     const wrongWords = this.#learningController.progressTracker?.getWrongWords?.() || [];
 
     if (wrongWords.length === 0) {
-      container.innerHTML = '<div class="empty-message">太棒了！没有错词 🎉</div>';
+      container.innerHTML = '<div class="empty-message">No words to review yet 🎉</div>';
       return;
     }
 
     container.innerHTML = `
       <table class="report-table">
         <thead>
-          <tr><th>单词</th><th>简单题错</th><th>复杂题错</th><th>状态</th></tr>
+          <tr><th>Word</th><th>Basic Misses</th><th>Advanced Misses</th><th>Status</th></tr>
         </thead>
         <tbody>
           ${wrongWords.slice(0, 20).map(w => `
@@ -123,7 +123,7 @@ export class ReportView extends BaseView {
           `).join('')}
         </tbody>
       </table>
-      ${wrongWords.length > 20 ? `<div class="more-hint">显示前20个，共${wrongWords.length}个</div>` : ''}
+      ${wrongWords.length > 20 ? `<div class="more-hint">Showing first 20 of ${wrongWords.length}</div>` : ''}
     `;
   }
 
@@ -143,28 +143,28 @@ export class ReportView extends BaseView {
       .slice(0, 30);
 
     if (words.length === 0) {
-      container.innerHTML = '<div class="empty-message">暂无学习数据</div>';
+      container.innerHTML = '<div class="empty-message">No learning data yet</div>';
       return;
     }
 
     container.innerHTML = `
       <table class="report-table">
         <thead>
-          <tr><th>单词</th><th>状态</th><th>简单题</th><th>复杂题</th><th>首次见到</th></tr>
+          <tr><th>Word</th><th>Status</th><th>Basic</th><th>Advanced</th><th>First Seen</th></tr>
         </thead>
         <tbody>
           ${words.map(w => `
             <tr>
               <td><strong>${w.word}</strong></td>
               <td class="status-${w.status}">${STATUS_LABELS[w.status] || w.status}</td>
-              <td>${w.simpleCorrect ? '✓' : '✗'} (${w.simpleWrongCount}错)</td>
-              <td>${w.complexCorrect ? '✓' : '✗'} (${w.complexWrongCount}错)</td>
+              <td>${w.simpleCorrect ? '✓' : '✗'} (${w.simpleWrongCount} misses)</td>
+              <td>${w.complexCorrect ? '✓' : '✗'} (${w.complexWrongCount} misses)</td>
               <td>${w.firstSeenDate || '-'}</td>
             </tr>
           `).join('')}
         </tbody>
       </table>
-      <div class="more-hint">显示前30个</div>
+      <div class="more-hint">Showing first 30</div>
     `;
   }
 }

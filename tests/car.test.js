@@ -36,12 +36,6 @@ describe('Car', () => {
       expect(car.speed).toBe(0);
     });
 
-    it('should have default upgrade levels of 1', () => {
-      expect(car.upgradeLevels.engine).toBe(1);
-      expect(car.upgradeLevels.tire).toBe(1);
-      expect(car.upgradeLevels.body).toBe(1);
-    });
-
     it('should have zero nitro charges initially', () => {
       expect(car.nitroCharges).toBe(0);
     });
@@ -209,32 +203,6 @@ describe('Car', () => {
       car.nitroTimer = 1;
       car.update(mockTrack);
       expect(car.nitroActive).toBe(false);
-    });
-  });
-
-  describe('upgrades', () => {
-    it('should apply engine upgrade (speed +10% per level)', () => {
-      car.applyUpgrades({ engine: 2, tire: 1, body: 1 });
-      expect(car.maxSpeed).toBeCloseTo(4.0 * 1.1, 2); // 4.4
-      expect(car.nitroMaxSpeed).toBeCloseTo(8.0 * 1.1, 2); // 8.8
-    });
-
-    it('should apply tire upgrade (turn +10% per level)', () => {
-      car.applyUpgrades({ engine: 1, tire: 3, body: 1 });
-      expect(car.turnSpeed).toBeCloseTo(0.045 * 1.2, 4); // 0.054
-    });
-
-    it('should apply body upgrade (accel +5% per level)', () => {
-      car.applyUpgrades({ engine: 1, tire: 1, body: 4 });
-      expect(car.acceleration).toBeCloseTo(0.08 * 1.15, 4); // 0.092
-      expect(car.brakeForce).toBeCloseTo(0.15 * 1.15, 4); // 0.1725
-    });
-
-    it('should apply all upgrades together', () => {
-      car.applyUpgrades({ engine: 4, tire: 4, body: 4 });
-      expect(car.maxSpeed).toBeCloseTo(4.0 * 1.3, 2); // 5.2
-      expect(car.turnSpeed).toBeCloseTo(0.045 * 1.3, 4); // 0.0585
-      expect(car.acceleration).toBeCloseTo(0.08 * 1.15, 4); // 0.092
     });
   });
 

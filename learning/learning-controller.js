@@ -24,6 +24,7 @@ import { LEARNING, REWARDS } from '../config/learning-config.js';
 
 export class LearningController {
   #eventBus;
+  #userId;
   #gameState;
   #progressTracker;
   #dailyManager;
@@ -37,13 +38,15 @@ export class LearningController {
 
   /**
    * @param {EventBus} eventBus - 可选的事件总线，不传则自建（向后兼容）
+   * @param {string} userId - 用户ID
    */
-  constructor(eventBus = null) {
+  constructor(eventBus = null, userId = 'default') {
     this.#eventBus = eventBus ?? new EventBus();
-    this.#gameState = new GameState(this.#eventBus);
-    this.#progressTracker = new ProgressTracker(this.#eventBus);
-    this.#dailyManager = new DailyManager(this.#eventBus, this.#gameState);
-    this.#sessionManager = new QuizSessionManager(this.#eventBus, this.#dailyManager, this.#progressTracker);
+    this.#userId = userId;
+    this.#gameState = new GameState(this.#eventBus, userId);
+    this.#progressTracker = new ProgressTracker(this.#eventBus, 'shanghai-zhongkao', userId);
+    this.#dailyManager = new DailyManager(this.#eventBus, this.#gameState, userId);
+    this.#sessionManager = new QuizSessionManager(this.#eventBus, this.#dailyManager, this.#progressTracker, userId);
     this.#achievementManager = new AchievementManager(this.#eventBus, this.#gameState);
     this.#adaptiveSelector = null;
     this.#learningUI = null;

@@ -158,7 +158,6 @@ describe('Track Registry', () => {
         expect(track).toHaveProperty('name');
         expect(track).toHaveProperty('type');
         expect(track).toHaveProperty('description');
-        expect(track).toHaveProperty('cost');
       });
     });
 
@@ -188,22 +187,12 @@ describe('Track Registry', () => {
         expect(validTypes).toContain(track.type);
       });
     });
-
-    it('cost 应该是非负数', () => {
-      const tracks = Object.values(TRACK_REGISTRY);
-
-      tracks.forEach(track => {
-        expect(typeof track.cost).toBe('number');
-        expect(track.cost).toBeGreaterThanOrEqual(0);
-      });
-    });
   });
 
   describe('默认赛道', () => {
     it('应该包含 shanghai-2d 作为默认赛道', () => {
       expect(TRACK_REGISTRY['shanghai-2d']).toBeDefined();
       expect(TRACK_REGISTRY['shanghai-2d'].type).toBe('2d');
-      expect(TRACK_REGISTRY['shanghai-2d'].cost).toBe(10);
     });
   });
 
@@ -258,7 +247,6 @@ describe('Track Registry', () => {
         expect(track).toBeDefined();
         expect(track.id).toBe('shanghai-3d');
         expect(track.type).toBe('3d');
-        expect(track.cost).toBe(10);
       });
 
       it('应该有 waypoints 数据', () => {
@@ -313,24 +301,6 @@ describe('Track Registry', () => {
       expect(turns.left).toBeGreaterThan(points.length * 0.2);
       expect(turns.right).toBeGreaterThan(points.length * 0.2);
       expect(getDirectionChanges(points)).toBeGreaterThanOrEqual(4);
-    });
-  });
-
-  describe('赛道成本', () => {
-    it('所有赛道都应该有成本', () => {
-      const tracks = Object.values(TRACK_REGISTRY);
-      tracks.forEach(track => {
-        expect(track.cost).toBeGreaterThan(0);
-      });
-    });
-
-    it('shanghai-2d 应该是成本最低的赛道', () => {
-      const shanghai = TRACK_REGISTRY['shanghai-2d'];
-      const tracks = Object.values(TRACK_REGISTRY);
-
-      tracks.forEach(track => {
-        expect(shanghai.cost).toBeLessThanOrEqual(track.cost);
-      });
     });
   });
 });

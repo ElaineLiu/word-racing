@@ -23,7 +23,6 @@ describe('TrackUnlockManager - 解锁进度', () => {
       const progress = manager.getUnlockProgress('monaco-2d');
 
       expect(progress.unlocked).toBe(false);
-      expect(progress.cost).toBe(15);
       expect(progress.type).toBe('2d');
       expect(progress.requirements.quizzesCompleted).toEqual({
         current: 5,
@@ -45,7 +44,6 @@ describe('TrackUnlockManager - 解锁进度', () => {
       const progress = manager.getUnlockProgress('silverstone-2d');
 
       expect(progress.unlocked).toBe(false);
-      expect(progress.cost).toBe(20);
       expect(progress.type).toBe('2d');
       expect(progress.requirements.masteryCount).toEqual({
         current: 25,
@@ -126,7 +124,6 @@ describe('TrackUnlockManager - 解锁进度', () => {
       const progress = manager.getUnlockProgress('shanghai-3d');
 
       expect(progress.unlocked).toBe(false);
-      expect(progress.cost).toBe(10);
       expect(progress.type).toBe('3d');
       expect(progress.requirements.masteryCount).toEqual({
         current: 150,

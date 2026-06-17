@@ -20,24 +20,24 @@ function createMockLearningController() {
     getAchievements: vi.fn(() => [
       {
         id: 'first-quiz',
-        name: '初次上阵',
-        description: '完成第一套题',
+        name: 'First Pit Stop',
+        description: 'Complete your first quiz.',
         unlocked: true,
         progress: null,
         reward: { track: 'shanghai-2d' },
       },
       {
         id: 'quiz-master-10',
-        name: '答题达人',
-        description: '累计完成 10 套题',
+        name: 'Quiz Streak 10',
+        description: 'Complete 10 quizzes.',
         unlocked: false,
         progress: { current: 5, target: 10 },
         reward: { fuelCoins: 50 },
       },
       {
         id: 'perfect-streak',
-        name: '完美连击',
-        description: '连续3次全对',
+        name: 'Perfect Run',
+        description: 'Answer all 10 questions correctly in one quiz.',
         unlocked: false,
         progress: null,
         reward: { track: 'monaco-2d' },
@@ -140,7 +140,7 @@ describe('AchievementPanel - 成就面板 (Phase 3.5)', () => {
       learningController.getAchievements = vi.fn(() => []);
       const { document } = mountPanel(learningController);
       const list = document.getElementById('achievement-list');
-      expect(list.textContent).toContain('暂无成就');
+      expect(list.textContent).toContain('No achievements yet');
     });
   });
 });

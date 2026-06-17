@@ -18,8 +18,8 @@ import { AchievementToast } from '../ui/achievement-toast.js';
 function createMockAchievement() {
   return {
     id: 'first-quiz',
-    name: '初次上阵',
-    description: '完成第一套题',
+    name: 'First Pit Stop',
+    description: 'Complete your first quiz.',
     reward: { track: 'shanghai-2d' },
   };
 }
@@ -75,7 +75,7 @@ describe('AchievementToast - 成就提示 (Phase 3.3)', () => {
       eventBus.emit(Events.ACHIEVEMENT_UNLOCKED, { achievement: mockAchievement });
       vi.advanceTimersByTime(100);
       const toast = document.querySelector('.achievement-toast');
-      expect(toast.textContent).toContain('初次上阵');
+      expect(toast.textContent).toContain('First Pit Stop');
     });
 
     it('应显示成就描述', () => {
@@ -83,7 +83,7 @@ describe('AchievementToast - 成就提示 (Phase 3.3)', () => {
       eventBus.emit(Events.ACHIEVEMENT_UNLOCKED, { achievement: mockAchievement });
       vi.advanceTimersByTime(100);
       const toast = document.querySelector('.achievement-toast');
-      expect(toast.textContent).toContain('完成第一套题');
+      expect(toast.textContent).toContain('Complete your first quiz.');
     });
 
     it('应显示奖励（赛道图标）', () => {
@@ -127,7 +127,7 @@ describe('AchievementToast - 成就提示 (Phase 3.3)', () => {
       const { document } = mountToast(eventBus);
       eventBus.emit(Events.ACHIEVEMENT_UNLOCKED, { achievement: mockAchievement });
       vi.advanceTimersByTime(100);
-      const ach2 = { ...mockAchievement, id: 'quiz-master-10', name: '答题达人' };
+      const ach2 = { ...mockAchievement, id: 'quiz-master-10', name: 'Quiz Streak 10' };
       eventBus.emit(Events.ACHIEVEMENT_UNLOCKED, { achievement: ach2 });
       vi.advanceTimersByTime(100);
       expect(document.querySelectorAll('.achievement-toast').length).toBe(2);

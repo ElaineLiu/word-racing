@@ -87,10 +87,7 @@ export class ViewManager {
   async switchTo(viewName) {
     // Validate race access
     if (viewName === 'race') {
-      if (this.#game.fuel <= 0) {
-        alert('Insufficient fuel! Buy fuel in the shop first.');
-        viewName = 'home';
-      } else if (![GAME.STATES.COUNTDOWN, GAME.STATES.RACING, GAME.STATES.RESULTS].includes(this.#game.state)) {
+      if (![GAME.STATES.COUNTDOWN, GAME.STATES.RACING, GAME.STATES.RESULTS].includes(this.#game.state)) {
         try {
           await this.#game.continueToRace();
         } catch (err) {

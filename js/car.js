@@ -4,7 +4,7 @@
  *
  * Phase 1.2 - Converted to ES6 module, uses config
  */
-import { PHYSICS, UPGRADES, DISPLAY, CAR as CAR_CONFIG, GAME } from '../config/game-config.js';
+import { PHYSICS, DISPLAY, CAR as CAR_CONFIG, GAME } from '../config/game-config.js';
 
 export class Car {
     constructor(x, y, angle) {
@@ -37,9 +37,6 @@ export class Car {
         this._baseTurnSpeed = PHYSICS.BASE_TURN_SPEED;
         this._baseNitroMaxSpeed = PHYSICS.NITRO_MAX_SPEED;
         this._baseNitroAccel = PHYSICS.NITRO_ACCEL;
-
-        // Upgrade levels
-        this.upgradeLevels = { engine: 1, tire: 1, body: 1 };
 
         // Lap tracking
         this.lastProgress = 0;
@@ -87,35 +84,6 @@ export class Car {
         this.skidMarks = [];
         this.particles = [];
         this.offTrackTimer = 0;
-        this.applyUpgrades(this.upgradeLevels);
-    }
-
-    /**
-     * Apply upgrade levels to car physics.
-     * Called when upgrades change or car resets.
-     * @param {object} upgrades - { engine: 1-4, tire: 1-4, body: 1-4 }
-     */
-    applyUpgrades(upgrades) {
-        this.upgradeLevels = { ...upgrades };
-
-        const engineLv = upgrades.engine || UPGRADES.MIN_LEVEL;
-        const tireLv = upgrades.tire || UPGRADES.MIN_LEVEL;
-        const bodyLv = upgrades.body || UPGRADES.MIN_LEVEL;
-
-        // Engine: speed bonus per level
-        const engineMult = 1 + (engineLv - 1) * UPGRADES.ENGINE_SPEED_BONUS;
-        this.maxSpeed = this._baseMaxSpeed * engineMult;
-        this.nitroMaxSpeed = this._baseNitroMaxSpeed * engineMult;
-        this.nitroAccel = this._baseNitroAccel * engineMult;
-
-        // Tire: grip bonus per level (turn speed = cornering ability)
-        const tireMult = 1 + (tireLv - 1) * UPGRADES.TIRE_GRIP_BONUS;
-        this.turnSpeed = this._baseTurnSpeed * tireMult;
-
-        // Body: weight bonus per level (acceleration + brake force)
-        const bodyMult = 1 + (bodyLv - 1) * UPGRADES.BODY_WEIGHT_BONUS;
-        this.acceleration = this._baseAcceleration * bodyMult;
-        this.brakeForce = this._baseBrakeForce * bodyMult;
     }
 
     /**

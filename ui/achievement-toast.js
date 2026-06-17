@@ -62,7 +62,8 @@ export class AchievementToast {
       <div class="achievement-toast-content">
         <span class="achievement-toast-icon">🏆</span>
         <div class="achievement-toast-text">
-          <div class="achievement-toast-title">${achievement.name}</div>
+          <div class="achievement-toast-title">Achievement unlocked!</div>
+          <div class="achievement-toast-name">${achievement.name}</div>
           <div class="achievement-toast-desc">${achievement.description}</div>
           ${rewardText ? `<div class="achievement-toast-reward">${rewardText}</div>` : ''}
         </div>
@@ -84,7 +85,7 @@ export class AchievementToast {
   #formatReward(reward) {
     if (!reward) return '';
     const parts = [];
-    if (reward.track) parts.push('🏁 解锁赛道');
+    if (reward.track) parts.push('🏁 Track unlocked');
     if (reward.fuelCoins) parts.push(`🪙 ${reward.fuelCoins} Fuel Coins`);
     return parts.join(' ');
   }

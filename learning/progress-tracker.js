@@ -18,25 +18,27 @@ import {
   LEARNING,
 } from '../config/learning-config.js';
 
-// 存储键
-const STORAGE_KEY = LEARNING.STORAGE_KEYS.WORD_PROGRESS;
-
 /**
  * ProgressTracker - 单词进度追踪器
  */
 export class ProgressTracker {
   #eventBus;
   #wordSetId;
+  #userId;
+  #storageKey;
   #progress = new Map(); // word -> WordProgress
   #dirty = false;        // 是否有未保存的更改
 
   /**
    * @param {EventBus} eventBus - 事件总线
    * @param {string} [wordSetId] - 词库ID
+   * @param {string} [userId] - 用户ID
    */
-  constructor(eventBus, wordSetId = 'shanghai-zhongkao') {
+  constructor(eventBus, wordSetId = 'shanghai-zhongkao', userId = 'default') {
     this.#eventBus = eventBus;
     this.#wordSetId = wordSetId;
+    this.#userId = userId;
+    this.#storageKey = `wr_word_progress_${userId}`;
     this.#load();
   }
 
@@ -367,7 +369,7 @@ export class ProgressTracker {
         progress: this.getAllProgress(),
         savedAt: new Date().toISOString(),
       };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(this.#storageKey, JSON.stringify(data));
       this.#dirty = false;
     } catch (e) {
       console.warn('[ProgressTracker] Failed to save:', e);
@@ -379,7 +381,18 @@ export class ProgressTracker {
    */
   #load() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      let raw = localStorage.getItem(this.#storageKey);
+
+      // Migration: copy old data to new key (for first user only)
+      if (!raw && this.#userId === 'user_001') {
+        const oldData = localStorage.getItem('wr_word_progress');
+        if (oldData) {
+          raw = oldData;
+          localStorage.setItem(this.#storageKey, raw);
+          console.log(`[ProgressTracker] Migrated old data to ${this.#storageKey}`);
+        }
+      }
+
       if (!raw) return;
 
       const data = JSON.parse(raw);
@@ -402,7 +415,7 @@ export class ProgressTracker {
     this.#progress.clear();
     this.#dirty = true;
     this.save();
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(this.#storageKey);
   }
 
   // ==================== 工具方法 ====================

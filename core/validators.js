@@ -89,15 +89,6 @@ export function isValidCoins(value) {
 }
 
 /**
- * Validate upgrade levels
- */
-export function isValidUpgrades(upgrades) {
-  if (!isObject(upgrades)) return false;
-  const { engine, tire, body } = upgrades;
-  return isValidLevel(engine) && isValidLevel(tire) && isValidLevel(body);
-}
-
-/**
  * Validate quiz mode
  */
 export function isValidQuizMode(mode) {
@@ -252,9 +243,6 @@ export function validateGameStateObject(state) {
   if (!isValidCoins(state.gearCoins)) {
     errors.push('Invalid gearCoins value');
   }
-  if (!isValidUpgrades(state.upgrades)) {
-    errors.push('Invalid upgrades');
-  }
   if (!isArray(state.wrongWords)) {
     errors.push('Invalid wrongWords');
   }
@@ -276,7 +264,6 @@ export function sanitizeGameState(state, defaults) {
   if (isValidFuel(state.fuel)) sanitized.fuel = state.fuel;
   if (isValidCoins(state.fuelCoins)) sanitized.fuelCoins = state.fuelCoins;
   if (isValidCoins(state.gearCoins)) sanitized.gearCoins = state.gearCoins;
-  if (isValidUpgrades(state.upgrades)) sanitized.upgrades = { ...state.upgrades };
   if (isArray(state.wrongWords)) sanitized.wrongWords = state.wrongWords.slice(0, 50);
   if (isArray(state.leaderboard)) {
     sanitized.leaderboard = state.leaderboard

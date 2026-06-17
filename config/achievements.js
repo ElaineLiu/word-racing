@@ -22,8 +22,8 @@ export const ACHIEVEMENTS = {
    */
   'first-quiz': {
     id: 'first-quiz',
-    name: '初次上阵',
-    description: '完成第一套题',
+    name: 'First Pit Stop',
+    description: 'Complete your first quiz.',
     check: (state) => (state.learning?.totalQuizzes || 0) >= 1,
     reward: { track: 'shanghai-2d' }
   },
@@ -33,8 +33,8 @@ export const ACHIEVEMENTS = {
    */
   'quiz-master-10': {
     id: 'quiz-master-10',
-    name: '答题达人',
-    description: '累计完成 10 套题',
+    name: 'Quiz Streak 10',
+    description: 'Complete 10 quizzes.',
     check: (state) => (state.learning?.totalQuizzes || 0) >= 10,
     reward: { track: 'monaco-2d' }
   },
@@ -44,8 +44,8 @@ export const ACHIEVEMENTS = {
    */
   'word-collector-50': {
     id: 'word-collector-50',
-    name: '单词收藏家',
-    description: '掌握 50 个单词',
+    name: 'Word Collector',
+    description: 'Master 50 words.',
     check: (state) => (state.learning?.totalWordsMastered || 0) >= 50,
     reward: { track: 'silverstone-2d' }
   },
@@ -55,8 +55,8 @@ export const ACHIEVEMENTS = {
    */
   'word-master-100': {
     id: 'word-master-100',
-    name: '单词大师',
-    description: '掌握 100 个单词',
+    name: 'Word Master',
+    description: 'Master 100 words.',
     check: (state) => (state.learning?.totalWordsMastered || 0) >= 100,
     reward: { track: 'shanghai-3d' }
   },
@@ -66,8 +66,8 @@ export const ACHIEVEMENTS = {
    */
   'perfect-streak': {
     id: 'perfect-streak',
-    name: '完美连击',
-    description: '单套题全对（10/10）',
+    name: 'Perfect Run',
+    description: 'Answer all 10 questions correctly in one quiz.',
     check: (state) => state.learning?.lastPerfectQuiz === true,
     reward: { fuelCoins: 50 }
   }

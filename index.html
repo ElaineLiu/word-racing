@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Racing - Back words, drive fast!</title>
+    <title>Word Racing - Practice vocabulary. Earn fuel. Win races.</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
     <nav id="top-nav">
         <button class="nav-btn active" data-page="home">Home</button>
         <button class="nav-btn" data-page="quiz">Quiz</button>
-        <button class="nav-btn" data-page="shop">Shop</button>
+        <button class="nav-btn" data-page="shop">Garage</button>
         <button class="nav-btn" data-page="race">Race</button>
         <button class="nav-btn" data-page="report">Report</button>
     </nav>
@@ -19,84 +19,90 @@
     <!-- Page 1: Home -->
     <div id="page-home" class="page active">
         <div class="home-content">
-            <div class="home-header">
+            <!-- Hero Section -->
+            <div class="home-hero">
                 <h1>WORD RACING</h1>
-                <div class="header-actions">
-                    <button id="achievement-btn-home" class="icon-btn" title="成就">🏆</button>
-                    <div class="settings-wrapper">
-                        <button id="home-settings-btn" class="settings-btn" title="Settings">⚙️</button>
-                        <div id="settings-dropdown" class="settings-dropdown" style="display:none;">
-                            <button id="reset-daily-btn" class="settings-menu-item">重置每日答题限制</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <p>Back words, drive fast!</p>
-            <!-- Learning Panel (inserted by LearningUI) -->
-            <div id="learning-panel-container"></div>
-
-            <!-- 学习进度卡片 -->
-            <div id="home-progress" class="progress-card">
-                <div class="progress-title">📚 学习进度</div>
-                <div class="progress-grid">
-                    <div class="progress-item">
-                        <span class="progress-label">今日答题</span>
-                        <span class="progress-value" id="home-quizzes-today">0/3</span>
-                    </div>
-                    <div class="progress-item">
-                        <span class="progress-label">已掌握</span>
-                        <span class="progress-value" id="home-words-mastered">0 词</span>
-                    </div>
-                    <div class="progress-item">
-                        <span class="progress-label">连续学习</span>
-                        <span class="progress-value" id="home-streak">0 天</span>
-                    </div>
-                </div>
+                <p>Practice vocabulary. Earn fuel. Win races.</p>
             </div>
 
-            <!-- 资源信息 -->
-            <div id="home-stats" class="stats-container">
-                <!-- 比赛资源 -->
-                <div class="stats-section">
-                    <div class="stats-section-title">🏁 比赛资源</div>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <span class="stat-icon">⛽</span>
-                            <span class="stat-label">燃油</span>
-                            <span class="stat-value"><span id="home-fuel">0</span>/100</span>
+            <!-- Primary Action -->
+            <div class="home-primary-action">
+                <button id="home-start-btn">Start Today's Practice</button>
+                <p class="home-goal-hint">Daily goal: 3 quizzes</p>
+                <p class="home-action-hint">Earn fuel from practice, then spend it on the track.</p>
+            </div>
+
+            <!-- Dashboard Cards -->
+            <div class="home-dashboard">
+                <!-- Progress Snapshot -->
+                <div class="home-card home-progress-card">
+                    <h3>Daily Progress</h3>
+                    <div class="home-stats-row">
+                        <div class="home-stat">
+                            <span class="home-stat-value" id="home-quizzes-today">0/3</span>
+                            <span class="home-stat-label">Quizzes</span>
                         </div>
-                        <div class="stat-item">
-                            <span class="stat-icon">🔥</span>
-                            <span class="stat-label">氮气</span>
-                            <span class="stat-value" id="home-nitro">0</span>
+                        <div class="home-stat">
+                            <span class="home-stat-value" id="home-words-mastered">0 words</span>
+                            <span class="home-stat-label">Mastered</span>
+                        </div>
+                        <div class="home-stat">
+                            <span class="home-stat-value" id="home-streak">0 days</span>
+                            <span class="home-stat-label">Streak</span>
                         </div>
                     </div>
+                    <div id="learning-panel-container"></div>
                 </div>
-                <!-- 货币资源 -->
-                <div class="stats-section">
-                    <div class="stats-section-title">💰 货币</div>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <span class="stat-icon">🪙</span>
-                            <span class="stat-label">燃油币</span>
-                            <span class="stat-value" id="home-fuel-coins">0</span>
+
+                <!-- Race Readiness -->
+                <div class="home-card home-race-card">
+                    <h3>Race Readiness</h3>
+                    <div class="home-stats-row">
+                        <div class="home-stat">
+                            <span class="home-stat-icon">⛽</span>
+                            <span class="home-stat-value"><span id="home-fuel">0</span>/100</span>
+                            <span class="home-stat-label">Fuel</span>
                         </div>
-                        <div class="stat-item">
-                            <span class="stat-icon">⚙️</span>
-                            <span class="stat-label">齿轮币</span>
-                            <span class="stat-value" id="home-gear-coins">0</span>
+                        <div class="home-stat">
+                            <span class="home-stat-icon">🔥</span>
+                            <span class="home-stat-value" id="home-nitro">0</span>
+                            <span class="home-stat-label">Nitro</span>
+                        </div>
+                        <div class="home-stat">
+                            <span class="home-stat-icon">🪙</span>
+                            <span class="home-stat-value" id="home-fuel-coins">0</span>
+                            <span class="home-stat-label">Fuel Coins</span>
+                        </div>
+                        <div class="home-stat">
+                            <span class="home-stat-icon">⚙️</span>
+                            <span class="home-stat-value" id="home-gear-coins">0</span>
+                            <span class="home-stat-label">Gear Coins</span>
                         </div>
                     </div>
+                    <div id="home-leaderboard"></div>
                 </div>
             </div>
 
-            <div id="home-leaderboard">
-                <!-- Leaderboard will be rendered here -->
+            <!-- Secondary Actions -->
+            <div class="home-secondary-grid">
+                <button id="home-garage-btn" class="home-secondary-btn">
+                    <span class="home-secondary-icon">🏎️</span>
+                    <span class="home-secondary-label">Open Garage</span>
+                </button>
+                <button id="achievement-btn-home" class="home-secondary-btn">
+                    <span class="home-secondary-icon">🏆</span>
+                    <span class="home-secondary-label">View Achievements</span>
+                </button>
+                <button id="home-settings-btn" class="home-secondary-btn home-secondary-btn-small">
+                    <span class="home-secondary-icon">⚙️</span>
+                    <span class="home-secondary-label">Settings</span>
+                </button>
             </div>
-            <div id="home-lap-select">
-                <!-- Lap count selector -->
+
+            <!-- Settings Dropdown -->
+            <div id="settings-dropdown" class="settings-dropdown" style="display:none;">
+                <button id="reset-daily-btn" class="settings-menu-item">Reset Daily Practice Limit</button>
             </div>
-            <button id="home-start-btn">START QUIZ</button>
         </div>
     </div>
 
@@ -119,11 +125,11 @@
                     <div id="quiz-sentence"></div>
                     <div id="quiz-options"></div>
                     <div id="quiz-nav">
-                        <button id="quiz-prev-btn" class="quiz-nav-btn" disabled>◀ 上一题</button>
-                        <button id="quiz-next-btn" class="quiz-nav-btn" disabled>下一题 ▶</button>
+                        <button id="quiz-prev-btn" class="quiz-nav-btn" disabled>◀ Previous</button>
+                        <button id="quiz-next-btn" class="quiz-nav-btn" disabled>Next ▶</button>
                     </div>
                     <div id="quiz-dont-know">
-                        <button id="quiz-dont-know-btn">我不认识 😅</button>
+                        <button id="quiz-dont-know-btn">I'm not sure</button>
                     </div>
                     <div id="quiz-nitro-hint">Correct answer = Nitro boost!</div>
                 </div>
@@ -135,7 +141,7 @@
                     <div id="quiz-learn-meaning"></div>
                     <div id="quiz-learn-sentence"></div>
                     <div id="quiz-learn-sentence-cn"></div>
-                    <button id="quiz-learn-continue-btn">我记住了，继续！</button>
+                    <button id="quiz-learn-continue-btn">Got it. Continue</button>
                 </div>
             </div>
 
@@ -151,10 +157,10 @@
                 <!-- Lap count selector -->
                 <div id="quiz-lap-select"></div>
                 <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px;">
-                    <button id="quiz-restart-btn">RETRY QUIZ</button>
-                    <button id="quiz-start-btn">START RACE</button>
-                    <button id="quiz-shop-btn">GO TO SHOP</button>
-                    <button id="achievement-btn">🏆 成就</button>
+                    <button id="quiz-restart-btn">Try Again</button>
+                    <button id="quiz-start-btn">Start Race</button>
+                    <button id="quiz-shop-btn">Go to Garage</button>
+                    <button id="achievement-btn">🏆 Achievements</button>
                 </div>
             </div>
         </div>
@@ -163,15 +169,15 @@
     <!-- Page 3: Shop -->
     <div id="page-shop" class="page">
         <div id="shop-container">
-            <h2>Pit Shop</h2>
+            <h2>Garage</h2>
             <div id="shop-stats">
                 <div>Fuel Coins: <span id="shop-fuel-coins">0</span></div>
                 <div>Gear Coins: <span id="shop-gear-coins">0</span></div>
-                <div>Fuel: <span id="shop-fuel">0</span>/100</div>
                 <div>Nitro: <span id="shop-nitro">0</span></div>
             </div>
+            <div id="shop-lap-select"></div>
             <div id="shop-tabs">
-                <button id="shop-tab-items" class="active">Items</button>
+                <button id="shop-tab-items" class="active">Supplies</button>
                 <button id="shop-tab-tracks">Tracks</button>
             </div>
             <div id="shop-items">
@@ -181,8 +187,8 @@
                 <!-- Track list will be rendered here -->
             </div>
             <div id="shop-actions">
-                <button id="shop-back-btn">BACK</button>
-                <button id="shop-race-btn">START RACE</button>
+                <button id="shop-back-btn">Back</button>
+                <button id="shop-race-btn">Start Race</button>
             </div>
         </div>
     </div>
@@ -208,34 +214,34 @@
     <div id="page-report" class="page">
         <div class="report-content">
             <div class="report-header">
-                <h2>📊 学习进度报告</h2>
-                <button id="achievement-btn-report" class="icon-btn" title="成就">🏆 成就</button>
+                <h2>Progress Report</h2>
+                <button id="achievement-btn-report" class="icon-btn" title="Achievements">🏆 Achievements</button>
             </div>
 
             <div class="report-section">
-                <h3>累计统计</h3>
+                <h3>All-Time Progress</h3>
                 <div id="report-total-stats" class="report-stats"></div>
             </div>
 
             <div class="report-section">
-                <h3>今日进度</h3>
+                <h3>Today’s Summary</h3>
                 <div id="report-today-stats" class="report-stats"></div>
             </div>
 
             <div class="report-section">
-                <h3>单词掌握状态</h3>
-                <p class="section-hint">已掌握 = 简单题和复杂题都答对；学习中 = 只通过一种题型或有答错</p>
+                <h3>Mastery Overview</h3>
+                <p class="section-hint">Mastered = passed both Basic and Advanced questions; Learning = passed one mode or missed answers.</p>
                 <div id="report-mastery-stats" class="report-stats"></div>
             </div>
 
             <div class="report-section">
-                <h3>错词列表</h3>
+                <h3>Words to Review</h3>
                 <div id="report-wrong-words" class="report-list"></div>
             </div>
 
             <div class="report-section">
-                <h3>单词详情</h3>
-                <p class="section-hint">按答题状态排序，已掌握的排在最后</p>
+                <h3>Word Details</h3>
+                <p class="section-hint">Sorted by practice status, mastered words appear last.</p>
                 <div id="report-word-details" class="report-list"></div>
             </div>
         </div>
@@ -245,7 +251,7 @@
     <div id="achievement-panel" class="modal" style="display:none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>🏆 成就</h2>
+                <h2>Achievements</h2>
                 <button id="achievement-panel-close" class="modal-close">×</button>
             </div>
             <div id="achievement-list"></div>

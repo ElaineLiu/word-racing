@@ -9,7 +9,7 @@
  */
 import { Car } from './car.js';
 import { VocabularyQuiz } from './quiz.js';
-import { ECONOMY, DISPLAY, GAME, UPGRADES } from '../config/game-config.js';
+import { ECONOMY, DISPLAY, GAME } from '../config/game-config.js';
 import { EventBus, Events } from '../core/event-bus.js';
 import { GameState } from '../core/game-state.js';
 import { ShopSystem } from '../systems/shop-system.js';
@@ -17,7 +17,6 @@ import { RenderSystem } from '../rendering/render-system.js';
 import { TRACK_REGISTRY } from '../config/track-registry.js';
 import { FeatureFlags } from '../config/feature-flags.js';
 import { TrackUnlockManager } from '../systems/track-unlock-manager.js';
-import { RacingCostManager } from '../systems/racing-cost-manager.js';
 import { TrackFactory } from '../systems/track-factory.js';
 
 export class Game {
@@ -45,14 +44,12 @@ export class Game {
 
         // Manager instances
         this._trackUnlockManager = new TrackUnlockManager(this._eventBus, this._gameState);
-        this._racingCostManager = new RacingCostManager(this._eventBus, this._gameState);
         this._trackFactory = new TrackFactory(this._eventBus, this._gameState, {
             track3DOptions: this._track3DOptions
         });
 
         // Player resources (legacy 'coins' counter, not persisted — kept for UI compatibility)
         this.coins = 0;
-        this.fuelPerLap = ECONOMY.FUEL_PER_LAP;
         this.raceScore = 0;
         this.totalScore = 0;
         this.raceStartTime = 0;
@@ -95,7 +92,6 @@ export class Game {
             this.track.startPos.angle
         );
         this.quiz = new VocabularyQuiz();
-        this.car.applyUpgrades(this.upgrades);
         // 同步持久化的 nitroCharges 到 Car（运行时单一源）
         this.car.nitroCharges = this._gameState.get('nitroCharges') || 0;
 
@@ -119,11 +115,6 @@ export class Game {
 
     get gearCoins() { return this._gameState.get('gearCoins') || 0; }
     set gearCoins(value) { this._gameState.set('gearCoins', value); }
-
-    get fuel() { return this._gameState.get('fuel') ?? ECONOMY.INITIAL_FUEL; }
-    set fuel(value) { this._gameState.set('fuel', value); }
-
-    get maxFuel() { return ECONOMY.MAX_FUEL; }
 
     get upgrades() { return this._gameState.get('upgrades'); }
     set upgrades(value) { this._gameState.set('upgrades', value); }
@@ -557,7 +548,6 @@ export class Game {
      * Called when player clicks "Start Race" in SHOP
      */
     startRaceFromShop() {
-        if (this.fuel <= 0) return; // safety guard
         return this.continueToRace();
     }
 
@@ -565,16 +555,11 @@ export class Game {
         // 清理 3D HUD
         this._disposeHUD3DManager();
 
-        // BugFix: Deduct fuel when race completes (real-time based on distance)
-        // Same logic as exitRace(): lapsDone * fuelPerLap + partialFuel
-        const progress = this.car.lastProgress || 0;
-        const lapsDone = Math.max(0, this.car.lap);
-        const partialFuel = this.fuelPerLap * Math.max(0, progress);
-        const totalFuelUsed = lapsDone * this.fuelPerLap + partialFuel;
-        this.fuel = Math.max(0, this.fuel - totalFuelUsed);
-
         // 同步赛车运行时 nitro 到持久化层（单一源 Car → GameState）
         this._gameState.set('nitroCharges', this.car.nitroCharges);
+
+        // 按实际圈数扣费
+        this._chargeFuelCoinsByActualLaps();
 
         if (this.isCurrentTrack3D() && this.car.bestLapTime === Infinity) {
             this.car.bestLapTime = this.raceTime;
@@ -597,15 +582,12 @@ export class Game {
         if (this.car.bestLapTime < Infinity) {
             this.saveLapTime(this.car.bestLapTime, this.totalLaps);
         }
-        // 按已完成的圈数 + 当前圈进度比例扣除燃油
-        const progress = this.car.lastProgress || 0;
-        const lapsDone = Math.max(0, this.car.lap); // 已完成的整圈数
-        const partialFuel = this.fuelPerLap * Math.max(0, progress); // 当前圈按比例扣
-        const totalFuelUsed = lapsDone * this.fuelPerLap + partialFuel;
-        this.fuel = Math.max(0, this.fuel - totalFuelUsed);
 
         // 同步赛车运行时 nitro 到持久化层
         this._gameState.set('nitroCharges', this.car.nitroCharges);
+
+        // 按实际圈数扣费
+        this._chargeFuelCoinsByActualLaps();
 
         const exitPayload = {
             trackId: this.selectedTrackId,
@@ -629,6 +611,30 @@ export class Game {
         this.state = 'HOME';
         this._eventBus.emit(Events.RACE_EXIT, exitPayload);
         return 'HOME';
+    }
+
+    /**
+     * 按实际跑的圈数扣费
+     * 扣费公式：实际圈数 × 10 金币
+     * 实际圈数 = car.lap + (car.lastProgress || 0)
+     * 例如：跑 2.5 圈，扣 25 金币
+     */
+    _chargeFuelCoinsByActualLaps() {
+        // 计算实际圈数
+        let actualLaps = this.car.lap + (this.car.lastProgress || 0);
+
+        // 扣费（向上取整，最少扣 0 金币）
+        const cost = Math.ceil(actualLaps * 10);
+        const currentCoins = this._gameState.get('fuelCoins') || 0;
+        const finalCost = Math.max(0, Math.min(cost, currentCoins));
+
+        this._gameState.set('fuelCoins', currentCoins - finalCost);
+
+        // 记录扣费日志（调试用）
+        console.log(`[Race Cost] Actual laps: ${actualLaps.toFixed(2)}, Cost: ${finalCost} fuel coins`);
+
+        // 清除比赛开始时记录的状态
+        this._raceStartFuelCoins = null;
     }
 
     /**
@@ -679,16 +685,14 @@ export class Game {
             throw new Error(`Track not available: ${trackId}`);
         }
 
-        // 使用 RacingCostManager 扣除金币
-        const result = this._racingCostManager.deductCost(trackId);
-        if (!result.success) {
-            throw new Error(result.error);
-        }
-
         return this._prepareRaceAfterCost(trackId, trackDef);
     }
 
     async _prepareRaceAfterCost(trackId, trackDef) {
+        // 不再扣费，改为比赛结束时按实际圈数扣费
+        // 记录比赛开始时的状态（用于调试）
+        this._raceStartFuelCoins = this._gameState.get('fuelCoins') || 0;
+
         try {
             this._disposeRaceSession3D();
             this._disposeHUD3DManager();
@@ -724,8 +728,7 @@ export class Game {
                 }
             }
         } catch (error) {
-            // 创建失败，退款
-            this._racingCostManager.refund(trackId);
+            // 创建失败，无需退款（因为还没扣费）
             this._disposeRaceSession3D();
             this._disposeHUD3DManager();
             throw error;
@@ -841,8 +844,7 @@ export class Game {
 
         return availableTracks.map(track => ({
             ...track,
-            unlocked: this._trackUnlockManager.isUnlocked(track.id),
-            canAfford: this._racingCostManager.canAfford(track.id)
+            unlocked: this._trackUnlockManager.isUnlocked(track.id)
         }));
     }
 

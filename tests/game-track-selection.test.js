@@ -65,9 +65,8 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
 
   // ==================== selectTrack ====================
   describe('selectTrack(trackId) - UC-02', () => {
-    it('Main: 选择已解锁且金币足够的赛道，应更新 selectedTrackId 到 GameState', () => {
+    it('Main: 选择已解锁的赛道，应更新 selectedTrackId 到 GameState', () => {
       gameState.set('unlockedTracks', ['shanghai-2d', 'monaco-2d']);
-      gameState.set('fuelCoins', 100);
 
       game.selectTrack('monaco-2d');
 
@@ -77,48 +76,24 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
 
     it('A1: 赛道未解锁应抛出 Track not unlocked', () => {
       gameState.set('unlockedTracks', ['shanghai-2d']);
-      gameState.set('fuelCoins', 100);
 
       expect(() => game.selectTrack('monaco-2d')).toThrow('Track not unlocked');
       // selectedTrackId 不应改变
       expect(game.selectedTrackId).toBe('shanghai-2d');
     });
 
-    it('A2: 金币不足应抛出 Insufficient fuel coins', () => {
-      gameState.set('unlockedTracks', ['shanghai-2d', 'monaco-2d']);
-      gameState.set('fuelCoins', 5); // monaco 需要 15
-
-      expect(() => game.selectTrack('monaco-2d')).toThrow('Insufficient fuel coins');
-      expect(gameState.get('selectedTrackId')).toBe('shanghai-2d');
-    });
-
     it('A3: 赛道不存在应抛出 Unknown track', () => {
-      gameState.set('fuelCoins', 100);
-
       expect(() => game.selectTrack('non-existent')).toThrow('Unknown track');
-    });
-
-    it('金币恰好等于 cost 应允许选择（边界值）', () => {
-      gameState.set('unlockedTracks', ['shanghai-2d', 'monaco-2d']);
-      gameState.set('fuelCoins', 15); // 正好等于 monaco 的 cost
-
-      expect(() => game.selectTrack('monaco-2d')).not.toThrow();
-      expect(game.selectedTrackId).toBe('monaco-2d');
     });
   });
 
   // ==================== startRace ====================
   describe('startRace() - UC-03', () => {
     beforeEach(() => {
-      // 默认场景：玩家已选 shanghai-2d，金币充足
+      // 默认场景：玩家已选 shanghai-2d，有足够金币
       gameState.set('unlockedTracks', ['shanghai-2d', 'monaco-2d']);
-      gameState.set('fuelCoins', 100);
+      gameState.set('fuelCoins', 100);  // 添加足够的金币
       gameState.set('selectedTrackId', 'shanghai-2d');
-    });
-
-    it('Main: 应从 GameState 扣除赛道 cost', () => {
-      game.startRace();
-      expect(gameState.get('fuelCoins')).toBe(90); // 100 - 10
     });
 
     it('Main: 2D 赛道应创建 Track 实例', () => {
@@ -157,16 +132,9 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
       expect(game._renderSystem).toBeDefined();
     });
 
-    it('A1: 金币不足应抛出 Insufficient fuel coins 且不扣金币', () => {
-      gameState.set('fuelCoins', 5);
-      expect(() => game.startRace()).toThrow('Insufficient fuel coins');
-      expect(gameState.get('fuelCoins')).toBe(5); // 不扣
-    });
-
     it('3D 赛道在 feature flag 关闭时不可用', () => {
       FeatureFlags.disable('3d-track');
       gameState.set('unlockedTracks', ['shanghai-3d']);
-      gameState.set('fuelCoins', 100);
       gameState.set('selectedTrackId', 'shanghai-3d');
 
       expect(() => game.startRace()).toThrow('Track not available: shanghai-3d');
@@ -196,28 +164,12 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
       expect(tracks.find(t => t.id === 'silverstone-2d').unlocked).toBe(false);
     });
 
-    it('应正确标记 canAfford 状态', () => {
-      gameState.set('fuelCoins', 12);
-      const tracks = game.getAvailableTracks();
-      expect(tracks.find(t => t.id === 'shanghai-2d').canAfford).toBe(true);  // cost 10
-      expect(tracks.find(t => t.id === 'monaco-2d').canAfford).toBe(false); // cost 15
-    });
-
     it('应保留 registry 中的所有原始字段', () => {
       const tracks = game.getAvailableTracks();
       const shanghai = tracks.find(t => t.id === 'shanghai-2d');
       expect(shanghai.name).toBe(TRACK_REGISTRY['shanghai-2d'].name);
-      expect(shanghai.cost).toBe(TRACK_REGISTRY['shanghai-2d'].cost);
       expect(shanghai.type).toBe('2d');
       expect(shanghai.waypoints).toBeDefined();
-    });
-
-    it('金币为 0 时所有 canAfford 应为 false', () => {
-      gameState.set('fuelCoins', 0);
-      const tracks = game.getAvailableTracks();
-      tracks.forEach(t => {
-        expect(t.canAfford).toBe(false);
-      });
     });
   });
 
@@ -225,17 +177,27 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
   describe('完整流程 (UC-02 + UC-03 集成)', () => {
     it('解锁 → 选择 → 开始比赛 全链路应正确', () => {
       gameState.set('unlockedTracks', ['shanghai-2d', 'monaco-2d']);
-      gameState.set('fuelCoins', 50);
+      gameState.set('fuelCoins', 100);  // 添加足够的金币
 
       // 选择
       game.selectTrack('monaco-2d');
       expect(game.selectedTrackId).toBe('monaco-2d');
 
-      // 开始比赛
+      // 开始比赛（不再扣费）
       game.startRace();
-      expect(gameState.get('fuelCoins')).toBe(35); // 50 - 15
       expect(game.state).toBe('COUNTDOWN');
       expect(game.track.trackWidth).toBe(50);
+      // 比赛开始时不扣费
+      expect(gameState.get('fuelCoins')).toBe(100);
+
+      // 模拟跑 1 圈后完赛
+      game.car.lap = 1;
+      game.car.lastProgress = 0;
+      game.car.finished = true;
+      game._showResults();
+
+      // 比赛结束时扣费：1 圈 × 10 = 10 金币
+      expect(gameState.get('fuelCoins')).toBe(90);
     });
   });
 });

@@ -263,7 +263,6 @@ describe('HomeView', () => {
     view.updateStats();
 
     // 比赛资源
-    expect(document.getElementById('home-fuel').textContent).toBe('50');
     expect(document.getElementById('home-nitro').textContent).toBe('2');
 
     // 货币资源
@@ -272,8 +271,8 @@ describe('HomeView', () => {
 
     // 学习进度
     expect(document.getElementById('home-quizzes-today').textContent).toBe('1/3');
-    expect(document.getElementById('home-words-mastered').textContent).toBe('25 词');
-    expect(document.getElementById('home-streak').textContent).toBe('3 天');
+    expect(document.getElementById('home-words-mastered').textContent).toBe('25 words');
+    expect(document.getElementById('home-streak').textContent).toBe('3 days');
   });
 
   it('should emit QUIZ_START when start button clicked', () => {

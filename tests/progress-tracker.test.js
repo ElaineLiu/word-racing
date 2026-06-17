@@ -30,7 +30,7 @@ describe('ProgressTracker', () => {
     });
 
     it('should load existing progress from localStorage', () => {
-      // Setup: save some progress
+      // Setup: save some progress (using multi-user key)
       const existingData = {
         wordSetId: 'shanghai-zhongkao',
         progress: {
@@ -49,10 +49,11 @@ describe('ProgressTracker', () => {
         },
         savedAt: '2026-05-25T10:00:00Z',
       };
-      localStorage.setItem('wr_word_progress', JSON.stringify(existingData));
+      // Use multi-user key format (default user)
+      localStorage.setItem('wr_word_progress_default', JSON.stringify(existingData));
 
       // Create new tracker - should load existing
-      const newTracker = new ProgressTracker(eventBus);
+      const newTracker = new ProgressTracker(eventBus, 'shanghai-zhongkao', 'default');
       const status = newTracker.getStatus('speed');
       expect(status).not.toBeNull();
       expect(status.status).toBe(MASTERY_STATUS.SIMPLE_PASSED);
@@ -279,7 +280,7 @@ describe('ProgressTracker', () => {
       tracker.updateStatus('persist_test', 'PIT_BOARD', true, 100);
       tracker.save();
 
-      const stored = JSON.parse(localStorage.getItem('wr_word_progress'));
+      const stored = JSON.parse(localStorage.getItem('wr_word_progress_default'));
       expect(stored.progress['persist_test']).toBeDefined();
       expect(stored.progress['persist_test'].simpleCorrect).toBe(true);
     });

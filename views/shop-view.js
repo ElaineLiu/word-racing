@@ -20,6 +20,7 @@ export class ShopView extends BaseView {
     super.mount();
     this.#setupEventListeners();
     this.#subscribeToEvents();
+    this.renderLapSelector();
     this.render();
   }
 
@@ -27,13 +28,13 @@ export class ShopView extends BaseView {
     this.updateStats();
     this.renderItems();
     this.renderTracks();
+    this.renderLapSelector();
     this.#applyTabVisibility();
   }
 
   updateStats() {
     this.setText('#shop-fuel-coins', this.#game.fuelCoins);
     this.setText('#shop-gear-coins', this.#game.gearCoins);
-    this.setText('#shop-fuel', Math.round(this.#game.fuel));
     this.setText('#shop-nitro', this.#game.nitroCharges);
   }
 
@@ -83,11 +84,11 @@ export class ShopView extends BaseView {
     overview.className = 'track-unlock-overview';
     overview.style.cssText = 'background: rgba(33, 150, 243, 0.08); border-left: 3px solid #2196F3; padding: 10px 12px; margin-bottom: 12px; border-radius: 4px; font-size: 13px; line-height: 1.6;';
     overview.innerHTML = `
-      <div style="font-weight: 600; margin-bottom: 6px;">📖 如何解锁新赛道？</div>
+      <div style="font-weight: 600; margin-bottom: 6px;">How to unlock new tracks</div>
       <div style="color: var(--text-muted, #888);">
-        • 通过答题积累「已学单词」和「已掌握单词」<br>
-        • 达到下方进度条要求后，赛道会通过成就<strong>自动解锁</strong><br>
-        • 解锁后再支付对应燃油币即可开始比赛
+        • Complete quizzes to build words learned and words mastered<br>
+        • Meet the progress requirements below to unlock tracks automatically through achievements<br>
+        • Once unlocked, select a track to race
       </div>
     `;
     container.appendChild(overview);
@@ -106,7 +107,7 @@ export class ShopView extends BaseView {
 
       // 基本信息
       let infoHTML = `<strong>${lockIcon}${track.name}</strong>
-        <span class="text-muted">- ${track.description} (${track.cost} 燃油币)</span>`;
+        <span class="text-muted">- ${track.description}</span>`;
 
       // 解锁进度（如果未解锁）
       if (!track.unlocked && this.#game._trackUnlockManager) {
@@ -117,27 +118,27 @@ export class ShopView extends BaseView {
           // 计算还差多少
           const remaining = [];
           if (req.wordsLearned.required > 0 && req.wordsLearned.current < req.wordsLearned.required) {
-            remaining.push(`再学 ${req.wordsLearned.required - req.wordsLearned.current} 个单词`);
+            remaining.push(`Learn ${req.wordsLearned.required - req.wordsLearned.current} more words`);
           }
           if (req.quizzesCompleted.required > 0 && req.quizzesCompleted.current < req.quizzesCompleted.required) {
-            remaining.push(`再完成 ${req.quizzesCompleted.required - req.quizzesCompleted.current} 套题`);
+            remaining.push(`Complete ${req.quizzesCompleted.required - req.quizzesCompleted.current} more quizzes`);
           }
           if (req.masteryCount.required > 0 && req.masteryCount.current < req.masteryCount.required) {
-            remaining.push(`再掌握 ${req.masteryCount.required - req.masteryCount.current} 个单词`);
+            remaining.push(`Master ${req.masteryCount.required - req.masteryCount.current} more words`);
           }
 
           infoHTML += '<div class="unlock-requirements" style="margin-top: 8px; font-size: 12px;">';
 
           if (remaining.length > 0) {
-            infoHTML += `<div style="color: #FF9800; margin-bottom: 6px;">⏳ 还差：${remaining.join('，')}</div>`;
+            infoHTML += `<div style="color: #FF9800; margin-bottom: 6px;">Remaining: ${remaining.join(', ')}</div>`;
           } else {
-            infoHTML += `<div style="color: #4CAF50; margin-bottom: 6px;">✓ 条件已满足，完成下一套题即可解锁</div>`;
+            infoHTML += `<div style="color: #4CAF50; margin-bottom: 6px;">Requirements met. Complete your next quiz to unlock this track.</div>`;
           }
 
           // 进度条
           if (req.wordsLearned.required > 0) {
             const percent = Math.min(100, (req.wordsLearned.current / req.wordsLearned.required) * 100);
-            infoHTML += `<div>已学单词：${req.wordsLearned.current}/${req.wordsLearned.required}
+            infoHTML += `<div>Words learned: ${req.wordsLearned.current}/${req.wordsLearned.required}
               <div style="background: #eee; height: 4px; border-radius: 2px; margin-top: 2px;">
                 <div style="background: #4CAF50; width: ${percent}%; height: 100%; border-radius: 2px;"></div>
               </div>
@@ -146,7 +147,7 @@ export class ShopView extends BaseView {
 
           if (req.quizzesCompleted.required > 0) {
             const percent = Math.min(100, (req.quizzesCompleted.current / req.quizzesCompleted.required) * 100);
-            infoHTML += `<div style="margin-top: 6px;">已完成题数：${req.quizzesCompleted.current}/${req.quizzesCompleted.required}
+            infoHTML += `<div style="margin-top: 6px;">Quizzes completed: ${req.quizzesCompleted.current}/${req.quizzesCompleted.required}
               <div style="background: #eee; height: 4px; border-radius: 2px; margin-top: 2px;">
                 <div style="background: #2196F3; width: ${percent}%; height: 100%; border-radius: 2px;"></div>
               </div>
@@ -155,7 +156,7 @@ export class ShopView extends BaseView {
 
           if (req.masteryCount.required > 0) {
             const percent = Math.min(100, (req.masteryCount.current / req.masteryCount.required) * 100);
-            infoHTML += `<div style="margin-top: 6px;">已掌握：${req.masteryCount.current}/${req.masteryCount.required}
+            infoHTML += `<div style="margin-top: 6px;">Mastered: ${req.masteryCount.current}/${req.masteryCount.required}
               <div style="background: #eee; height: 4px; border-radius: 2px; margin-top: 2px;">
                 <div style="background: #FF9800; width: ${percent}%; height: 100%; border-radius: 2px;"></div>
               </div>
@@ -171,15 +172,13 @@ export class ShopView extends BaseView {
 
       const btn = document.createElement('button');
       if (!track.unlocked) {
-        btn.textContent = '未解锁';
+        btn.textContent = 'Locked';
       } else if (track.id === selectedId) {
-        btn.textContent = '已选择';
-      } else if (!track.canAfford) {
-        btn.textContent = '燃油币不足';
+        btn.textContent = 'Selected';
       } else {
-        btn.textContent = '选择';
+        btn.textContent = 'Select';
       }
-      btn.disabled = !track.unlocked || !track.canAfford || track.id === selectedId;
+      btn.disabled = !track.unlocked || track.id === selectedId;
       btn.addEventListener('click', () => this.#handleTrackSelect(track.id));
       div.appendChild(btn);
 
@@ -195,11 +194,7 @@ export class ShopView extends BaseView {
     } catch (err) {
       // UC-02 Alternative Scenarios: 用户友好的错误提示
       if (err.message === 'Track not unlocked') {
-        alert('该赛道尚未解锁！请完成成就解锁。');
-      } else if (err.message === 'Insufficient fuel coins') {
-        const track = this.#game.getAvailableTracks().find(t => t.id === trackId);
-        const cost = track ? track.cost : 0;
-        alert(`燃油币不足！需要 ${cost} 燃油币。`);
+        alert('This track is locked. Complete the achievement requirements to unlock it.');
       } else {
         console.warn('selectTrack failed:', err.message);
       }
@@ -225,20 +220,9 @@ export class ShopView extends BaseView {
 
   #canBuyItem(item) {
     if (item.currency === 'fuel') {
-      const canAfford = this.#game.fuelCoins >= item.cost;
-      // For fuel items, check if tank is not full
-      if (item.effect?.fuel) {
-        return canAfford && this.#game.fuel < this.#game.maxFuel;
-      }
-      return canAfford;
+      return this.#game.fuelCoins >= item.cost;
     } else if (item.currency === 'gear') {
-      const canAfford = this.#game.gearCoins >= item.cost;
-      // For upgrades, check if not maxed
-      if (item.upgrade && this.#game.upgrades) {
-        const currentLevel = this.#game.upgrades[item.upgrade] || 1;
-        return canAfford && currentLevel < 4; // MAX_LEVEL = 4
-      }
-      return canAfford;
+      return this.#game.gearCoins >= item.cost;
     }
     return false;
   }
@@ -249,6 +233,31 @@ export class ShopView extends BaseView {
     this.emit(Events.SHOP_PURCHASE, { itemId });
   }
 
+  // ==================== Lap Selector ====================
+
+  renderLapSelector() {
+    const container = this.$('#shop-lap-select');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    const label = document.createElement('span');
+    label.textContent = 'Laps: ';
+    label.className = 'lap-label';
+    container.appendChild(label);
+
+    for (let i = 1; i <= 5; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.className = 'lap-btn' + (i === this.#game.selectedLaps ? ' active' : '');
+      btn.addEventListener('click', () => {
+        this.#game.setLapCount(i);
+        this.renderLapSelector();
+      });
+      container.appendChild(btn);
+    }
+  }
+
   #setupEventListeners() {
     this.onClick('#shop-back-btn', () => {
       this.emit(Events.VIEW_CHANGE, { view: 'home' });
@@ -256,18 +265,14 @@ export class ShopView extends BaseView {
 
     this.onClick('#shop-race-btn', async () => {
       const button = this.$('#shop-race-btn');
-      if (this.#game.fuel > 0) {
-        try {
-          if (button) button.disabled = true;
-          await this.#game.continueToRace();
-          this.emit(Events.RACE_START, { source: 'shop' });
-        } catch (err) {
-          alert(err.message);
-        } finally {
-          if (button) button.disabled = false;
-        }
-      } else {
-        alert('Need fuel! Go to quiz to earn fuel coins.');
+      try {
+        if (button) button.disabled = true;
+        await this.#game.continueToRace();
+        this.emit(Events.RACE_START, { source: 'shop' });
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        if (button) button.disabled = false;
       }
     });
 
