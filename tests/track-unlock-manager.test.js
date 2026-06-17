@@ -66,22 +66,20 @@ describe('TrackUnlockManager', () => {
       expect(progress).toEqual({ unlocked: true });
     });
 
-    it('should return cost and type for locked track', () => {
+    it('should return type for locked track', () => {
       gameState.set('unlockedTracks', ['shanghai-2d']);
 
       const progress = manager.getUnlockProgress('monaco-2d');
 
       expect(progress.unlocked).toBe(false);
-      expect(progress.cost).toBe(15);
       expect(progress.type).toBe('2d');
       expect(progress.requirements).toBeDefined();
     });
 
-    it('should return cost for shanghai-3d', () => {
+    it('should return type for shanghai-3d', () => {
       const progress = manager.getUnlockProgress('shanghai-3d');
 
       expect(progress.unlocked).toBe(false);
-      expect(progress.cost).toBe(10);
       expect(progress.type).toBe('3d');
       expect(progress.requirements).toBeDefined();
       expect(progress.requirements.masteryCount.required).toBe(200);

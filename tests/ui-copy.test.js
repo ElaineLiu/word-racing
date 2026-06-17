@@ -52,11 +52,11 @@ describe('English UI copy', () => {
   it('keeps Garage track state copy in English', () => {
     const source = readProjectFile('views/shop-view.js');
 
-    ['Locked', 'Selected', 'Not enough fuel coins', 'Select', 'Fuel Coins'].forEach(copy => {
+    ['Locked', 'Selected', 'Select', 'Fuel Coins'].forEach(copy => {
       expect(source).toContain(copy);
     });
 
-    ["'未解锁'", "'已选择'", "'燃油币不足'", "'选择'"].forEach(copy => {
+    ["'未解锁'", "'已选择'", "'选择'"].forEach(copy => {
       expect(source).not.toContain(copy);
     });
   });

@@ -71,7 +71,7 @@ describe('Game 3D integration', () => {
     eventBus.on(Events.RACE_FINISH, finishHandler);
     const { game, gameState } = createGame({ eventBus });
 
-    gameState.set('fuelCoins', 100);
+    gameState.set('fuelCoins', 100);  // 添加足够的金币
     gameState.set('fuel', 100);
     gameState.set('unlockedTracks', ['shanghai-2d']);
     gameState.set('selectedTrackId', 'shanghai-2d');
@@ -90,7 +90,7 @@ describe('Game 3D integration', () => {
 
   it('should prepare 2D races through async continueToRace without changing behavior', async () => {
     const { game, gameState } = createGame();
-    gameState.set('fuelCoins', 100);
+    gameState.set('fuelCoins', 100);  // 添加足够的金币
     gameState.set('unlockedTracks', ['shanghai-2d']);
     gameState.set('selectedTrackId', 'shanghai-2d');
 
@@ -100,17 +100,37 @@ describe('Game 3D integration', () => {
     await result;
     expect(game.state).toBe(GAME.STATES.COUNTDOWN);
     expect(game.track.constructor.name).toBe('Track');
+    // 比赛开始时不扣费
+    expect(gameState.get('fuelCoins')).toBe(100);
+
+    // 模拟跑 1 圈后完赛
+    game.car.lap = 1;
+    game.car.lastProgress = 0;
+    game.car.finished = true;
+    game._showResults();
+
+    // 比赛结束时扣费：1 圈 × 10 = 10 金币
     expect(gameState.get('fuelCoins')).toBe(90);
   });
 
   it('should not double deduct while race preparation is pending', async () => {
     const { game, gameState } = createGame();
-    gameState.set('fuelCoins', 100);
+    gameState.set('fuelCoins', 100);  // 添加足够的金币
     gameState.set('unlockedTracks', ['shanghai-2d']);
     gameState.set('selectedTrackId', 'shanghai-2d');
 
     await Promise.all([game.continueToRace(), game.continueToRace()]);
 
+    // 比赛开始时不扣费
+    expect(gameState.get('fuelCoins')).toBe(100);
+
+    // 模拟跑 1 圈后完赛
+    game.car.lap = 1;
+    game.car.lastProgress = 0;
+    game.car.finished = true;
+    game._showResults();
+
+    // 只扣一次
     expect(gameState.get('fuelCoins')).toBe(90);
   });
 
@@ -118,7 +138,7 @@ describe('Game 3D integration', () => {
     const { game, gameState, eventBus, rendererFactory } = createGame();
     const trackSelectedHandler = vi.fn();
     eventBus.on(Events.TRACK_SELECTED, trackSelectedHandler);
-    gameState.set('fuelCoins', 100);
+    gameState.set('fuelCoins', 100);  // 添加足够的金币
     gameState.set('fuel', 100);
     gameState.set('unlockedTracks', ['shanghai-2d', 'shanghai-3d']);
     gameState.set('selectedTrackId', 'shanghai-3d');
@@ -132,19 +152,29 @@ describe('Game 3D integration', () => {
     expect(game.car.model).toBeDefined();
     expect(game.get3DRaceSession().aiCars).toHaveLength(3);
     expect(game.get3DRaceSession().playerRank).toBeGreaterThanOrEqual(1);
-    expect(gameState.get('fuelCoins')).toBe(90);
+    // 比赛开始时不扣费
+    expect(gameState.get('fuelCoins')).toBe(100);
     expect(rendererFactory).toHaveBeenCalled();
     expect(trackSelectedHandler).toHaveBeenCalledWith(expect.objectContaining({
       trackId: 'shanghai-3d',
       type: '3d',
     }));
+
+    // 模拟跑 1 圈后完赛
+    game.car.lap = 1;
+    game.car.lastProgress = 0;
+    game.car.finished = true;
+    game._showResults();
+
+    // 比赛结束时扣费：1 圈 × 10 = 10 金币
+    expect(gameState.get('fuelCoins')).toBe(90);
   });
 
   it('should update, render, and finish 3D races with ranking payload', async () => {
     const { game, gameState, eventBus } = createGame();
     const finishHandler = vi.fn();
     eventBus.on(Events.RACE_FINISH, finishHandler);
-    gameState.set('fuelCoins', 100);
+    gameState.set('fuelCoins', 100);  // 添加足够的金币
     gameState.set('fuel', 100);
     gameState.set('unlockedTracks', ['shanghai-2d', 'shanghai-3d']);
     gameState.set('selectedTrackId', 'shanghai-3d');
@@ -167,35 +197,37 @@ describe('Game 3D integration', () => {
     }));
   });
 
-  it('should block 3D race when feature flag is disabled and keep cost unchanged', async () => {
+  it('should block 3D race when feature flag is disabled', async () => {
     const { game, gameState } = createGame();
     FeatureFlags.disable('3d-track');
-    gameState.set('fuelCoins', 100);
+    gameState.set('fuelCoins', 100);  // 添加足够的金币
     gameState.set('unlockedTracks', ['shanghai-2d', 'shanghai-3d']);
     gameState.set('selectedTrackId', 'shanghai-3d');
 
     await expect(game.continueToRace()).rejects.toThrow('Track not available: shanghai-3d');
 
+    // 金币未扣除
     expect(gameState.get('fuelCoins')).toBe(100);
     expect(game.get3DRaceSession()).toBe(null);
   });
 
-  it('should refund 3D race cost if renderer creation fails', async () => {
+  it('should handle renderer creation failure and refund coins', async () => {
     const rendererFactory = createRendererFactory({ fail: true });
     const { game, gameState } = createGame({ rendererFactory });
-    gameState.set('fuelCoins', 100);
+    gameState.set('fuelCoins', 100);  // 添加足够的金币
     gameState.set('unlockedTracks', ['shanghai-2d', 'shanghai-3d']);
     gameState.set('selectedTrackId', 'shanghai-3d');
 
     await expect(game.continueToRace()).rejects.toThrow('Renderer failed');
 
+    // 金币已退还
     expect(gameState.get('fuelCoins')).toBe(100);
     expect(game.get3DRaceSession()).toBe(null);
   });
 
   it('should toggle pause and resume with Tab during 3D race', async () => {
     const { game, gameState } = createGame();
-    gameState.set('fuelCoins', 100);
+    gameState.set('fuelCoins', 100);  // 添加足够的金币
     gameState.set('fuel', 100);
     gameState.set('unlockedTracks', ['shanghai-2d', 'shanghai-3d']);
     gameState.set('selectedTrackId', 'shanghai-3d');
@@ -211,7 +243,7 @@ describe('Game 3D integration', () => {
 
   it('should dispose 3D session when exiting race', async () => {
     const { game, gameState } = createGame();
-    gameState.set('fuelCoins', 100);
+    gameState.set('fuelCoins', 100);  // 添加足够的金币
     gameState.set('fuel', 100);
     gameState.set('unlockedTracks', ['shanghai-2d', 'shanghai-3d']);
     gameState.set('selectedTrackId', 'shanghai-3d');

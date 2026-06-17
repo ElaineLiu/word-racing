@@ -558,6 +558,9 @@ export class Game {
         // 同步赛车运行时 nitro 到持久化层（单一源 Car → GameState）
         this._gameState.set('nitroCharges', this.car.nitroCharges);
 
+        // 按实际圈数扣费
+        this._chargeFuelCoinsByActualLaps();
+
         if (this.isCurrentTrack3D() && this.car.bestLapTime === Infinity) {
             this.car.bestLapTime = this.raceTime;
         }
@@ -583,6 +586,9 @@ export class Game {
         // 同步赛车运行时 nitro 到持久化层
         this._gameState.set('nitroCharges', this.car.nitroCharges);
 
+        // 按实际圈数扣费
+        this._chargeFuelCoinsByActualLaps();
+
         const exitPayload = {
             trackId: this.selectedTrackId,
             trackType: this.getCurrentTrackType(),
@@ -605,6 +611,30 @@ export class Game {
         this.state = 'HOME';
         this._eventBus.emit(Events.RACE_EXIT, exitPayload);
         return 'HOME';
+    }
+
+    /**
+     * 按实际跑的圈数扣费
+     * 扣费公式：实际圈数 × 10 金币
+     * 实际圈数 = car.lap + (car.lastProgress || 0)
+     * 例如：跑 2.5 圈，扣 25 金币
+     */
+    _chargeFuelCoinsByActualLaps() {
+        // 计算实际圈数
+        let actualLaps = this.car.lap + (this.car.lastProgress || 0);
+
+        // 扣费（向上取整，最少扣 0 金币）
+        const cost = Math.ceil(actualLaps * 10);
+        const currentCoins = this._gameState.get('fuelCoins') || 0;
+        const finalCost = Math.max(0, Math.min(cost, currentCoins));
+
+        this._gameState.set('fuelCoins', currentCoins - finalCost);
+
+        // 记录扣费日志（调试用）
+        console.log(`[Race Cost] Actual laps: ${actualLaps.toFixed(2)}, Cost: ${finalCost} fuel coins`);
+
+        // 清除比赛开始时记录的状态
+        this._raceStartFuelCoins = null;
     }
 
     /**
@@ -659,6 +689,10 @@ export class Game {
     }
 
     async _prepareRaceAfterCost(trackId, trackDef) {
+        // 不再扣费，改为比赛结束时按实际圈数扣费
+        // 记录比赛开始时的状态（用于调试）
+        this._raceStartFuelCoins = this._gameState.get('fuelCoins') || 0;
+
         try {
             this._disposeRaceSession3D();
             this._disposeHUD3DManager();
@@ -694,7 +728,7 @@ export class Game {
                 }
             }
         } catch (error) {
-            // 创建失败，清理资源
+            // 创建失败，无需退款（因为还没扣费）
             this._disposeRaceSession3D();
             this._disposeHUD3DManager();
             throw error;

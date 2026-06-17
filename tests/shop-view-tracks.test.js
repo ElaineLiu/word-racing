@@ -3,10 +3,10 @@
  *
  * 验证 ShopView 的赛道标签页功能：
  *   - 标签切换（道具 / 赛道）
- *   - 赛道列表渲染（已解锁/未解锁、可购买/金币不足）
+ *   - 赛道列表渲染（已解锁/未解锁）
  *   - 当前选中赛道高亮
  *   - 点击选择赛道调用 game.selectTrack()
- *   - 错误处理（未解锁、金币不足）
+ *   - 错误处理（未解锁）
  *
  * 借鉴 ISSUE_LOG #001（解锁≠免费）和 #003（Alternative Scenario 必须测试）。
  */
@@ -60,7 +60,6 @@ function createMockGame(overrides = {}) {
     getAvailableTracks: vi.fn(() => Object.values(TRACK_REGISTRY).map(t => ({
       ...t,
       unlocked: t.id === 'shanghai-2d',
-      canAfford: 50 >= t.cost,
     }))),
     selectTrack: vi.fn(function (id) { this.selectedTrackId = id; }),
     ...overrides,
@@ -129,9 +128,9 @@ describe('ShopView - 赛道标签页 (Phase 3.4)', () => {
     });
 
     it('已解锁但未选中的赛道应显示可点的选择按钮', () => {
-      // 让 monaco 已解锁且金币足够，但当前选中的是 shanghai
+      // 让 monaco 已解锁，但当前选中的是 shanghai
       mockGame.getAvailableTracks = vi.fn(() => Object.values(TRACK_REGISTRY).map(t => ({
-        ...t, unlocked: t.id !== 'silverstone-2d', canAfford: true,
+        ...t, unlocked: t.id !== 'silverstone-2d',
       })));
       const { document } = mountShopView(mockGame, eventBus);
       const monaco = document.querySelector('.shop-track-item[data-track-id="monaco-2d"]');
@@ -154,23 +153,10 @@ describe('ShopView - 赛道标签页 (Phase 3.4)', () => {
       expect(btn.disabled).toBe(true);
     });
 
-    it('金币不足的已解锁赛道按钮也应 disabled', () => {
-      // shanghai-2d 已解锁但金币只有 5，cost=10
-      mockGame.fuelCoins = 5;
-      mockGame.getAvailableTracks = vi.fn(() => Object.values(TRACK_REGISTRY).map(t => ({
-        ...t, unlocked: t.id === 'shanghai-2d', canAfford: 5 >= t.cost,
-      })));
-      const { document } = mountShopView(mockGame, eventBus);
-      const shanghai = document.querySelector('.shop-track-item[data-track-id="shanghai-2d"]');
-      const btn = shanghai.querySelector('button');
-      expect(btn.disabled).toBe(true);
-    });
-
-    it('应显示赛道名称、描述和 cost', () => {
+    it('应显示赛道名称和描述', () => {
       const { document } = mountShopView(mockGame, eventBus);
       const shanghai = document.querySelector('.shop-track-item[data-track-id="shanghai-2d"]');
       expect(shanghai.textContent).toContain('Shanghai International Circuit');
-      expect(shanghai.textContent).toContain('10'); // cost
     });
 
     it('当前选中赛道应有 selected 类', () => {
@@ -183,9 +169,9 @@ describe('ShopView - 赛道标签页 (Phase 3.4)', () => {
 
   describe('选择赛道交互', () => {
     beforeEach(() => {
-      // 多个赛道都已解锁且可买，currentSelected = shanghai
+      // 多个赛道都已解锁，currentSelected = shanghai
       mockGame.getAvailableTracks = vi.fn(() => Object.values(TRACK_REGISTRY).map(t => ({
-        ...t, unlocked: true, canAfford: true,
+        ...t, unlocked: true,
       })));
     });
 

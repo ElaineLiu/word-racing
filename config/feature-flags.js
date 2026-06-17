@@ -6,7 +6,6 @@
 const DEFAULT_FLAGS = {
   '2d-track': true,
   '3d-track': true,
-  'multiple-tracks': true,
 };
 
 export const FeatureFlags = {
@@ -42,7 +41,7 @@ export const FeatureFlags = {
    */
   load() {
     try {
-      const saved = localStorage.getItem('wr_feature_flags') || localStorage.getItem('featureFlags');
+      const saved = localStorage.getItem('wr_feature_flags');
       if (saved) {
         this.flags = { ...this.flags, ...JSON.parse(saved) };
       }

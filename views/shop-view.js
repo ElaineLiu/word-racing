@@ -20,6 +20,7 @@ export class ShopView extends BaseView {
     super.mount();
     this.#setupEventListeners();
     this.#subscribeToEvents();
+    this.renderLapSelector();
     this.render();
   }
 
@@ -27,6 +28,7 @@ export class ShopView extends BaseView {
     this.updateStats();
     this.renderItems();
     this.renderTracks();
+    this.renderLapSelector();
     this.#applyTabVisibility();
   }
 
@@ -86,7 +88,7 @@ export class ShopView extends BaseView {
       <div style="color: var(--text-muted, #888);">
         • Complete quizzes to build words learned and words mastered<br>
         • Meet the progress requirements below to unlock tracks automatically through achievements<br>
-        • After a track is unlocked, spend the required Fuel Coins to race
+        • Once unlocked, select a track to race
       </div>
     `;
     container.appendChild(overview);
@@ -229,6 +231,31 @@ export class ShopView extends BaseView {
     this.#game._executeShopAction(itemId);
     this.render();
     this.emit(Events.SHOP_PURCHASE, { itemId });
+  }
+
+  // ==================== Lap Selector ====================
+
+  renderLapSelector() {
+    const container = this.$('#shop-lap-select');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    const label = document.createElement('span');
+    label.textContent = 'Laps: ';
+    label.className = 'lap-label';
+    container.appendChild(label);
+
+    for (let i = 1; i <= 5; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.className = 'lap-btn' + (i === this.#game.selectedLaps ? ' active' : '');
+      btn.addEventListener('click', () => {
+        this.#game.setLapCount(i);
+        this.renderLapSelector();
+      });
+      container.appendChild(btn);
+    }
   }
 
   #setupEventListeners() {

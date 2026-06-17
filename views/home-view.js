@@ -21,7 +21,6 @@ export class HomeView extends BaseView {
     this.#setupEventListeners();
     this.#subscribeToEvents();
     this.renderLeaderboard();
-    this.renderLapSelector();
     this.updateLearningUI();
   }
 
@@ -97,29 +96,6 @@ export class HomeView extends BaseView {
     `).join('');
 
     container.innerHTML = `<div class="leaderboard-title">FASTEST LAPS</div>${html}`;
-  }
-
-  renderLapSelector() {
-    const container = this.$('#home-lap-select');
-    if (!container) return;
-
-    container.innerHTML = '';
-
-    const label = document.createElement('span');
-    label.textContent = 'Laps: ';
-    label.className = 'lap-label';
-    container.appendChild(label);
-
-    for (let i = 1; i <= 5; i++) {
-      const btn = document.createElement('button');
-      btn.textContent = i;
-      btn.className = 'lap-btn' + (i === this.#game.selectedLaps ? ' active' : '');
-      btn.addEventListener('click', () => {
-        this.#game.setLapCount(i);
-        this.renderLapSelector();
-      });
-      container.appendChild(btn);
-    }
   }
 
   #setupEventListeners() {
