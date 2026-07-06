@@ -10,7 +10,7 @@
  */
 
 import { Events } from '../core/event-bus.js';
-import { LEARNING, REWARDS } from '../config/learning-config.js';
+import { LEARNING } from '../config/learning-config.js';
 
 // 存储键
 const SESSION_KEY = LEARNING.STORAGE_KEYS.QUIZ_SESSION;
@@ -279,30 +279,6 @@ export class QuizSessionManager {
     };
   }
 
-  /**
-   * 获取连击奖励
-   * @returns {Object} 奖励
-   */
-  getComboReward() {
-    const combo = this.#session?.maxCombo || 0;
-
-    // 检查连击奖励档位
-    if (combo >= 10 && REWARDS.combo[10]) {
-      return { ...REWARDS.combo[10], combo };
-    }
-    if (combo >= 7 && REWARDS.combo[7]) {
-      return { ...REWARDS.combo[7], combo };
-    }
-    if (combo >= 5 && REWARDS.combo[5]) {
-      return { ...REWARDS.combo[5], combo };
-    }
-    if (combo >= 3 && REWARDS.combo[3]) {
-      return { ...REWARDS.combo[3], combo };
-    }
-
-    return { fuel: 0, gear: 0, combo };
-  }
-
   // ==================== 套题完成 ====================
 
   /**
@@ -317,10 +293,9 @@ export class QuizSessionManager {
     this.#session.completed = true;
     this.#saveSession();
 
-    // 计算连击奖励
-    const comboReward = this.getComboReward();
-    const totalFuel = this.#session.fuelCoinsEarned + (comboReward.fuel || 0) + REWARDS.perQuizComplete.fuel;
-    const totalGear = this.#session.gearCoinsEarned + (comboReward.gear || 0) + REWARDS.perQuizComplete.gear;
+    // 累加奖励（每题答题时已计入 session.fuelCoinsEarned/gearCoinsEarned）
+    const totalFuel = this.#session.fuelCoinsEarned;
+    const totalGear = this.#session.gearCoinsEarned;
 
     const result = {
       quizNumber: this.#session.currentQuiz,
@@ -333,7 +308,6 @@ export class QuizSessionManager {
       fuelCoins: totalFuel,
       gearCoins: totalGear,
       maxCombo: this.#session.maxCombo,
-      comboReward,
       duration: this.#calculateDuration(),
     };
 

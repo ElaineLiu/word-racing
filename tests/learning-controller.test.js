@@ -199,23 +199,7 @@ describe('LearningController', () => {
   // ==================== 目标达成验证 ====================
 
   describe('daily goals', () => {
-    it('should achieve newWords10 goal after learning 10 words', () => {
-      // 完成一套题（10题全对）
-      controller.startNewQuiz();
-      for (let i = 0; i < 10; i++) {
-        const question = controller.getCurrentQuestion();
-        if (question) {
-          controller.submitAnswer(question.correctIndex);
-        }
-      }
-      controller.completeQuiz();
-
-      const goals = controller.dailyManager.checkDailyGoals();
-      expect(goals.newWords10.achieved).toBe(true);
-      expect(goals.newWords10.progress).toBe(10);
-    });
-
-    it('should achieve allThree goal after 3 quizzes', () => {
+    it('should achieve dailyComplete goal after 3 quizzes', () => {
       for (let quiz = 0; quiz < 3; quiz++) {
         controller.startNewQuiz();
         for (let i = 0; i < 10; i++) {
@@ -228,24 +212,7 @@ describe('LearningController', () => {
       }
 
       const goals = controller.dailyManager.checkDailyGoals();
-      expect(goals.allThree.achieved).toBe(true);
-    });
-
-    it('should achieve accuracy80 goal with 80%+ correct', () => {
-      controller.startNewQuiz();
-      // 8对2错 = 80%
-      for (let i = 0; i < 10; i++) {
-        const question = controller.getCurrentQuestion();
-        if (question) {
-          const correct = i < 8;
-          const index = correct ? question.correctIndex : (question.correctIndex + 1) % 4;
-          controller.submitAnswer(index);
-        }
-      }
-      controller.completeQuiz();
-
-      const goals = controller.dailyManager.checkDailyGoals();
-      expect(goals.accuracy80.achieved).toBe(true);
+      expect(goals.dailyComplete.achieved).toBe(true);
     });
   });
 

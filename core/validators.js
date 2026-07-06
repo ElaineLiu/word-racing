@@ -168,10 +168,9 @@ export function isValidLeaderboardEntry(entry) {
  */
 export function isValidDailyData(daily) {
   if (!isObject(daily)) return false;
-  const { lastActiveDate, streakDays, todayQuizzes, todayFuelCoins, todayGearCoins } = daily;
+  const { lastActiveDate, todayQuizzes, todayFuelCoins, todayGearCoins } = daily;
   // lastActiveDate can be null or a date string
   if (lastActiveDate !== null && !isString(lastActiveDate)) return false;
-  if (!isInteger(streakDays) || streakDays < 0) return false;
   if (!isInteger(todayQuizzes) || todayQuizzes < 0) return false;
   if (!isInteger(todayFuelCoins) || todayFuelCoins < 0) return false;
   if (!isInteger(todayGearCoins) || todayGearCoins < 0) return false;

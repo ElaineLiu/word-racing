@@ -47,7 +47,6 @@ export class ReportView extends BaseView {
       <div class="stat-row"><span>Total Questions</span><strong>${stats.totalQuestions || 0}</strong></div>
       <div class="stat-row"><span>Correct Answers</span><strong>${stats.totalCorrect || 0}</strong></div>
       <div class="stat-row"><span>Accuracy</span><strong>${accuracy}%</strong></div>
-      <div class="stat-row"><span>Streak</span><strong>${stats.streak || 0}</strong></div>
     `;
   }
 
@@ -66,14 +65,8 @@ export class ReportView extends BaseView {
       <div class="stat-row"><span>Fuel Coins</span><strong>${progress.fuelCoinsEarned || 0}</strong></div>
       <div class="stat-row"><span>Gear Coins</span><strong>${progress.gearCoinsEarned || 0}</strong></div>
       <div class="goals-section">
-        <div class="goal ${goals.allThree?.achieved ? 'achieved' : ''}">
-          ${goals.allThree?.achieved ? '✓' : '○'} Complete 3 quizzes
-        </div>
-        <div class="goal ${goals.accuracy80?.achieved ? 'achieved' : ''}">
-          ${goals.accuracy80?.achieved ? '✓' : '○'} 80% accuracy
-        </div>
-        <div class="goal ${goals.newWords10?.achieved ? 'achieved' : ''}">
-          ${goals.newWords10?.achieved ? '✓' : '○'} Learn 10 new words
+        <div class="goal ${goals.dailyComplete?.achieved ? 'achieved' : ''}">
+          ${goals.dailyComplete?.achieved ? '✓' : '○'} Complete ${goals.dailyComplete?.target || 3} quizzes
         </div>
       </div>
     `;

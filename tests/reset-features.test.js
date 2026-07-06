@@ -106,7 +106,6 @@ describe('Reset Features - 集成测试', () => {
       gameState.set('daily.todayQuizzes', 2);
       gameState.set('daily.todayFuelCoins', 50);
       gameState.set('daily.todayGearCoins', 30);
-      gameState.set('daily.streakDays', 5);
 
       // 执行重置
       dailyManager.reset();
@@ -115,7 +114,6 @@ describe('Reset Features - 集成测试', () => {
       expect(gameState.get('daily.todayQuizzes')).toBe(0);
       expect(gameState.get('daily.todayFuelCoins')).toBe(0);
       expect(gameState.get('daily.todayGearCoins')).toBe(0);
-      expect(gameState.get('daily.streakDays')).toBe(0);
     });
 
     it('应该发出 DAILY_RESET 事件', () => {

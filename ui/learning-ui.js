@@ -17,7 +17,6 @@ export class LearningUI {
   #dailyManager;
   #sessionManager;
   #container = null;
-  #comboDisplay = null;
   #animationQueue = [];
 
   constructor(eventBus, progressTracker, dailyManager, sessionManager) {
@@ -62,7 +61,6 @@ export class LearningUI {
     return `
       <div class="learning-header">
         <span class="learning-title">TODAY'S PIT STOPS</span>
-        <span class="learning-streak" id="learning-streak"></span>
       </div>
       <div class="learning-progress">
         <div class="quiz-indicators" id="quiz-indicators">
@@ -90,7 +88,6 @@ export class LearningUI {
     this.updateDailyProgress();
     this.updateGoals();
     this.updateStats();
-    this.updateStreak();
   }
 
   /**
@@ -137,9 +134,7 @@ export class LearningUI {
 
     const goals = this.#dailyManager.checkDailyGoals();
     const goalsList = [
-      { key: 'allThree', name: 'Complete 3 quizzes', achieved: goals.allThree.achieved },
-      { key: 'accuracy80', name: '80%+ accuracy', achieved: goals.accuracy80.achieved },
-      { key: 'newWords10', name: 'Learn 10+ new words', achieved: goals.newWords10.achieved },
+      { key: 'dailyComplete', name: `Complete ${goals.dailyComplete.target} quizzes`, achieved: goals.dailyComplete.achieved },
     ];
 
     goalsContainer.innerHTML = goalsList.map(g => `
@@ -178,58 +173,6 @@ export class LearningUI {
         <span class="stat-value gear">${progress.gearCoinsEarned}</span>
       </div>
     `;
-  }
-
-  /**
-   * 更新连续天数
-   */
-  updateStreak() {
-    const streakEl = document.getElementById('learning-streak');
-    if (!streakEl) return;
-
-    const streak = this.#dailyManager.getStreak();
-    if (streak > 0) {
-      streakEl.textContent = `🔥 ${streak} day streak`;
-      streakEl.title = `Keep it up! Study daily to maintain your streak.`;
-    } else {
-      streakEl.textContent = '';
-    }
-  }
-
-  // ==================== 连击显示 ====================
-
-  /**
-   * 显示连击动画
-   */
-  showCombo(combo) {
-    // 移除旧的连击显示
-    if (this.#comboDisplay) {
-      this.#comboDisplay.remove();
-    }
-
-    // 只在 3+ 连击时显示
-    if (combo < 3) return;
-
-    this.#comboDisplay = document.createElement('div');
-    this.#comboDisplay.className = 'combo-display';
-    this.#comboDisplay.textContent = `${combo}x COMBO!`;
-
-    // 添加到页面
-    const quizArea = document.getElementById('quiz-question-area');
-    if (quizArea) {
-      quizArea.appendChild(this.#comboDisplay);
-    }
-
-    // 动画结束后移除
-    setTimeout(() => {
-      if (this.#comboDisplay) {
-        this.#comboDisplay.classList.add('fade-out');
-        setTimeout(() => {
-          this.#comboDisplay?.remove();
-          this.#comboDisplay = null;
-        }, 300);
-      }
-    }, 1500);
   }
 
   /**
@@ -279,18 +222,9 @@ export class LearningUI {
       gearEl.textContent = `Gear Coins: +${result.gearCoins}`;
     }
 
-    // 显示连击奖励
-    if (result.maxCombo >= 3) {
-      const comboRewardEl = document.getElementById('quiz-result-combo');
-      if (comboRewardEl) {
-        comboRewardEl.textContent = `Max Combo: ${result.maxCombo}x (+${result.comboReward?.gear || 0} Gear)`;
-        comboRewardEl.style.display = 'block';
-      }
-    }
-
     // 检查是否完成今日目标
     const goals = this.#dailyManager.checkDailyGoals();
-    if (goals.allThree.achieved || goals.accuracy80.achieved || goals.newWords10.achieved) {
+    if (goals.dailyComplete.achieved) {
       this.#showGoalCompleteMessage(goals);
     }
   }
@@ -300,9 +234,7 @@ export class LearningUI {
    */
   #showGoalCompleteMessage(goals) {
     const messages = [];
-    if (goals.allThree.achieved) messages.push('3 quizzes completed!');
-    if (goals.accuracy80.achieved) messages.push('80%+ accuracy achieved!');
-    if (goals.newWords10.achieved) messages.push('10+ new words learned!');
+    if (goals.dailyComplete.achieved) messages.push('3 quizzes completed!');
 
     // 在完成界面显示
     const completePanel = document.getElementById('quiz-complete');
@@ -351,13 +283,6 @@ export class LearningUI {
   // ==================== 事件订阅 ====================
 
   #subscribeToEvents() {
-    // 连击更新
-    this.#eventBus.on(Events.SESSION_SAVE, ({ combo }) => {
-      if (combo >= 3) {
-        this.showCombo(combo);
-      }
-    });
-
     // 套题完成
     this.#eventBus.on(Events.QUIZ_COMPLETE, (result) => {
       this.update();
@@ -399,10 +324,6 @@ export class LearningUI {
     if (this.#container) {
       this.#container.remove();
       this.#container = null;
-    }
-    if (this.#comboDisplay) {
-      this.#comboDisplay.remove();
-      this.#comboDisplay = null;
     }
   }
 }

@@ -126,7 +126,6 @@
       wrongWords: [],
       daily: {
         lastActiveDate: null,
-        streakDays: 0,
         todayQuizzes: 0,
         todayFuelCoins: 0,
         todayGearCoins: 0
