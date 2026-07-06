@@ -14,6 +14,7 @@
         <button class="nav-btn" data-page="shop">Garage</button>
         <button class="nav-btn" data-page="race">Race</button>
         <button class="nav-btn" data-page="report">Report</button>
+        <button class="nav-btn nav-btn-settings" id="top-settings-btn">⚙️</button>
     </nav>
 
     <!-- Page 1: Home -->
@@ -83,26 +84,13 @@
                 </div>
             </div>
 
-            <!-- Secondary Actions -->
-            <div class="home-secondary-grid">
-                <button id="home-garage-btn" class="home-secondary-btn">
-                    <span class="home-secondary-icon">🏎️</span>
-                    <span class="home-secondary-label">Open Garage</span>
-                </button>
-                <button id="achievement-btn-home" class="home-secondary-btn">
-                    <span class="home-secondary-icon">🏆</span>
-                    <span class="home-secondary-label">View Achievements</span>
-                </button>
-                <button id="home-settings-btn" class="home-secondary-btn home-secondary-btn-small">
-                    <span class="home-secondary-icon">⚙️</span>
-                    <span class="home-secondary-label">Settings</span>
-                </button>
-            </div>
-
-            <!-- Settings Dropdown -->
+            <!-- Settings Dropdown (positioned by JS) -->
             <div id="settings-dropdown" class="settings-dropdown" style="display:none;">
                 <button id="reset-daily-btn" class="settings-menu-item">Reset Daily Practice Limit</button>
+                <button id="reset-week-btn" class="settings-menu-item">Reset This Week</button>
+                <button id="reset-all-btn" class="settings-menu-item reset-danger">Reset All Data</button>
             </div>
+
         </div>
     </div>
 
@@ -267,5 +255,13 @@
     }
     </script>
     <script type="module" src="js/main-v2.js"></script>
+    <script>
+      // 仅在开发环境加载调试命令
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        const script = document.createElement('script');
+        script.src = 'scripts/debug-commands.js';
+        document.head.appendChild(script);
+      }
+    </script>
 </body>
 </html>

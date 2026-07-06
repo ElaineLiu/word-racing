@@ -269,35 +269,28 @@ localStorage.setItem('wr_current_user', 'user_001')
 
 ### 隐蔽调试口令
 
-在浏览器控制台运行以下脚本，可解锁指定赛道：
+在开发环境（localhost/127.0.0.1）下，浏览器控制台自动加载 `scripts/debug-commands.js`，提供以下命令：
 
 ```javascript
-// 解锁蒙特卡洛赛道
-localStorage.setItem('wr_debug_unlock_monaco', 'true');
-location.reload();
+// 解锁指定赛道
+debugUnlockTrack('monaco-2d');
+debugUnlockTrack('silverstone-2d');
+debugUnlockTrack('shanghai-3d');
+debugUnlockTrack('night-race-3d');
 
-// 解锁银石赛道
-localStorage.setItem('wr_debug_unlock_silverstone', 'true');
-location.reload();
+// 添加资源
+debugAddFuelCoins(1000);    // 添加金币
+debugAddGearCoins(500);     // 添加装备币
 
-// 解锁上海3D赛道
-localStorage.setItem('wr_debug_unlock_shanghai_3d', 'true');
-location.reload();
+// 批量操作
+debugUnlockAllTracks();     // 解锁所有赛道
+debugResetToDefault();      // 重置为默认状态（保留单词进度）
 
-// 给当前用户添加金币（测试用）
-const currentUser = localStorage.getItem('wr_current_user');
-const stateKey = `wr_game_state_${currentUser}`;
-const state = JSON.parse(localStorage.getItem(stateKey) || '{}');
-state.fuelCoins = (state.fuelCoins || 0) + 1000;
-localStorage.setItem(stateKey, JSON.stringify(state));
-location.reload();
+// 帮助
+debugHelp();                // 显示所有可用命令
 ```
 
-### 调试口令说明
-
-- 这些口令仅供开发调试使用
-- 口令不会在UI中显示
-- 刷新页面后生效
+所有命令执行后自动刷新页面。
 
 ---
 

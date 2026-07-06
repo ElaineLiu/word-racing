@@ -51,6 +51,7 @@ export class ViewManager {
     this.#navBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const page = btn.dataset.page;
+        if (!page) return; // 跳过无 data-page 的按钮（如 settings）
         void this.switchTo(page);
       });
     });

@@ -135,6 +135,7 @@ export const Events = {
   DAILY_GOAL_COMPLETE: 'daily:goal_complete',
   DAILY_RESET: 'daily:reset',
   DAILY_STREAK_UPDATE: 'daily:streak_update',
+  DAILY_HISTORY_CLEARED: 'daily:history_cleared',
 
   // Learning system - 会话
   SESSION_START: 'session:start',

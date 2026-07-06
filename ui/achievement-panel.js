@@ -22,9 +22,8 @@ export class AchievementPanel {
     this.#closeBtn = document.getElementById('achievement-panel-close');
     this.#list = document.getElementById('achievement-list');
 
-    // 绑定所有成就按钮（首页、Report页面、Quiz完成页面）
+    // 绑定所有成就按钮（Report页面、Quiz完成页面）
     const triggerBtns = [
-      document.getElementById('achievement-btn-home'),
       document.getElementById('achievement-btn-report'),
       document.getElementById('achievement-btn'),
     ];

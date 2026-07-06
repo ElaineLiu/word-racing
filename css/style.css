@@ -1820,9 +1820,7 @@ html, body {
 }
 
 .settings-dropdown {
-    position: absolute;
-    top: 100%;
-    right: 0;
+    position: fixed;
     margin-top: var(--space-xs);
     background: var(--bg-card);
     border: 1px solid var(--border-default);
