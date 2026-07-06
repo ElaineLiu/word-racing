@@ -103,21 +103,26 @@ export const LEARNING = {
 
 export const REWARDS = {
   // 每题奖励
-  perCorrectSimple: { fuel: 3, gear: 0 },    // 简单题答对
-  perCorrectComplex: { fuel: 5, gear: 0 },   // 复杂题答对
+  perCorrectSimple: { fuel: 5, gear: 0 },    // 简单题答对
+  perCorrectComplex: { fuel: 0, gear: 8 },   // 复杂题答对
   perWrong: { fuel: 0, gear: 0 },            // 答错无奖励
 
-  // 正确率奖励（套题完成时发放）
-  accuracyBonus: {
-    100: { gear: 3 },  // 100% 正确率
-    80: { gear: 2 },   // ≥80% 正确率
-    60: { gear: 1 },   // ≥60% 正确率
+  // 套题奖励（完成每套10题）
+  perQuizComplete: { fuel: 10, gear: 0 },
+
+  // 连击奖励
+  combo: {
+    3: { fuel: 0, gear: 5 },   // 连续答对3题
+    5: { fuel: 0, gear: 10 },  // 连续答对5题
+    7: { fuel: 0, gear: 15 },  // 连续答对7题
+    10: { fuel: 0, gear: 25 }, // 连续答对10题（满连）
   },
 
   // 每日目标奖励
   dailyGoals: {
-    accuracy100: { fuel: 30, gear: 0 },  // 当日正确率100%
-    accuracy80: { fuel: 20, gear: 0 },   // 当日正确率≥80%
+    allThree: { fuel: 50, gear: 30 },        // 完成3套题
+    accuracy80: { fuel: 30, gear: 0 },       // 正确率≥80%
+    newWords10: { fuel: 20, gear: 0 },       // 新学10个词
   },
 };
 

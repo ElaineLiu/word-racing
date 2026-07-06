@@ -5,7 +5,6 @@
 import { BaseView } from './base-view.js';
 import { Events } from '../core/event-bus.js';
 import { LEARNING } from '../config/learning-config.js';
-import { GAME } from '../config/game-config.js';
 
 export class QuizView extends BaseView {
   #game;
@@ -389,31 +388,14 @@ export class QuizView extends BaseView {
     label.style.color = 'var(--text-secondary)';
     container.appendChild(label);
 
-    // 获取当前金币数量
-    const fuelCoins = this.#game.fuelCoins || 0;
-    // 每圈消耗 10 金币，计算最大可选圈数
-    const maxAffordableLaps = Math.floor(fuelCoins / 10);
-
-    for (let i = 1; i <= GAME.MAX_LAPS; i++) {
+    for (let i = 1; i <= 5; i++) {
       const btn = document.createElement('button');
       btn.textContent = i;
-
-      const canAfford = i <= maxAffordableLaps;
-      const isSelected = i === this.#game.selectedLaps;
-
-      btn.className = 'lap-btn';
-      if (isSelected && canAfford) btn.className += ' active';
-      if (!canAfford) btn.className += ' disabled';
-
-      if (canAfford) {
-        btn.addEventListener('click', () => {
-          this.#game.setLapCount(i);
-          this.#renderLapSelector();
-        });
-      } else {
-        btn.disabled = true;
-      }
-
+      btn.className = 'lap-btn' + (i === this.#game.selectedLaps ? ' active' : '');
+      btn.addEventListener('click', () => {
+        this.#game.setLapCount(i);
+        this.#renderLapSelector();
+      });
       container.appendChild(btn);
     }
   }

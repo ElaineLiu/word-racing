@@ -199,7 +199,7 @@ describe('LearningController', () => {
   // ==================== 目标达成验证 ====================
 
   describe('daily goals', () => {
-    it('should achieve accuracy100 goal with 100% correct', () => {
+    it('should achieve newWords10 goal after learning 10 words', () => {
       // 完成一套题（10题全对）
       controller.startNewQuiz();
       for (let i = 0; i < 10; i++) {
@@ -211,11 +211,11 @@ describe('LearningController', () => {
       controller.completeQuiz();
 
       const goals = controller.dailyManager.checkDailyGoals();
-      expect(goals.accuracy100.achieved).toBe(true);
-      expect(goals.accuracy100.progress).toBe(100);
+      expect(goals.newWords10.achieved).toBe(true);
+      expect(goals.newWords10.progress).toBe(10);
     });
 
-    it('should achieve accuracy80 goal with 80%+ correct across quizzes', () => {
+    it('should achieve allThree goal after 3 quizzes', () => {
       for (let quiz = 0; quiz < 3; quiz++) {
         controller.startNewQuiz();
         for (let i = 0; i < 10; i++) {
@@ -228,7 +228,7 @@ describe('LearningController', () => {
       }
 
       const goals = controller.dailyManager.checkDailyGoals();
-      expect(goals.accuracy80.achieved).toBe(true);
+      expect(goals.allThree.achieved).toBe(true);
     });
 
     it('should achieve accuracy80 goal with 80%+ correct', () => {

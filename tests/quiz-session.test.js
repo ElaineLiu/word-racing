@@ -248,14 +248,14 @@ describe('QuizSessionManager', () => {
       expect(result.accuracy).toBe(50);
     });
 
-    it('should include accuracy bonus', () => {
+    it('should include combo rewards', () => {
       sessionManager.saveAnswer({ questionIndex: 0, correct: true, mode: 'PIT_BOARD' });
       sessionManager.saveAnswer({ questionIndex: 1, correct: true, mode: 'PIT_BOARD' });
 
       const result = sessionManager.completeQuiz();
 
-      expect(result.accuracy).toBe(100);
-      expect(result.accuracyBonus).toBeDefined();
+      expect(result.maxCombo).toBe(2);
+      expect(result.comboReward).toBeDefined();
     });
 
     it('should emit QUIZ_COMPLETE event', () => {
@@ -279,101 +279,39 @@ describe('QuizSessionManager', () => {
     });
   });
 
-  // ==================== Accuracy Bonus ====================
+  // ==================== Combo Rewards ====================
 
-  describe('getAccuracyBonus', () => {
+  describe('getComboReward', () => {
     beforeEach(() => {
       sessionManager.startDailySession();
       sessionManager.setQuestions(Array(10).fill(null).map((_, i) => createQuestion(i, `word${i}`)));
     });
 
-    it('should return 3 gear coins for 100% accuracy', () => {
-      // 答对 10 题
-      for (let i = 0; i < 10; i++) {
+    it('should return no reward for combo < 3', () => {
+      sessionManager.saveAnswer({ questionIndex: 0, correct: true, mode: 'PIT_BOARD' });
+      sessionManager.saveAnswer({ questionIndex: 1, correct: true, mode: 'PIT_BOARD' });
+
+      const reward = sessionManager.getComboReward();
+      expect(reward.fuel).toBe(0);
+      expect(reward.gear).toBe(0);
+    });
+
+    it('should return combo 3 reward', () => {
+      for (let i = 0; i < 3; i++) {
         sessionManager.saveAnswer({ questionIndex: i, correct: true, mode: 'PIT_BOARD' });
       }
 
-      const bonus = sessionManager.getAccuracyBonus(100);
-      expect(bonus.gear).toBe(3);
+      const reward = sessionManager.getComboReward();
+      expect(reward.gear).toBe(5);
     });
 
-    it('should return 2 gear coins for 80% accuracy', () => {
-      const bonus = sessionManager.getAccuracyBonus(80);
-      expect(bonus.gear).toBe(2);
-    });
-
-    it('should return 1 gear coin for 60% accuracy', () => {
-      const bonus = sessionManager.getAccuracyBonus(60);
-      expect(bonus.gear).toBe(1);
-    });
-
-    it('should return no bonus for <60% accuracy', () => {
-      const bonus = sessionManager.getAccuracyBonus(50);
-      expect(bonus.gear).toBe(0);
-    });
-  });
-
-  describe('completeQuiz - accuracy bonus integration', () => {
-    beforeEach(() => {
-      sessionManager.startDailySession();
-      sessionManager.setQuestions(Array(10).fill(null).map((_, i) => createQuestion(i, `word${i}`)));
-    });
-
-    it('should give 3 gear coins for 100% accuracy', () => {
-      // 答对 10 题
-      for (let i = 0; i < 10; i++) {
-        sessionManager.saveAnswer({ questionIndex: i, correct: true, mode: 'PIT_BOARD', fuelCoins: 3, gearCoins: 0 });
+    it('should return combo 5 reward', () => {
+      for (let i = 0; i < 5; i++) {
+        sessionManager.saveAnswer({ questionIndex: i, correct: true, mode: 'PIT_BOARD' });
       }
 
-      const result = sessionManager.completeQuiz();
-      expect(result.accuracy).toBe(100);
-      expect(result.gearCoins).toBe(3);  // 仅正确率奖励
-    });
-
-    it('should give 2 gear coins for 80% accuracy', () => {
-      // 答对 8 题
-      for (let i = 0; i < 8; i++) {
-        sessionManager.saveAnswer({ questionIndex: i, correct: true, mode: 'PIT_BOARD', fuelCoins: 3, gearCoins: 0 });
-      }
-      for (let i = 8; i < 10; i++) {
-        sessionManager.saveAnswer({ questionIndex: i, correct: false, mode: 'PIT_BOARD', fuelCoins: 0, gearCoins: 0 });
-      }
-
-      const result = sessionManager.completeQuiz();
-      expect(result.accuracy).toBe(80);
-      expect(result.gearCoins).toBe(2);
-    });
-
-    it('should give 1 gear coin for 60% accuracy', () => {
-      // 答对 6 题
-      for (let i = 0; i < 6; i++) {
-        sessionManager.saveAnswer({ questionIndex: i, correct: true, mode: 'PIT_BOARD', fuelCoins: 3, gearCoins: 0 });
-      }
-      for (let i = 6; i < 10; i++) {
-        sessionManager.saveAnswer({ questionIndex: i, correct: false, mode: 'PIT_BOARD', fuelCoins: 0, gearCoins: 0 });
-      }
-
-      const result = sessionManager.completeQuiz();
-      expect(result.accuracy).toBe(60);
-      expect(result.gearCoins).toBe(1);
-    });
-
-    it('should NOT include combo reward in result', () => {
-      for (let i = 0; i < 10; i++) {
-        sessionManager.saveAnswer({ questionIndex: i, correct: true, mode: 'PIT_BOARD', fuelCoins: 3, gearCoins: 0 });
-      }
-
-      const result = sessionManager.completeQuiz();
-      expect(result.comboReward).toBeUndefined();
-    });
-
-    it('should NOT include perQuizComplete reward', () => {
-      for (let i = 0; i < 10; i++) {
-        sessionManager.saveAnswer({ questionIndex: i, correct: true, mode: 'PIT_BOARD', fuelCoins: 3, gearCoins: 0 });
-      }
-
-      const result = sessionManager.completeQuiz();
-      expect(result.fuelCoins).toBe(30);  // 10题 × 3金币，无套题奖励
+      const reward = sessionManager.getComboReward();
+      expect(reward.gear).toBe(10);
     });
   });
 

@@ -89,9 +89,9 @@ describe('Game', () => {
 
   describe('shop purchases', () => {
     it('should buy nitro with gear coins', () => {
-      game.gearCoins = 5;
+      game.gearCoins = 50;
       game._executeShopAction('nitro1');
-      expect(game.gearCoins).toBe(4);
+      expect(game.gearCoins).toBe(49);
       expect(game.nitroCharges).toBe(1);
     });
   });

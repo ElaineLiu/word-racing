@@ -103,24 +103,29 @@ export class HomeView extends BaseView {
       this.emit(Events.QUIZ_START, { source: 'home' });
     });
 
-    // Navigate to Garage
-    this.onClick('#home-garage-btn', () => {
-      this.emit(Events.VIEW_CHANGE, { view: 'shop' });
-    });
+    // Settings dropdown (button is outside container, use document.querySelector)
+    const settingsBtn = document.querySelector('#top-settings-btn');
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dropdown = document.querySelector('#settings-dropdown');
+        if (!dropdown) return;
 
-    // Settings dropdown
-    this.onClick('#home-settings-btn', (e) => {
-      e.stopPropagation();
-      const dropdown = this.$('#settings-dropdown');
-      if (dropdown) {
-        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-      }
-    });
+        if (dropdown.style.display === 'none') {
+          const rect = settingsBtn.getBoundingClientRect();
+          dropdown.style.top = rect.bottom + 8 + 'px';
+          dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+          dropdown.style.display = 'block';
+        } else {
+          dropdown.style.display = 'none';
+        }
+      });
+    }
 
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
-      const dropdown = this.$('#settings-dropdown');
-      const btn = this.$('#home-settings-btn');
+      const dropdown = document.querySelector('#settings-dropdown');
+      const btn = document.querySelector('#top-settings-btn');
       if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
         dropdown.style.display = 'none';
       }
@@ -130,6 +135,20 @@ export class HomeView extends BaseView {
     this.onClick('#reset-daily-btn', () => {
       if (confirm('Reset daily practice limit?\n\nYour word mastery progress will stay unchanged.')) {
         this.#resetDailyLimit();
+      }
+    });
+
+    // Reset all data
+    this.onClick('#reset-all-btn', () => {
+      if (confirm('Confirm reset all data?\n\nThis will clear all your learning progress, coins, achievements, and unlocked tracks.\nThis action cannot be undone.')) {
+        this.#resetAllData();
+      }
+    });
+
+    // Reset this week's history
+    this.onClick('#reset-week-btn', () => {
+      if (confirm('Reset this week\'s history?\n\nThis will clear the last 7 days of practice history. Your coins and word progress will be kept.')) {
+        this.#resetWeekHistory();
       }
     });
   }
@@ -160,6 +179,53 @@ export class HomeView extends BaseView {
       if (dropdown) dropdown.style.display = 'none';
 
       // 刷新 UI
+      this.updateLearningUI();
+    } catch (e) {
+      alert('Reset failed: ' + e.message);
+    }
+  }
+
+  #resetAllData() {
+    try {
+      // Reset GameState (coins, achievements, unlocked tracks)
+      if (this.#game?.gameState) {
+        this.#game.gameState.reset();
+      }
+
+      // Clear word progress
+      if (this.#learningController?.progressTracker) {
+        this.#learningController.progressTracker.clear();
+      }
+
+      // Clear daily history
+      if (this.#learningController?.dailyManager) {
+        this.#learningController.dailyManager.reset();
+        this.#learningController.dailyManager.clearHistory(30);
+      }
+
+      // Clear quiz session
+      if (this.#learningController?.sessionManager) {
+        this.#learningController.sessionManager.clearSession?.();
+      }
+
+      alert('All data has been reset. The page will now refresh.');
+
+      // Refresh the page
+      window.location.reload();
+    } catch (e) {
+      alert('Reset failed: ' + e.message);
+    }
+  }
+
+  #resetWeekHistory() {
+    try {
+      this.#learningController?.dailyManager?.clearHistory(7);
+
+      alert('This week\'s history has been cleared.');
+
+      const dropdown = this.$('#settings-dropdown');
+      if (dropdown) dropdown.style.display = 'none';
+
       this.updateLearningUI();
     } catch (e) {
       alert('Reset failed: ' + e.message);

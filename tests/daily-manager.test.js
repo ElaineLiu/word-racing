@@ -177,22 +177,27 @@ describe('DailyManager', () => {
       const result = dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
 
       expect(result.goals).toBeDefined();
-      expect(result.goals.accuracy80).toBeDefined();
+      expect(result.goals.allThree).toBeDefined();
     });
   });
 
   // ==================== Daily Goals ====================
 
   describe('checkDailyGoals', () => {
-    it('should check accuracy100 goal', () => {
-      // 100% 正确率
-      for (let i = 0; i < 10; i++) {
-        dailyManager.updateProgress({ correct: true });
+    it('should return allThree goal as not achieved initially', () => {
+      const goals = dailyManager.checkDailyGoals();
+
+      expect(goals.allThree.achieved).toBe(false);
+      expect(goals.allThree.progress).toBe(0);
+    });
+
+    it('should achieve allThree after 3 quizzes', () => {
+      for (let i = 0; i < 3; i++) {
+        dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
       }
 
       const goals = dailyManager.checkDailyGoals();
-      expect(goals.accuracy100.achieved).toBe(true);
-      expect(goals.accuracy100.progress).toBe(100);
+      expect(goals.allThree.achieved).toBe(true);
     });
 
     it('should check accuracy80 goal', () => {
@@ -217,14 +222,13 @@ describe('DailyManager', () => {
       expect(goals.accuracy80.achieved).toBe(true);
     });
 
-    it('should achieve both accuracy100 and accuracy80 when 100%', () => {
+    it('should check newWords10 goal', () => {
       for (let i = 0; i < 10; i++) {
-        dailyManager.updateProgress({ correct: true });
+        dailyManager.updateProgress({ correct: true, isNewWord: true });
       }
 
       const goals = dailyManager.checkDailyGoals();
-      expect(goals.accuracy100.achieved).toBe(true);
-      expect(goals.accuracy80.achieved).toBe(true);
+      expect(goals.newWords10.achieved).toBe(true);
     });
   });
 
@@ -239,55 +243,74 @@ describe('DailyManager', () => {
       expect(result.achieved).toEqual([]);
     });
 
-    it('should give 30 fuel for accuracy100', () => {
-      // 100% 正确率
-      for (let i = 0; i < 10; i++) {
-        dailyManager.updateProgress({ correct: true });
+    it('should calculate rewards for achieved goals', () => {
+      // Complete 3 quizzes
+      for (let i = 0; i < 3; i++) {
+        dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 9 });
       }
 
       const result = dailyManager.settleDailyRewards();
 
-      expect(result.rewards.fuel).toBe(30);
-      expect(result.achieved).toContain('accuracy100');
-    });
-
-    it('should give 20 fuel for accuracy80', () => {
-      // 80% 正确率
-      for (let i = 0; i < 8; i++) {
-        dailyManager.updateProgress({ correct: true });
-      }
-      for (let i = 0; i < 2; i++) {
-        dailyManager.updateProgress({ correct: false });
-      }
-
-      const result = dailyManager.settleDailyRewards();
-
-      expect(result.rewards.fuel).toBe(20);
+      // allThree + accuracy80 should be achieved
+      expect(result.rewards.fuel).toBe(80); // 50 + 30
+      expect(result.rewards.gear).toBe(30);
+      expect(result.achieved).toContain('allThree');
       expect(result.achieved).toContain('accuracy80');
-    });
-
-    it('should give only highest reward (not cumulative)', () => {
-      // 100% 正确率，应该只获得 30 金币，不叠加 20 金币
-      for (let i = 0; i < 10; i++) {
-        dailyManager.updateProgress({ correct: true });
-      }
-
-      const result = dailyManager.settleDailyRewards();
-
-      expect(result.rewards.fuel).toBe(30);  // 只有 accuracy100 的 30 金币
-      expect(result.achieved).toEqual(['accuracy100']);  // 不包含 accuracy80
     });
 
     it('should emit DAILY_GOAL_COMPLETE when goals achieved', () => {
       const handler = vi.fn();
       eventBus.on(Events.DAILY_GOAL_COMPLETE, handler);
 
-      for (let i = 0; i < 10; i++) {
-        dailyManager.updateProgress({ correct: true });
+      for (let i = 0; i < 3; i++) {
+        dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 9 });
       }
       dailyManager.settleDailyRewards();
 
       expect(handler).toHaveBeenCalled();
+    });
+  });
+
+  // ==================== Streak ====================
+
+  describe('streak', () => {
+    it('should start with 0 streak', () => {
+      expect(dailyManager.getStreak()).toBe(0);
+    });
+
+    it('should increment streak when all three quizzes completed', () => {
+      for (let i = 0; i < 3; i++) {
+        dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
+      }
+      dailyManager.settleDailyRewards();
+
+      expect(dailyManager.getStreak()).toBe(1);
+    });
+
+    it('should emit DAILY_STREAK_UPDATE on streak increment', () => {
+      const handler = vi.fn();
+      eventBus.on(Events.DAILY_STREAK_UPDATE, handler);
+
+      for (let i = 0; i < 3; i++) {
+        dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
+      }
+      dailyManager.settleDailyRewards();
+
+      expect(handler).toHaveBeenCalledWith({ streak: 1 });
+    });
+
+    it('should not increment streak without completing all three', () => {
+      dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
+      dailyManager.settleDailyRewards();
+
+      expect(dailyManager.getStreak()).toBe(0);
+    });
+
+    it('should reset streak manually', () => {
+      gameState.set('daily.streakDays', 5);
+      dailyManager.resetStreak();
+
+      expect(dailyManager.getStreak()).toBe(0);
     });
   });
 

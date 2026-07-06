@@ -280,21 +280,27 @@ export class QuizSessionManager {
   }
 
   /**
-   * 获取正确率奖励
-   * @param {number} accuracy - 正确率（0-100）
+   * 获取连击奖励
    * @returns {Object} 奖励
    */
-  getAccuracyBonus(accuracy) {
-    if (accuracy >= 100 && REWARDS.accuracyBonus[100]) {
-      return { ...REWARDS.accuracyBonus[100] };
+  getComboReward() {
+    const combo = this.#session?.maxCombo || 0;
+
+    // 检查连击奖励档位
+    if (combo >= 10 && REWARDS.combo[10]) {
+      return { ...REWARDS.combo[10], combo };
     }
-    if (accuracy >= 80 && REWARDS.accuracyBonus[80]) {
-      return { ...REWARDS.accuracyBonus[80] };
+    if (combo >= 7 && REWARDS.combo[7]) {
+      return { ...REWARDS.combo[7], combo };
     }
-    if (accuracy >= 60 && REWARDS.accuracyBonus[60]) {
-      return { ...REWARDS.accuracyBonus[60] };
+    if (combo >= 5 && REWARDS.combo[5]) {
+      return { ...REWARDS.combo[5], combo };
     }
-    return { fuel: 0, gear: 0 };
+    if (combo >= 3 && REWARDS.combo[3]) {
+      return { ...REWARDS.combo[3], combo };
+    }
+
+    return { fuel: 0, gear: 0, combo };
   }
 
   // ==================== 套题完成 ====================
@@ -311,24 +317,23 @@ export class QuizSessionManager {
     this.#session.completed = true;
     this.#saveSession();
 
-    // 计算正确率
-    const accuracy = this.#session.questions.length > 0
-      ? Math.round((this.#session.correctCount / this.#session.questions.length) * 100)
-      : 0;
-
-    // 计算正确率奖励
-    const accuracyBonus = this.getAccuracyBonus(accuracy);
+    // 计算连击奖励
+    const comboReward = this.getComboReward();
+    const totalFuel = this.#session.fuelCoinsEarned + (comboReward.fuel || 0) + REWARDS.perQuizComplete.fuel;
+    const totalGear = this.#session.gearCoinsEarned + (comboReward.gear || 0) + REWARDS.perQuizComplete.gear;
 
     const result = {
       quizNumber: this.#session.currentQuiz,
       totalQuestions: this.#session.questions.length,
       correctCount: this.#session.correctCount,
       wrongCount: this.#session.wrongCount,
-      accuracy,
-      fuelCoins: this.#session.fuelCoinsEarned,
-      gearCoins: this.#session.gearCoinsEarned + accuracyBonus.gear,
-      accuracyBonus,
+      accuracy: this.#session.questions.length > 0
+        ? Math.round((this.#session.correctCount / this.#session.questions.length) * 100)
+        : 0,
+      fuelCoins: totalFuel,
+      gearCoins: totalGear,
       maxCombo: this.#session.maxCombo,
+      comboReward,
       duration: this.#calculateDuration(),
     };
 

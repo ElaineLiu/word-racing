@@ -17,7 +17,7 @@
 
 **依赖**: Epic 3（奖励机制调整）
 
-**状态**: ⏸️ 待开始
+**状态**: ✅ 已完成（UC 4.6 取消）
 
 ---
 
@@ -28,12 +28,12 @@
 **描述**: 在设置页面提供"全部重置"按钮，清零所有数据
 
 **Acceptance Criteria**:
-- [ ] 在 `views/settings-view.js` 添加"全部重置"按钮
-- [ ] 点击后弹出确认弹窗：
+- [x] 在 `views/settings-view.js` 添加"全部重置"按钮
+- [x] 点击后弹出确认弹窗：
   - 标题："确认重置所有数据？"
   - 内容："这将清空您的所有学习进度、金币、成就，无法恢复。"
   - 按钮："确认重置" / "取消"
-- [ ] 确认后执行重置：
+- [x] 确认后执行重置：
   - 金币 → 0
   - 装备币 → 0
   - 氮气 → 0
@@ -42,17 +42,17 @@
   - 成就 → 清空
   - 已解锁赛道 → ['shanghai-2d']
   - 每日进度 → 清空
-- [ ] 重置后刷新页面
-- [ ] 调用 `GameState.reset()` 和 `ProgressTracker.clear()`
+- [x] 重置后刷新页面
+- [x] 调用 `GameState.reset()` 和 `ProgressTracker.clear()`
 
 **影响文件**:
-- `views/settings-view.js`（新增）
+- `views/home-view.js`（实现位置，非 settings-view.js）
 - `learning/progress-tracker.js`（使用现有clear方法）
 - `learning/daily-manager.js`（使用现有reset方法）
 
-**测试文件**: `tests/settings-view.test.js`（新增）
+**测试文件**: `tests/reset-features.test.js`（已完成）
 
-**状态**: ⏸️ 待开始
+**状态**: ✅ 已完成
 
 ---
 
@@ -61,26 +61,26 @@
 **描述**: 在学习页面提供"重置今日"按钮，只清除今日答题统计
 
 **Acceptance Criteria**:
-- [ ] 在 `ui/learning-ui.js` 添加"重置今日"按钮（开发调试用，可隐藏）
-- [ ] 点击后弹出确认弹窗：
+- [x] 在 `ui/learning-ui.js` 添加"重置今日"按钮（开发调试用，可隐藏）
+- [x] 点击后弹出确认弹窗：
   - 标题："确认重置今日学习记录？"
   - 内容："这将清除今日的答题统计和收益，但保留金币和单词掌握进度。"
   - 按钮："确认重置" / "取消"
-- [ ] 确认后执行重置：
+- [x] 确认后执行重置：
   - 今日答题统计（套数、正确率）→ 0
   - 今日收益（金币、装备币）→ 0
   - 总金币 → 不变
   - 单词掌握进度 → 不变
-- [ ] 调用 `DailyManager.reset()`
-- [ ] 更新UI显示
+- [x] 调用 `DailyManager.reset()`
+- [x] 更新UI显示
 
 **影响文件**:
-- `ui/learning-ui.js`
+- `views/home-view.js`（实现位置，通过下拉菜单触发）
 - `learning/daily-manager.js`
 
-**测试文件**: `tests/learning-ui.test.js`（更新）
+**测试文件**: `tests/reset-features.test.js`（已完成）
 
-**状态**: ⏸️ 待开始
+**状态**: ✅ 已完成
 
 ---
 
@@ -89,17 +89,17 @@
 **描述**: 在学习页面提供"重置本周"按钮，清除最近7天答题统计
 
 **Acceptance Criteria**:
-- [ ] 在 `ui/learning-ui.js` 添加"重置本周"按钮（开发调试用，可隐藏）
-- [ ] 点击后弹出确认弹窗：
+- [x] 在 `views/home-view.js` 添加"重置本周"按钮（通过下拉菜单触发）
+- [x] 点击后弹出确认弹窗：
   - 标题："确认重置本周学习记录？"
   - 内容："这将清除最近7天的答题统计，但保留金币和单词掌握进度。"
   - 按钮："确认重置" / "取消"
-- [ ] 确认后执行重置：
+- [x] 确认后执行重置：
   - 最近7天答题统计 → 清空
   - 总金币 → 不变
   - 单词掌握进度 → 不变
-- [ ] 调用 `DailyManager.clearHistory(7)`
-- [ ] 更新UI显示
+- [x] 调用 `DailyManager.clearHistory(7)`
+- [x] 更新UI显示
 
 **新增方法**:
 ```javascript
@@ -116,7 +116,7 @@ clearHistory(days = 7) {
 
 **测试文件**: `tests/daily-manager.test.js`（更新）
 
-**状态**: ⏸️ 待开始
+**状态**: ✅ 已完成
 
 ---
 
@@ -125,13 +125,14 @@ clearHistory(days = 7) {
 **描述**: 创建隐蔽的控制台脚本，用于解锁赛道、添加金币
 
 **Acceptance Criteria**:
-- [ ] 创建 `scripts/debug-commands.js`（不打包到生产环境）
-- [ ] 提供以下调试命令：
+- [x] 创建 `scripts/debug-commands.js`（开发环境自动加载）
+- [x] 提供以下调试命令：
   ```javascript
   // 解锁指定赛道
   window.debugUnlockTrack('monaco-2d');
   window.debugUnlockTrack('silverstone-2d');
   window.debugUnlockTrack('shanghai-3d');
+  window.debugUnlockTrack('night-race-3d');
 
   // 添加金币
   window.debugAddFuelCoins(1000);
@@ -144,55 +145,18 @@ clearHistory(days = 7) {
 
   // 重置为默认状态（保留单词进度）
   window.debugResetToDefault();
+
+  // 显示帮助
+  window.debugHelp();
   ```
-- [ ] 命令执行后自动刷新页面
-- [ ] 在 `game-mechanics-v2.md` 中记录调试口令
+- [x] 命令执行后自动刷新页面
+- [x] 在 `game-mechanics-v2.md` 中记录调试口令
 
-**实现示例**:
-```javascript
-// scripts/debug-commands.js
-(function() {
-  const getCurrentUserId = () => localStorage.getItem('wr_current_user');
-
-  window.debugUnlockTrack = (trackId) => {
-    const userId = getCurrentUserId();
-    const key = `wr_game_state_${userId}`;
-    const state = JSON.parse(localStorage.getItem(key) || '{}');
-
-    if (!state.unlockedTracks) state.unlockedTracks = ['shanghai-2d'];
-    if (!state.unlockedTracks.includes(trackId)) {
-      state.unlockedTracks.push(trackId);
-    }
-
-    localStorage.setItem(key, JSON.stringify(state));
-    console.log(`✅ Track ${trackId} unlocked. Refreshing...`);
-    setTimeout(() => location.reload(), 500);
-  };
-
-  window.debugAddFuelCoins = (amount) => {
-    const userId = getCurrentUserId();
-    const key = `wr_game_state_${userId}`;
-    const state = JSON.parse(localStorage.getItem(key) || '{}');
-
-    state.fuelCoins = (state.fuelCoins || 0) + amount;
-
-    localStorage.setItem(key, JSON.stringify(state));
-    console.log(`✅ Added ${amount} fuel coins. Total: ${state.fuelCoins}. Refreshing...`);
-    setTimeout(() => location.reload(), 500);
-  };
-
-  window.debugUnlockAllTracks = () => {
-    const allTracks = ['shanghai-2d', 'monaco-2d', 'silverstone-2d', 'shanghai-3d'];
-    allTracks.forEach(trackId => {
-      window.debugUnlockTrack(trackId);
-    });
-  };
-})();
-```
+**实现**: `scripts/debug-commands.js`（IIFE，通过 `index.html` 条件加载）
 
 **测试**: 在浏览器控制台手动测试
 
-**状态**: ⏸️ 待开始
+**状态**: ✅ 已完成
 
 ---
 
@@ -201,22 +165,22 @@ clearHistory(days = 7) {
 **描述**: 创建完整的重置功能测试，验证所有场景
 
 **Acceptance Criteria**:
-- [ ] 测试全部重置：
+- [x] 测试全部重置：
   - 验证所有数据清零
   - 验证单词进度清空
   - 验证赛道解锁重置
-- [ ] 测试重置今日：
+- [x] 测试重置今日：
   - 验证今日统计清零
   - 验证金币保留
   - 验证单词进度保留
-- [ ] 测试重置本周：
+- [x] 测试重置本周：
   - 验证7天统计清空
   - 验证金币保留
   - 验证单词进度保留
 
-**测试文件**: `tests/reset-features.test.js`（新增）
+**测试文件**: `tests/reset-features.test.js`（已完成）
 
-**状态**: ⏸️ 待开始
+**状态**: ✅ 已完成
 
 ---
 
@@ -239,26 +203,26 @@ clearHistory(days = 7) {
 
 **测试**: 手动验证UI显示正确
 
-**状态**: ⏸️ 待开始
+**状态**: ❌ 已取消 — 重置功能统一通过首页下拉菜单访问，无需区分开发/生产环境UI
 
 ---
 
 ### ✅ Definition of Done
 
 **代码完成**:
-- [ ] 所有UC的AC全部勾选
-- [ ] 无console错误或警告
-- [ ] 调试命令不在生产环境暴露
+- [x] 所有UC的AC全部勾选（UC 4.6 取消）
+- [x] 无console错误或警告
+- [x] 调试命令仅在开发环境（localhost）加载
 
 **测试完成**:
-- [ ] 所有测试用例通过（`npx vitest run`）
-- [ ] 测试覆盖率 > 80%
-- [ ] 手动验证：三种重置功能正常
-- [ ] 手动验证：调试命令正常
+- [x] 所有测试用例通过（`npx vitest run`）— 740 tests passed
+- [x] 测试覆盖率 > 80%
+- [x] 手动验证：三种重置功能正常
+- [x] 手动验证：调试命令正常
 
 **文档完成**:
-- [ ] 更新本Epic状态为 ✅
-- [ ] 更新 `game-mechanics-v2.md` 中的调试口令说明
+- [x] 更新本Epic状态为 ✅
+- [x] 更新 `game-mechanics-v2.md` 中的调试口令说明
 - [ ] Git历史清晰，每个UC独立commit
 
 ---
