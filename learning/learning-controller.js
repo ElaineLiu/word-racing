@@ -268,11 +268,6 @@ export class LearningController {
       isReview,
     });
 
-    // 显示连击动画
-    if (correct && result.combo >= 3) {
-      this.#learningUI?.showCombo(result.combo);
-    }
-
     // 显示奖励动画
     if (correct) {
       this.#learningUI?.showReward(fuelCoins, gearCoins);
@@ -301,14 +296,30 @@ export class LearningController {
     const isPerfect = result.correctCount === result.totalQuestions && result.totalQuestions > 0;
     this.#gameState.set('learning.lastPerfectQuiz', isPerfect);
 
+    // 正确率奖励（装备币）
+    const accuracy = result.totalQuestions > 0
+      ? result.correctCount / result.totalQuestions
+      : 0;
+    let accuracyBonus = { gear: 0 };
+    if (accuracy >= 1.0) {
+      accuracyBonus = REWARDS.accuracyBonus[100];
+    } else if (accuracy >= 0.8) {
+      accuracyBonus = REWARDS.accuracyBonus[80];
+    } else if (accuracy >= 0.6) {
+      accuracyBonus = REWARDS.accuracyBonus[60];
+    }
+    if (accuracyBonus.gear > 0) {
+      this.#gameState.modify('gearCoins', accuracyBonus.gear);
+    }
+
     // 触发成就检查（解锁条件满足时会自动发放奖励）
     this.#achievementManager.checkAll();
 
     // 更新 UI（可选）
     this.#learningUI?.update();
-    this.#learningUI?.showQuizComplete(result);
+    this.#learningUI?.showQuizComplete({ ...result, accuracyBonus });
 
-    return result;
+    return { ...result, accuracyBonus };
   }
 
   /**

@@ -52,7 +52,6 @@ describe('DailyManager', () => {
         version: 3,
         daily: {
           lastActiveDate: yesterdayStr,
-          streakDays: 1,
           todayQuizzes: 3,
           todayFuelCoins: 100,
           todayGearCoins: 50,
@@ -177,58 +176,27 @@ describe('DailyManager', () => {
       const result = dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
 
       expect(result.goals).toBeDefined();
-      expect(result.goals.allThree).toBeDefined();
+      expect(result.goals.dailyComplete).toBeDefined();
     });
   });
 
   // ==================== Daily Goals ====================
 
   describe('checkDailyGoals', () => {
-    it('should return allThree goal as not achieved initially', () => {
+    it('should return dailyComplete goal as not achieved initially', () => {
       const goals = dailyManager.checkDailyGoals();
 
-      expect(goals.allThree.achieved).toBe(false);
-      expect(goals.allThree.progress).toBe(0);
+      expect(goals.dailyComplete.achieved).toBe(false);
+      expect(goals.dailyComplete.progress).toBe(0);
     });
 
-    it('should achieve allThree after 3 quizzes', () => {
+    it('should achieve dailyComplete after 3 quizzes', () => {
       for (let i = 0; i < 3; i++) {
         dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
       }
 
       const goals = dailyManager.checkDailyGoals();
-      expect(goals.allThree.achieved).toBe(true);
-    });
-
-    it('should check accuracy80 goal', () => {
-      dailyManager.updateProgress({ correct: true });
-      dailyManager.updateProgress({ correct: true });
-      dailyManager.updateProgress({ correct: false });
-
-      const goals = dailyManager.checkDailyGoals();
-      expect(goals.accuracy80.achieved).toBe(false);
-      expect(goals.accuracy80.progress).toBe(67); // 2/3 = 67%
-    });
-
-    it('should achieve accuracy80 with 80%+ correct', () => {
-      for (let i = 0; i < 8; i++) {
-        dailyManager.updateProgress({ correct: true });
-      }
-      for (let i = 0; i < 2; i++) {
-        dailyManager.updateProgress({ correct: false });
-      }
-
-      const goals = dailyManager.checkDailyGoals();
-      expect(goals.accuracy80.achieved).toBe(true);
-    });
-
-    it('should check newWords10 goal', () => {
-      for (let i = 0; i < 10; i++) {
-        dailyManager.updateProgress({ correct: true, isNewWord: true });
-      }
-
-      const goals = dailyManager.checkDailyGoals();
-      expect(goals.newWords10.achieved).toBe(true);
+      expect(goals.dailyComplete.achieved).toBe(true);
     });
   });
 
@@ -243,7 +211,7 @@ describe('DailyManager', () => {
       expect(result.achieved).toEqual([]);
     });
 
-    it('should calculate rewards for achieved goals', () => {
+    it('should mark dailyComplete when 3 quizzes done', () => {
       // Complete 3 quizzes
       for (let i = 0; i < 3; i++) {
         dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 9 });
@@ -251,11 +219,9 @@ describe('DailyManager', () => {
 
       const result = dailyManager.settleDailyRewards();
 
-      // allThree + accuracy80 should be achieved
-      expect(result.rewards.fuel).toBe(80); // 50 + 30
-      expect(result.rewards.gear).toBe(30);
-      expect(result.achieved).toContain('allThree');
-      expect(result.achieved).toContain('accuracy80');
+      expect(result.rewards.fuel).toBe(0);
+      expect(result.rewards.gear).toBe(0);
+      expect(result.achieved).toContain('dailyComplete');
     });
 
     it('should emit DAILY_GOAL_COMPLETE when goals achieved', () => {
@@ -268,49 +234,6 @@ describe('DailyManager', () => {
       dailyManager.settleDailyRewards();
 
       expect(handler).toHaveBeenCalled();
-    });
-  });
-
-  // ==================== Streak ====================
-
-  describe('streak', () => {
-    it('should start with 0 streak', () => {
-      expect(dailyManager.getStreak()).toBe(0);
-    });
-
-    it('should increment streak when all three quizzes completed', () => {
-      for (let i = 0; i < 3; i++) {
-        dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
-      }
-      dailyManager.settleDailyRewards();
-
-      expect(dailyManager.getStreak()).toBe(1);
-    });
-
-    it('should emit DAILY_STREAK_UPDATE on streak increment', () => {
-      const handler = vi.fn();
-      eventBus.on(Events.DAILY_STREAK_UPDATE, handler);
-
-      for (let i = 0; i < 3; i++) {
-        dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
-      }
-      dailyManager.settleDailyRewards();
-
-      expect(handler).toHaveBeenCalledWith({ streak: 1 });
-    });
-
-    it('should not increment streak without completing all three', () => {
-      dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
-      dailyManager.settleDailyRewards();
-
-      expect(dailyManager.getStreak()).toBe(0);
-    });
-
-    it('should reset streak manually', () => {
-      gameState.set('daily.streakDays', 5);
-      dailyManager.resetStreak();
-
-      expect(dailyManager.getStreak()).toBe(0);
     });
   });
 

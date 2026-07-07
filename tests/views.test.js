@@ -22,7 +22,7 @@ const createMockGame = () => ({
   state: 'IDLE',
   gameState: {
     getAll: () => ({
-      daily: { todayQuizzes: 1, streakDays: 3 },
+      daily: { todayQuizzes: 1 },
       learning: { totalWordsMastered: 25 }
     })
   },
@@ -243,7 +243,6 @@ describe('HomeView', () => {
         <span id="home-gear-coins"></span>
         <span id="home-quizzes-today"></span>
         <span id="home-words-mastered"></span>
-        <span id="home-streak"></span>
         <div id="home-leaderboard"></div>
         <div id="home-lap-select"></div>
         <button id="home-start-btn"></button>
@@ -272,7 +271,6 @@ describe('HomeView', () => {
     // 学习进度
     expect(document.getElementById('home-quizzes-today').textContent).toBe('1/3');
     expect(document.getElementById('home-words-mastered').textContent).toBe('25 words');
-    expect(document.getElementById('home-streak').textContent).toBe('3 days');
   });
 
   it('should emit QUIZ_START when start button clicked', () => {

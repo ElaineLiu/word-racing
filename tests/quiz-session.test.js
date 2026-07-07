@@ -248,14 +248,13 @@ describe('QuizSessionManager', () => {
       expect(result.accuracy).toBe(50);
     });
 
-    it('should include combo rewards', () => {
+    it('should include maxCombo', () => {
       sessionManager.saveAnswer({ questionIndex: 0, correct: true, mode: 'PIT_BOARD' });
       sessionManager.saveAnswer({ questionIndex: 1, correct: true, mode: 'PIT_BOARD' });
 
       const result = sessionManager.completeQuiz();
 
       expect(result.maxCombo).toBe(2);
-      expect(result.comboReward).toBeDefined();
     });
 
     it('should emit QUIZ_COMPLETE event', () => {
@@ -276,42 +275,6 @@ describe('QuizSessionManager', () => {
 
       const progress = dailyManager.getTodayProgress();
       expect(progress.quizzesCompleted).toBe(1);
-    });
-  });
-
-  // ==================== Combo Rewards ====================
-
-  describe('getComboReward', () => {
-    beforeEach(() => {
-      sessionManager.startDailySession();
-      sessionManager.setQuestions(Array(10).fill(null).map((_, i) => createQuestion(i, `word${i}`)));
-    });
-
-    it('should return no reward for combo < 3', () => {
-      sessionManager.saveAnswer({ questionIndex: 0, correct: true, mode: 'PIT_BOARD' });
-      sessionManager.saveAnswer({ questionIndex: 1, correct: true, mode: 'PIT_BOARD' });
-
-      const reward = sessionManager.getComboReward();
-      expect(reward.fuel).toBe(0);
-      expect(reward.gear).toBe(0);
-    });
-
-    it('should return combo 3 reward', () => {
-      for (let i = 0; i < 3; i++) {
-        sessionManager.saveAnswer({ questionIndex: i, correct: true, mode: 'PIT_BOARD' });
-      }
-
-      const reward = sessionManager.getComboReward();
-      expect(reward.gear).toBe(5);
-    });
-
-    it('should return combo 5 reward', () => {
-      for (let i = 0; i < 5; i++) {
-        sessionManager.saveAnswer({ questionIndex: i, correct: true, mode: 'PIT_BOARD' });
-      }
-
-      const reward = sessionManager.getComboReward();
-      expect(reward.gear).toBe(10);
     });
   });
 

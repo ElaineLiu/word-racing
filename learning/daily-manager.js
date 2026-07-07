@@ -10,7 +10,7 @@
  */
 
 import { Events } from '../core/event-bus.js';
-import { LEARNING, REWARDS } from '../config/learning-config.js';
+import { LEARNING } from '../config/learning-config.js';
 
 /**
  * DailyManager - 每日学习管理器
@@ -71,14 +71,8 @@ export class DailyManager {
         this.#saveToHistory(lastDate, this.#todayStats);
       }
 
-      // 检查连击
+      // 检查是否连续学习
       const yesterday = this.#getYesterday();
-      if (lastDate === yesterday) {
-        // 连续学习，保持连击
-      } else if (lastDate && lastDate !== yesterday) {
-        // 断了连击，重置
-        this.#gameState.set('daily.streakDays', 0);
-      }
 
       // 重置今日进度
       this.#todayStats = this.#createEmptyStats();
@@ -253,26 +247,11 @@ export class DailyManager {
     const progress = this.getTodayProgress();
 
     const goals = {
-      allThree: {
+      dailyComplete: {
         achieved: progress.quizzesCompleted >= LEARNING.DAILY_QUIZ_COUNT,
         progress: progress.quizzesCompleted,
         target: LEARNING.DAILY_QUIZ_COUNT,
-        reward: REWARDS.dailyGoals.allThree,
-      },
-      accuracy80: {
-        achieved: progress.totalQuestions > 0 &&
-          (progress.correctAnswers / progress.totalQuestions) >= 0.8,
-        progress: progress.totalQuestions > 0
-          ? Math.round((progress.correctAnswers / progress.totalQuestions) * 100)
-          : 0,
-        target: 80,
-        reward: REWARDS.dailyGoals.accuracy80,
-      },
-      newWords10: {
-        achieved: progress.newWordsLearned >= 10,
-        progress: progress.newWordsLearned,
-        target: 10,
-        reward: REWARDS.dailyGoals.newWords10,
+        reward: { fuel: 0, gear: 0 },
       },
     };
 
@@ -290,18 +269,8 @@ export class DailyManager {
 
     for (const [name, goal] of Object.entries(goals)) {
       if (goal.achieved) {
-        rewards.fuel += goal.reward.fuel || 0;
-        rewards.gear += goal.reward.gear || 0;
         achieved.push(name);
       }
-    }
-
-    // 更新连击天数
-    if (goals.allThree.achieved) {
-      const currentStreak = this.#gameState.get('daily.streakDays') || 0;
-      const newStreak = currentStreak + 1;
-      this.#gameState.set('daily.streakDays', newStreak);
-      this.#eventBus.emit(Events.DAILY_STREAK_UPDATE, { streak: newStreak });
     }
 
     // 标记今日完成
@@ -324,25 +293,7 @@ export class DailyManager {
     return {
       rewards,
       achieved,
-      streak: this.#gameState.get('daily.streakDays') || 0,
     };
-  }
-
-  // ==================== 连击天数 ====================
-
-  /**
-   * 获取连续学习天数
-   * @returns {number}
-   */
-  getStreak() {
-    return this.#gameState.get('daily.streakDays') || 0;
-  }
-
-  /**
-   * 重置连击天数
-   */
-  resetStreak() {
-    this.#gameState.set('daily.streakDays', 0);
   }
 
   // ==================== 历史统计 ====================
@@ -437,7 +388,6 @@ export class DailyManager {
       totalCorrect: this.#gameState.get('learning.totalCorrect') || 0,
       totalWordsSeen: this.#gameState.get('learning.totalWordsSeen') || 0,
       totalWordsMastered: this.#gameState.get('learning.totalWordsMastered') || 0,
-      streak: this.getStreak(),
     };
   }
 
@@ -494,7 +444,6 @@ export class DailyManager {
     this.#todayStats = null;
     this.#gameState.set('daily', {
       lastActiveDate: null,
-      streakDays: 0,
       todayQuizzes: 0,
       todayFuelCoins: 0,
       todayGearCoins: 0,

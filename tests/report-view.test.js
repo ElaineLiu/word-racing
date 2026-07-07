@@ -22,12 +22,9 @@ function createMockLearningController() {
         totalQuizzes: 5,
         totalQuestions: 50,
         totalCorrect: 40,
-        streak: 3,
       })),
       checkDailyGoals: vi.fn(() => ({
-        allThree: { achieved: true },
-        accuracy80: { achieved: false },
-        newWords10: { achieved: true },
+        dailyComplete: { achieved: true },
       })),
     },
     getDailyProgress: vi.fn(() => ({
@@ -78,7 +75,6 @@ describe('ReportView', () => {
     expect(container.textContent).toContain('Total Questions');
     expect(container.textContent).toContain('Correct Answers');
     expect(container.textContent).toContain('Accuracy');
-    expect(container.textContent).toContain('Streak');
   });
 
   it('renders English today stats labels', () => {
@@ -162,7 +158,5 @@ describe('ReportView', () => {
 
     const container = document.getElementById('report-today-stats');
     expect(container.textContent).toContain('Complete 3 quizzes');
-    expect(container.textContent).toContain('80% accuracy');
-    expect(container.textContent).toContain('Learn 10 new words');
   });
 });

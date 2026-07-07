@@ -64,10 +64,6 @@ export class HomeView extends BaseView {
     // 已掌握单词数
     const mastered = learning.totalWordsMastered || 0;
     this.setText('#home-words-mastered', `${mastered} words`);
-
-    // 连续学习天数
-    const streak = daily.streakDays || 0;
-    this.setText('#home-streak', `${streak} days`);
   }
 
   updateLearningUI() {
@@ -158,7 +154,6 @@ export class HomeView extends BaseView {
       const state = JSON.parse(localStorage.getItem('wr_game_state') || '{}');
       state.daily = {
         lastActiveDate: null,
-        streakDays: 0,
         todayQuizzes: 0,
         todayFuelCoins: 0,
         todayGearCoins: 0,

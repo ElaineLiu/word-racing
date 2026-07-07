@@ -8,12 +8,12 @@ import { REWARDS } from '../config/learning-config.js';
 
 describe('learning-config - reward config', () => {
   describe('per-question rewards', () => {
-    it('should give 5 fuel coins for simple questions', () => {
-      expect(REWARDS.perCorrectSimple).toEqual({ fuel: 5, gear: 0 });
+    it('should give 3 fuel coins for simple questions', () => {
+      expect(REWARDS.perCorrectSimple).toEqual({ fuel: 3, gear: 0 });
     });
 
-    it('should give 8 gear coins for complex questions', () => {
-      expect(REWARDS.perCorrectComplex).toEqual({ fuel: 0, gear: 8 });
+    it('should give 5 fuel coins for complex questions', () => {
+      expect(REWARDS.perCorrectComplex).toEqual({ fuel: 5, gear: 0 });
     });
 
     it('should give no reward for wrong answers', () => {
@@ -21,59 +21,35 @@ describe('learning-config - reward config', () => {
     });
   });
 
-  describe('quiz completion rewards', () => {
-    it('should have perQuizComplete reward', () => {
-      expect(REWARDS.perQuizComplete).toBeDefined();
+  describe('accuracy bonus', () => {
+    it('should have accuracyBonus', () => {
+      expect(REWARDS.accuracyBonus).toBeDefined();
     });
 
-    it('should give 10 fuel coins for completing a quiz', () => {
-      expect(REWARDS.perQuizComplete).toEqual({ fuel: 10, gear: 0 });
-    });
-  });
-
-  describe('combo rewards', () => {
-    it('should have combo rewards', () => {
-      expect(REWARDS.combo).toBeDefined();
+    it('should give 3 gear for 100% accuracy', () => {
+      expect(REWARDS.accuracyBonus[100]).toEqual({ gear: 3 });
     });
 
-    it('should give 5 gear coins for 3x combo', () => {
-      expect(REWARDS.combo[3]).toEqual({ fuel: 0, gear: 5 });
+    it('should give 2 gear for 80% accuracy', () => {
+      expect(REWARDS.accuracyBonus[80]).toEqual({ gear: 2 });
     });
 
-    it('should give 25 gear coins for 10x combo (full combo)', () => {
-      expect(REWARDS.combo[10]).toEqual({ fuel: 0, gear: 25 });
+    it('should give 1 gear for 60% accuracy', () => {
+      expect(REWARDS.accuracyBonus[60]).toEqual({ gear: 1 });
     });
   });
 
   describe('deleted rewards', () => {
-    it('should NOT have accuracyBonus', () => {
-      expect(REWARDS.accuracyBonus).toBeUndefined();
-    });
-  });
-
-  describe('daily goals', () => {
-    it('should have allThree goal', () => {
-      expect(REWARDS.dailyGoals.allThree).toBeDefined();
+    it('should NOT have perQuizComplete', () => {
+      expect(REWARDS.perQuizComplete).toBeUndefined();
     });
 
-    it('should give 50 fuel + 30 gear for allThree goal', () => {
-      expect(REWARDS.dailyGoals.allThree).toEqual({ fuel: 50, gear: 30 });
+    it('should NOT have combo', () => {
+      expect(REWARDS.combo).toBeUndefined();
     });
 
-    it('should have newWords10 goal', () => {
-      expect(REWARDS.dailyGoals.newWords10).toBeDefined();
-    });
-
-    it('should give 20 fuel for newWords10 goal', () => {
-      expect(REWARDS.dailyGoals.newWords10).toEqual({ fuel: 20, gear: 0 });
-    });
-
-    it('should give 30 fuel for accuracy80 goal', () => {
-      expect(REWARDS.dailyGoals.accuracy80).toEqual({ fuel: 30, gear: 0 });
-    });
-
-    it('should NOT have accuracy100 goal', () => {
-      expect(REWARDS.dailyGoals.accuracy100).toBeUndefined();
+    it('should NOT have dailyGoals', () => {
+      expect(REWARDS.dailyGoals).toBeUndefined();
     });
   });
 });

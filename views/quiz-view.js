@@ -351,17 +351,6 @@ export class QuizView extends BaseView {
     this.setText('#quiz-result-fuel', `Fuel Coins: +${fuelCoins}`);
     this.setText('#quiz-result-gear', `Gear Coins: +${gearCoins}`);
 
-    // Combo result
-    const comboEl = document.getElementById('quiz-result-combo');
-    if (comboEl) {
-      if (results.maxCombo >= 3) {
-        comboEl.style.display = 'block';
-        comboEl.textContent = `Max Combo: ${results.maxCombo}x (+${results.comboReward?.gear || 0} Gear)`;
-      } else {
-        comboEl.style.display = 'none';
-      }
-    }
-
     if (results.wrongCount > 0) {
       this.setText('#quiz-result-wrong', `Wrong: ${results.wrongCount} words need review`);
     } else {

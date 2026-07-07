@@ -95,9 +95,7 @@ describe('Learning System Integration', () => {
 
       // 验证每日目标
       const goals = controller.dailyManager.checkDailyGoals();
-      expect(goals.allThree.achieved).toBe(true);
-      expect(goals.accuracy80.achieved).toBe(true);
-      expect(goals.newWords10.achieved).toBe(true);
+      expect(goals.dailyComplete.achieved).toBe(true);
 
       // 无法再开始新套题
       const more = controller.startNewQuiz();
@@ -248,64 +246,23 @@ describe('Learning System Integration', () => {
   // ==================== 新增：目标达成集成测试 ====================
 
   describe('goal achievement integration', () => {
-    it('should correctly track newWords10 goal through full flow', () => {
-      // 这是之前遗漏的测试点
-
-      // 第一套题：10个新词
-      controller.startNewQuiz();
-      for (let i = 0; i < 10; i++) {
-        const question = controller.getCurrentQuestion();
-        if (question) {
-          controller.submitAnswer(question.correctIndex);
+    it('should correctly track dailyComplete goal through full flow', () => {
+      // 完成3套题达成每日目标
+      for (let quiz = 0; quiz < 3; quiz++) {
+        controller.startNewQuiz();
+        for (let i = 0; i < 10; i++) {
+          const question = controller.getCurrentQuestion();
+          if (question) {
+            controller.submitAnswer(question.correctIndex);
+          }
         }
+        controller.completeQuiz();
       }
-      controller.completeQuiz();
 
-      // 验证目标状态
-      let goals = controller.dailyManager.checkDailyGoals();
-      expect(goals.newWords10.achieved).toBe(true);
-      expect(goals.newWords10.progress).toBe(10);
-
-      // 第二套题：不应该再计入新词（因为是复习词或检查词）
-      controller.startNewQuiz();
-      for (let i = 0; i < 10; i++) {
-        const question = controller.getCurrentQuestion();
-        if (question) {
-          controller.submitAnswer(question.correctIndex);
-        }
-      }
-      controller.completeQuiz();
-
-      goals = controller.dailyManager.checkDailyGoals();
-      // 新词数不应该再增加10
-      expect(goals.newWords10.progress).toBeLessThanOrEqual(20);
-    });
-
-    it('should correctly track accuracy across multiple quizzes', () => {
-      // 第一套：100% 正确率
-      controller.startNewQuiz();
-      for (let i = 0; i < 10; i++) {
-        const question = controller.getCurrentQuestion();
-        if (question) controller.submitAnswer(question.correctIndex);
-      }
-      controller.completeQuiz();
-
-      // 第二套：60% 正确率
-      controller.startNewQuiz();
-      for (let i = 0; i < 10; i++) {
-        const question = controller.getCurrentQuestion();
-        if (question) {
-          const correct = i < 6;
-          const index = correct ? question.correctIndex : (question.correctIndex + 1) % 4;
-          controller.submitAnswer(index);
-        }
-      }
-      controller.completeQuiz();
-
-      // 总正确率应该是 (10+6)/20 = 80%
       const goals = controller.dailyManager.checkDailyGoals();
-      expect(goals.accuracy80.achieved).toBe(true);
-      expect(goals.accuracy80.progress).toBe(80);
+      expect(goals.dailyComplete.achieved).toBe(true);
+      expect(goals.dailyComplete.progress).toBe(3);
     });
+
   });
 });
