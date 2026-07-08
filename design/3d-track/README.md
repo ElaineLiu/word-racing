@@ -13,6 +13,8 @@
 - Epic 6: ⏸️ 单词泡泡系统（核心教育价值）
 - Epic 7: ⏸️ HUD与UI系统
 - Epic 8: ⏸️ 性能优化
+- Epic 9: ⏸️ 3D 蒙特卡洛赛道 + 赛道解锁条件重构
+- Epic 10: ⏸️ 银石赛道 2D 重构 + 新增 3D 银石赛道
 
 ## 阅读规则
 
@@ -47,6 +49,8 @@
 | `epic-6-word-bubbles.md` | Epic 6 单词泡泡与学习强化闭环 |
 | `epic-7-hud-minimap.md` | Epic 7 HUD / 速度表 / 小地图 |
 | `epic-8-performance.md` | Epic 8 LOD / InstancedMesh / 性能优化 |
+| `epic-9-monaco-3d.md` | Epic 9 3D 蒙特卡洛赛道 / 赛道解锁条件重构 |
+| `epic-10-silverstone-3d.md` | Epic 10 银石赛道 2D 重构 / 3D 银石赛道 |
 | `99-success-maintenance.md` | 成功标准、文档维护规范、参考资料 |
 
 ## Token 预期收益

@@ -40,6 +40,18 @@ export const ACHIEVEMENTS = {
   },
 
   /**
+   * 赛道挑战者 - 累计完成20套题
+   * 解锁 shanghai-3d
+   */
+  'quiz-master-20': {
+    id: 'quiz-master-20',
+    name: 'Quiz Streak 20',
+    description: 'Complete 20 quizzes.',
+    check: (state) => (state.learning?.totalQuizzes || 0) >= 20,
+    reward: { track: 'shanghai-3d' }
+  },
+
+  /**
    * 单词收藏家 - 掌握50个单词
    */
   'word-collector-50': {
@@ -52,13 +64,38 @@ export const ACHIEVEMENTS = {
 
   /**
    * 单词大师 - 掌握100个单词
+   * 不再解锁赛道，改为燃油币奖励
    */
   'word-master-100': {
     id: 'word-master-100',
     name: 'Word Master',
     description: 'Master 100 words.',
     check: (state) => (state.learning?.totalWordsMastered || 0) >= 100,
-    reward: { track: 'shanghai-3d' }
+    reward: { fuelCoins: 100 }
+  },
+
+  /**
+   * 赛道之王 - 累计完成50套题
+   * 解锁 monaco-3d
+   */
+  'quiz-master-50': {
+    id: 'quiz-master-50',
+    name: 'Quiz Streak 50',
+    description: 'Complete 50 quizzes.',
+    check: (state) => (state.learning?.totalQuizzes || 0) >= 50,
+    reward: { track: 'monaco-3d' }
+  },
+
+  /**
+   * 单词大师 200 - 掌握200个单词
+   * 解锁 silverstone-3d
+   */
+  'word-master-200': {
+    id: 'word-master-200',
+    name: 'Word Master 200',
+    description: 'Master 200 words.',
+    check: (state) => (state.learning?.totalWordsMastered || 0) >= 200,
+    reward: { track: 'silverstone-3d' }
   },
 
   /**

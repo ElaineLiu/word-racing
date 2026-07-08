@@ -11,7 +11,19 @@ http://localhost:3000/index.html
 - Windows/Linux: 按 `F12` 或 `Ctrl+Shift+I`
 - Mac: 按 `Cmd+Option+I`
 
-### 步骤 3：复制粘贴以下脚本
+### 步骤 3（可选）：直接打开 3D 测试入口
+
+**快速测试上海 3D（默认）：**
+```
+http://localhost:3000/test-3d.html
+```
+
+**测试蒙特卡洛 3D（指定赛道）：**
+```
+http://localhost:3000/test-3d.html?track=monaco-3d
+```
+
+### 步骤 4：复制粘贴以下脚本
 
 **一键设置（推荐）：**
 ```javascript

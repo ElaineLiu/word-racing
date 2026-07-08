@@ -24,21 +24,24 @@
   state.fuelCoins = 10000; // 大量金币
   state.unlockedTracks = state.unlockedTracks || [];
 
-  // 确保 shanghai-2d 和 shanghai-3d 都解锁
+  // 解锁所有 3D 赛道
   if (!state.unlockedTracks.includes('shanghai-2d')) {
     state.unlockedTracks.push('shanghai-2d');
   }
   if (!state.unlockedTracks.includes('shanghai-3d')) {
     state.unlockedTracks.push('shanghai-3d');
   }
+  if (!state.unlockedTracks.includes('monaco-3d')) {
+    state.unlockedTracks.push('monaco-3d');
+  }
 
   // 设置当前选择为 3D 赛道
-  state.selectedTrackId = 'shanghai-3d';
+  state.selectedTrackId = 'shanghai-3d'; // 改为 'monaco-3d' 可测试蒙特卡洛
 
   // 设置学习进度（用于 UI 显示）
   state.learning = state.learning || {};
-  state.learning.totalWordsMastered = 250; // 超过 shanghai-3d 的 200 要求
-  state.learning.totalQuizzes = 20;
+  state.learning.totalWordsMastered = 100; // 满足 word-master-100
+  state.learning.totalQuizzes = 50; // 满足 shanghai-3d(20) 和 monaco-3d(50)
   state.learning.totalWordsSeen = 300;
 
   // 保存回 localStorage

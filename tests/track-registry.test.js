@@ -270,14 +270,85 @@ describe('Track Registry', () => {
         expect(track.trackWidth).toBe(90);
       });
 
-      it('应该有 masteryCount 解锁要求', () => {
+      it('应该有 quizzesCompleted 解锁要求（20道）', () => {
         const track = TRACK_REGISTRY['shanghai-3d'];
+        expect(track.unlockRequirements).toBeDefined();
+        expect(track.unlockRequirements.quizzesCompleted).toBe(20);
+        expect(track.unlockRequirements.masteryCount).toBeUndefined();
+      });
+
+      it('应该有有效的 sceneConfig', () => {
+        const track = TRACK_REGISTRY['shanghai-3d'];
+        expect(track.sceneConfig).toBeDefined();
+        expect(track.sceneConfig.camera).toBeDefined();
+        expect(track.sceneConfig.lighting).toBeDefined();
+      });
+    });
+
+    describe('monaco-3d', () => {
+      it('应该已注册且有正确的元数据', () => {
+        const track = TRACK_REGISTRY['monaco-3d'];
+        expect(track).toBeDefined();
+        expect(track.id).toBe('monaco-3d');
+        expect(track.type).toBe('3d');
+        expect(track.name).toBe('Monte Carlo Street Circuit 3D');
+      });
+
+      it('应该有 waypoints 数据（复用 monaco-2d）', () => {
+        const track = TRACK_REGISTRY['monaco-3d'];
+        const monaco2d = TRACK_REGISTRY['monaco-2d'];
+        expect(Array.isArray(track.waypoints)).toBe(true);
+        expect(track.waypoints.length).toBeGreaterThan(0);
+        expect(track.waypoints).toEqual(monaco2d.waypoints);
+      });
+
+      it('应该有 trackWidth（50，与 monaco-2d 一致）', () => {
+        const track = TRACK_REGISTRY['monaco-3d'];
+        expect(track.trackWidth).toBe(50);
+      });
+
+      it('应该有 quizzesCompleted 解锁要求（50道）', () => {
+        const track = TRACK_REGISTRY['monaco-3d'];
+        expect(track.unlockRequirements).toBeDefined();
+        expect(track.unlockRequirements.quizzesCompleted).toBe(50);
+      });
+
+      it('应该有有效的 sceneConfig', () => {
+        const track = TRACK_REGISTRY['monaco-3d'];
+        expect(track.sceneConfig).toBeDefined();
+        expect(track.sceneConfig.camera).toBeDefined();
+        expect(track.sceneConfig.lighting).toBeDefined();
+      });
+    });
+
+    describe('silverstone-3d', () => {
+      it('应该已注册且有正确的元数据', () => {
+        const track = TRACK_REGISTRY['silverstone-3d'];
+        expect(track).toBeDefined();
+        expect(track.id).toBe('silverstone-3d');
+        expect(track.type).toBe('3d');
+        expect(track.name).toBe('Silverstone Circuit 3D');
+      });
+
+      it('waypoints 应该与 silverstone-2d 一致', () => {
+        const s3d = TRACK_REGISTRY['silverstone-3d'];
+        const s2d = TRACK_REGISTRY['silverstone-2d'];
+        expect(s3d.waypoints).toEqual(s2d.waypoints);
+      });
+
+      it('应该有 trackWidth（70，高速赛道）', () => {
+        const track = TRACK_REGISTRY['silverstone-3d'];
+        expect(track.trackWidth).toBe(70);
+      });
+
+      it('应该有 masteryCount: 200 解锁要求', () => {
+        const track = TRACK_REGISTRY['silverstone-3d'];
         expect(track.unlockRequirements).toBeDefined();
         expect(track.unlockRequirements.masteryCount).toBe(200);
       });
 
       it('应该有有效的 sceneConfig', () => {
-        const track = TRACK_REGISTRY['shanghai-3d'];
+        const track = TRACK_REGISTRY['silverstone-3d'];
         expect(track.sceneConfig).toBeDefined();
         expect(track.sceneConfig.camera).toBeDefined();
         expect(track.sceneConfig.lighting).toBeDefined();
@@ -300,6 +371,43 @@ describe('Track Registry', () => {
 
       expect(turns.left).toBeGreaterThan(points.length * 0.2);
       expect(turns.right).toBeGreaterThan(points.length * 0.2);
+      expect(getDirectionChanges(points)).toBeGreaterThanOrEqual(4);
+    });
+  });
+
+  describe('蒙特卡洛赛道几何安全', () => {
+    it.each(['monaco-2d', 'monaco-3d'])('%s 中心线不应该自交', (trackId) => {
+      const track = TRACK_REGISTRY[trackId];
+      const points = generateSmoothCurve(track.waypoints);
+
+      expect(hasCenterlineIntersection(points, track.waypoints.length)).toBe(false);
+    });
+    it.each(['monaco-2d', 'monaco-3d'])('%s 应该有明显左右转变化', (trackId) => {
+      const track = TRACK_REGISTRY[trackId];
+      const points = generateSmoothCurve(track.waypoints);
+      const turns = getTurnDirectionCounts(points);
+
+      expect(turns.left).toBeGreaterThan(points.length * 0.2);
+      expect(turns.right).toBeGreaterThan(points.length * 0.2);
+      // 蒙特卡洛街道赛天然多弯，方向变化应 >= 6
+      expect(getDirectionChanges(points)).toBeGreaterThanOrEqual(6);
+    });
+  });
+
+  describe('银石赛道几何安全', () => {
+    it.each(['silverstone-2d', 'silverstone-3d'])('%s 中心线不应该自交', (trackId) => {
+      const track = TRACK_REGISTRY[trackId];
+      const points = generateSmoothCurve(track.waypoints);
+
+      expect(hasCenterlineIntersection(points, track.waypoints.length)).toBe(false);
+    });
+    it.each(['silverstone-2d', 'silverstone-3d'])('%s 应该有左右转变化', (trackId) => {
+      const track = TRACK_REGISTRY[trackId];
+      const points = generateSmoothCurve(track.waypoints);
+      const turns = getTurnDirectionCounts(points);
+
+      expect(turns.left).toBeGreaterThan(points.length * 0.1);
+      expect(turns.right).toBeGreaterThan(points.length * 0.1);
       expect(getDirectionChanges(points)).toBeGreaterThanOrEqual(4);
     });
   });
