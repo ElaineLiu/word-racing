@@ -284,7 +284,7 @@ export class GameState {
           if (parsed.gearCoins > 1000) parsed.gearCoins = 50;
           if (parsed.nitroCharges > 10) parsed.nitroCharges = 0;
           if (parsed.achievements && parsed.achievements.length > 10) parsed.achievements = [];
-          if (parsed.unlockedTracks && parsed.unlockedTracks.length > 5) parsed.unlockedTracks = ['shanghai-2d'];
+          if (parsed.unlockedTracks && parsed.unlockedTracks.length > 15) parsed.unlockedTracks = ['shanghai-2d'];
 
           // 设置新版本号
           parsed.version = 4;

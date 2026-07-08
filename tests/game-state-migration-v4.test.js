@@ -112,7 +112,7 @@ describe('GameState v4 Migration', () => {
         gearCoins: 3000,  // 调试数据
         nitroCharges: 20, // 调试数据
         achievements: Array(15).fill('achievement'), // 调试数据
-        unlockedTracks: ['shanghai-2d', 'monaco-2d', 'silverstone-2d', 'shanghai-3d', 'test1', 'test2'], // 6个赛道
+        unlockedTracks: Array(16).fill('fake-track'), // 16个赛道，触发 > 15 清理
       };
       localStorage.setItem('wr_game_state_test_user', JSON.stringify(v3Data));
 
