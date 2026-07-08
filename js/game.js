@@ -624,7 +624,7 @@ export class Game {
         let actualLaps = this.car.lap + (this.car.lastProgress || 0);
 
         // 扣费（向上取整，最少扣 0 金币）
-        const cost = Math.ceil(actualLaps * 10);
+        const cost = Math.ceil(actualLaps * GAME.FUEL_COST_PER_LAP);
         const currentCoins = this._gameState.get('fuelCoins') || 0;
         const finalCost = Math.max(0, Math.min(cost, currentCoins));
 
@@ -635,6 +635,33 @@ export class Game {
 
         // 清除比赛开始时记录的状态
         this._raceStartFuelCoins = null;
+    }
+
+    /**
+     * 计算 N 圈需要的燃油币
+     * @param {number} laps
+     * @returns {number}
+     */
+    getFuelCostForLaps(laps) {
+        return laps * GAME.FUEL_COST_PER_LAP;
+    }
+
+    /**
+     * 当前燃油币能跑的最大圈数
+     * @returns {number} 0-5
+     */
+    getMaxAffordableLaps() {
+        const coins = this._gameState.get('fuelCoins') || 0;
+        const maxByCoins = Math.floor(coins / GAME.FUEL_COST_PER_LAP);
+        return Math.max(0, Math.min(maxByCoins, GAME.MAX_LAPS));
+    }
+
+    /**
+     * 是否有足够燃油币参加比赛（至少 1 圈）
+     * @returns {boolean}
+     */
+    canAffordRace() {
+        return this.getMaxAffordableLaps() >= GAME.MIN_LAPS;
     }
 
     /**
@@ -683,6 +710,19 @@ export class Game {
         if (!trackDef) throw new Error('Unknown track');
         if (trackDef.type === '3d' && !this._trackFactory.isAvailable(trackId)) {
             throw new Error(`Track not available: ${trackId}`);
+        }
+
+        // 燃油币不足 1 圈 → 拒绝比赛
+        if (!this.canAffordRace()) {
+            const costPerLap = GAME.FUEL_COST_PER_LAP;
+            const coins = this._gameState.get('fuelCoins') || 0;
+            throw new Error(`Not enough Fuel Coins. Need ${costPerLap}, have ${coins}. Complete quizzes to earn more.`);
+        }
+
+        // 如果选中圈数超过可负担上限，自动 clamp 到最大值
+        const maxAffordable = this.getMaxAffordableLaps();
+        if (this.selectedLaps > maxAffordable) {
+            this.selectedLaps = maxAffordable;
         }
 
         return this._prepareRaceAfterCost(trackId, trackDef);

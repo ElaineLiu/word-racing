@@ -76,7 +76,6 @@ describe('AchievementManager', () => {
       const achievements = gameState.get('achievements');
       expect(achievements).toContain('first-quiz');
       expect(achievements).toContain('quiz-master-10');
-      expect(achievements).toContain('word-collector-50');
     });
   });
 
@@ -90,14 +89,14 @@ describe('AchievementManager', () => {
       expect(unlockedTracks).toContain('shanghai-2d');
     });
 
-    it('应该在解锁成就时发放金币', () => {
+    it('应该在解锁成就时发放装备币', () => {
       gameState.set('learning.lastPerfectQuiz', true);
-      const initialCoins = gameState.get('fuelCoins');
+      const initialGearCoins = gameState.get('gearCoins');
 
       manager.checkAll();
 
-      const finalCoins = gameState.get('fuelCoins');
-      expect(finalCoins).toBe(initialCoins + 50);
+      const finalGearCoins = gameState.get('gearCoins');
+      expect(finalGearCoins).toBe(initialGearCoins + 5);
     });
 
     it('应该避免重复解锁赛道', () => {

@@ -39,15 +39,15 @@ describe('TrackUnlockManager - 解锁进度', () => {
     });
 
     it('应该返回解锁进度（银石）', () => {
-      gameState.set('learning.totalWordsMastered', 25);
+      gameState.set('learning.totalQuizzes', 15);
 
       const progress = manager.getUnlockProgress('silverstone-2d');
 
       expect(progress.unlocked).toBe(false);
       expect(progress.type).toBe('2d');
-      expect(progress.requirements.masteryCount).toEqual({
-        current: 25,
-        required: 50
+      expect(progress.requirements.quizzesCompleted).toEqual({
+        current: 15,
+        required: 20
       });
       expect(progress.requirements.wordsLearned).toEqual({
         current: 0,
@@ -104,21 +104,21 @@ describe('TrackUnlockManager - 解锁进度', () => {
       expect(progress.requirements.masteryCount.required).toBe(0);
     });
 
-    it('银石应该有正确的解锁要求（与成就 word-collector-50 对齐）', () => {
+    it('银石 2D 应该有正确的解锁要求（20 套题）', () => {
       const progress = manager.getUnlockProgress('silverstone-2d');
 
-      expect(progress.requirements.masteryCount.required).toBe(50);
+      expect(progress.requirements.quizzesCompleted.required).toBe(20);
       expect(progress.requirements.wordsLearned.required).toBe(0);
-      expect(progress.requirements.quizzesCompleted.required).toBe(0);
+      expect(progress.requirements.masteryCount.required).toBe(0);
     });
 
-    it('上海应该没有解锁要求', () => {
+    it('上海 2D 应该默认可解锁', () => {
       const progress = manager.getUnlockProgress('shanghai-2d');
 
       expect(progress.unlocked).toBe(true);
     });
 
-    it('shanghai-3d 应该有 quizzesCompleted 解锁要求（20套）', () => {
+    it('shanghai-3d 应该有 quizzesCompleted 解锁要求（30套）', () => {
       gameState.set('learning.totalQuizzes', 15);
 
       const progress = manager.getUnlockProgress('shanghai-3d');
@@ -127,7 +127,7 @@ describe('TrackUnlockManager - 解锁进度', () => {
       expect(progress.type).toBe('3d');
       expect(progress.requirements.quizzesCompleted).toEqual({
         current: 15,
-        required: 20
+        required: 30
       });
     });
 

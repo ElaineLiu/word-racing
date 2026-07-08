@@ -47,14 +47,15 @@ describe('Achievements Config', () => {
       });
     });
 
-    it('reward 应该包含 track 或 fuelCoins', () => {
+    it('reward 应该包含 track、fuelCoins 或 gearCoins', () => {
       const achievements = Object.values(ACHIEVEMENTS);
 
       achievements.forEach(ach => {
         const hasTrack = ach.reward.track !== undefined;
         const hasFuelCoins = ach.reward.fuelCoins !== undefined;
+        const hasGearCoins = ach.reward.gearCoins !== undefined;
 
-        expect(hasTrack || hasFuelCoins).toBe(true);
+        expect(hasTrack || hasFuelCoins || hasGearCoins).toBe(true);
       });
     });
   });
@@ -115,6 +116,17 @@ describe('Achievements Config', () => {
       expect(achievement.check(state)).toBe(true);
     });
 
+    it('quiz-master-30: 完成30套题应该返回 true', () => {
+      const state = {
+        learning: {
+          totalQuizzes: 30
+        }
+      };
+
+      const achievement = ACHIEVEMENTS['quiz-master-30'];
+      expect(achievement.check(state)).toBe(true);
+    });
+
     it('quiz-master-50: 完成50套题应该返回 true', () => {
       const state = {
         learning: {
@@ -126,14 +138,14 @@ describe('Achievements Config', () => {
       expect(achievement.check(state)).toBe(true);
     });
 
-    it('word-collector-50: 掌握50个单词应该返回 true', () => {
+    it('quiz-master-100: 完成100套题应该返回 true', () => {
       const state = {
         learning: {
-          totalWordsMastered: 50
+          totalQuizzes: 100
         }
       };
 
-      const achievement = ACHIEVEMENTS['word-collector-50'];
+      const achievement = ACHIEVEMENTS['quiz-master-100'];
       expect(achievement.check(state)).toBe(true);
     });
 
@@ -145,17 +157,6 @@ describe('Achievements Config', () => {
       };
 
       const achievement = ACHIEVEMENTS['word-master-100'];
-      expect(achievement.check(state)).toBe(true);
-    });
-
-    it('word-master-200: 掌握200个单词应该返回 true', () => {
-      const state = {
-        learning: {
-          totalWordsMastered: 200
-        }
-      };
-
-      const achievement = ACHIEVEMENTS['word-master-200'];
       expect(achievement.check(state)).toBe(true);
     });
   });
@@ -172,22 +173,26 @@ describe('Achievements Config', () => {
       });
     });
 
-    it('quiz-master-20 应该解锁 shanghai-3d 赛道', () => {
-      expect(ACHIEVEMENTS['quiz-master-20'].reward.track).toBe('shanghai-3d');
+    it('quiz-master-20 应该解锁 silverstone-2d 赛道', () => {
+      expect(ACHIEVEMENTS['quiz-master-20'].reward.track).toBe('silverstone-2d');
+    });
+
+    it('quiz-master-30 应该解锁 shanghai-3d 赛道', () => {
+      expect(ACHIEVEMENTS['quiz-master-30'].reward.track).toBe('shanghai-3d');
     });
 
     it('quiz-master-50 应该解锁 monaco-3d 赛道', () => {
       expect(ACHIEVEMENTS['quiz-master-50'].reward.track).toBe('monaco-3d');
     });
 
+    it('quiz-master-100 应该解锁 silverstone-3d 赛道', () => {
+      expect(ACHIEVEMENTS['quiz-master-100'].reward.track).toBe('silverstone-3d');
+    });
+
     it('word-master-100 应该奖励燃油币而非赛道', () => {
       const achievement = ACHIEVEMENTS['word-master-100'];
       expect(achievement.reward.track).toBeUndefined();
       expect(achievement.reward.fuelCoins).toBe(100);
-    });
-
-    it('word-master-200 应该解锁 silverstone-3d 赛道', () => {
-      expect(ACHIEVEMENTS['word-master-200'].reward.track).toBe('silverstone-3d');
     });
 
     it('fuelCoins 奖励应该是正数', () => {

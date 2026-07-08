@@ -246,11 +246,21 @@ export class ShopView extends BaseView {
     label.className = 'lap-label';
     container.appendChild(label);
 
+    const maxAffordable = this.#game.getMaxAffordableLaps();
+    const costPerLap = this.#game.getFuelCostForLaps(1);
+
     for (let i = 1; i <= 5; i++) {
       const btn = document.createElement('button');
       btn.textContent = i;
+      const isAffordable = i <= maxAffordable;
       btn.className = 'lap-btn' + (i === this.#game.selectedLaps ? ' active' : '');
+      if (!isAffordable) {
+        btn.classList.add('disabled');
+        btn.title = `Need ${i * costPerLap} Fuel Coins`;
+        btn.disabled = true;
+      }
       btn.addEventListener('click', () => {
+        if (!isAffordable) return;
         this.#game.setLapCount(i);
         this.renderLapSelector();
       });

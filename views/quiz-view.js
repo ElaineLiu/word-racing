@@ -86,7 +86,9 @@ export class QuizView extends BaseView {
   }
 
   showQuestion() {
-    // Hide learning panel when showing new question
+    // 移除上一题残留的奖励弹出动画，防止闪现
+    const popup = this.$('.reward-popup');
+    if (popup) popup.remove();
     this.hide('#quiz-learn-panel');
 
     // Remove class to center layout
@@ -377,11 +379,21 @@ export class QuizView extends BaseView {
     label.style.color = 'var(--text-secondary)';
     container.appendChild(label);
 
+    const maxAffordable = this.#game.getMaxAffordableLaps();
+    const costPerLap = this.#game.getFuelCostForLaps(1);
+
     for (let i = 1; i <= 5; i++) {
       const btn = document.createElement('button');
       btn.textContent = i;
+      const isAffordable = i <= maxAffordable;
       btn.className = 'lap-btn' + (i === this.#game.selectedLaps ? ' active' : '');
+      if (!isAffordable) {
+        btn.classList.add('disabled');
+        btn.title = `Need ${i * costPerLap} Fuel Coins`;
+        btn.disabled = true;
+      }
       btn.addEventListener('click', () => {
+        if (!isAffordable) return;
         this.#game.setLapCount(i);
         this.#renderLapSelector();
       });

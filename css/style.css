@@ -1545,7 +1545,7 @@ html, body {
     transform: translateX(-50%);
     display: flex;
     gap: var(--space-md);
-    animation: reward-float 1s ease-out;
+    animation: reward-float 1s ease-out forwards;
     pointer-events: none;
     z-index: 10;
 }

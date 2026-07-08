@@ -50,6 +50,8 @@ const createMockGame = () => ({
     { time: 52000, lapCount: 3 }
   ]),
   setLapCount: vi.fn(),
+  getMaxAffordableLaps: vi.fn(() => 5),
+  getFuelCostForLaps: vi.fn(() => 20),
   startNewQuiz: vi.fn(),
   continueToRace: vi.fn(),
   onQuizComplete: vi.fn(),
