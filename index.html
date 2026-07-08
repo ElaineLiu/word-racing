@@ -251,8 +251,8 @@
     </script>
     <script type="module" src="js/main-v2.js"></script>
     <script>
-      // 仅在开发环境加载调试命令
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      // 仅在开发环境加载调试命令（localhost 或 URL 加 ?debug=true）
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || new URLSearchParams(window.location.search).has('debug')) {
         const script = document.createElement('script');
         script.src = 'scripts/debug-commands.js';
         document.head.appendChild(script);

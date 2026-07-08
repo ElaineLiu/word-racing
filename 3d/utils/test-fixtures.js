@@ -22,7 +22,8 @@ function makeWord(id, en, zh, status) {
  * Not an instance of GameState — avoids touching localStorage.
  *
  * Numbers are chosen so that:
- *   - the 3D track unlock threshold (masteryCount >= 200) is met
+ *   - the 3D track unlock thresholds (quizzesCompleted >= 20 for shanghai-3d,
+ *     quizzesCompleted >= 50 for monaco-3d) are met
  *   - fuel is sufficient to start a multi-lap race
  *   - wordsFixture covers every status the bubble system cares about
  */

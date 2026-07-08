@@ -113,7 +113,7 @@
   <canvas id="three-canvas"></canvas>
 
   <div id="top-banner">
-    <strong>EPIC 4</strong> · AI opponents + ranking + AUTO mode ·
+    <strong>EPIC 9</strong> · 3D track viewer · <span id="banner-track-name">shanghai-3d</span> ·
     WASD/arrow keys to drive, <strong>C</strong> toggles camera, <strong>Tab</strong> toggles AUTO
   </div>
 
@@ -164,8 +164,15 @@
 
     // ---------- Build Track3D ----------
     const canvas = document.getElementById('three-canvas');
+
+    // Read track ID from URL parameter, e.g. ?track=monaco-3d
+    const urlParams = new URLSearchParams(window.location.search);
+    const trackId = urlParams.get('track') || 'shanghai-3d';
+    const trackData = TRACK_REGISTRY[trackId];
+    if (!trackData) throw new Error(`Unknown track: ${trackId}`);
+
     const track = new Track3D(
-      TRACK_REGISTRY['shanghai-3d'],
+      trackData,
       eventBus,
       mock,
       {
@@ -180,6 +187,7 @@
     );
 
     document.getElementById('dbg-track').textContent = track.id;
+    document.getElementById('banner-track-name').textContent = track.name;
     document.getElementById('dbg-objects').textContent = track.scene.children.length;
     document.getElementById('dbg-three-version').textContent = THREE.REVISION;
 
@@ -413,6 +421,16 @@
       requestAnimationFrame(tick);
     }
     requestAnimationFrame(tick);
+  </script>
+
+  <script>
+    // 加载调试命令（localhost 或 URL 加 ?debug=true）
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocal || new URLSearchParams(window.location.search).has('debug')) {
+      const s = document.createElement('script');
+      s.src = 'scripts/debug-commands.js';
+      document.head.appendChild(s);
+    }
   </script>
 </body>
 </html>

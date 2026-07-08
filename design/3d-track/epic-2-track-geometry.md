@@ -128,7 +128,7 @@ class TrackBuilder {
 **Acceptance Criteria**:
 - [ ] 在 `TRACK_REGISTRY` 中添加 `'shanghai-3d'` 配置
 - [ ] 配置包含：id、name、type='3d'、description、cost、waypoints、trackWidth
-- [ ] 解锁条件：`unlockRequirements: { masteryCount: 200 }`
+- [ ] 解锁条件：`unlockRequirements: { quizzesCompleted: 20 }`（已从 masteryCount 调整）
 - [ ] 燃油币消耗：`cost: 10`（与2D上海一致）
 - [ ] 添加 `sceneConfig`（摄像机/光照配置）
 - [ ] 现有2D赛道配置完全不变
@@ -145,7 +145,7 @@ class TrackBuilder {
   waypoints: [/* 复用2D waypoints或新设计 */],
   trackWidth: 90,
   unlockRequirements: {
-    masteryCount: 200  // 掌握200个单词解锁
+    quizzesCompleted: 20  // 完成20套quiz解锁（由Epic 9调整）
   },
   sceneConfig: {
     camera: { fov: 75, near: 0.1, far: 2000 },
@@ -219,13 +219,13 @@ describe('Track3D', () => {
 #### TC 2.2: 解锁条件正确判断
 ```javascript
 describe('3D track unlock', () => {
-  it('should be locked when mastery < 200', () => {
-    gameState.learning.totalWordsMastered = 150;
+  it('should be locked when quizzes < 20', () => {
+    gameState.learning.totalQuizzes = 15;
     expect(TrackUnlockManager.isUnlocked('shanghai-3d', gameState)).toBe(false);
   });
 
-  it('should be unlocked when mastery >= 200', () => {
-    gameState.learning.totalWordsMastered = 200;
+  it('should be unlocked when quizzes >= 20', () => {
+    gameState.learning.totalQuizzes = 20;
     expect(TrackUnlockManager.isUnlocked('shanghai-3d', gameState)).toBe(true);
   });
 });
