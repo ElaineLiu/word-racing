@@ -118,16 +118,16 @@ describe('TrackUnlockManager - 解锁进度', () => {
       expect(progress.unlocked).toBe(true);
     });
 
-    it('shanghai-3d 应该有 masteryCount 解锁要求', () => {
-      gameState.set('learning.totalWordsMastered', 150);
+    it('shanghai-3d 应该有 quizzesCompleted 解锁要求（20套）', () => {
+      gameState.set('learning.totalQuizzes', 15);
 
       const progress = manager.getUnlockProgress('shanghai-3d');
 
       expect(progress.unlocked).toBe(false);
       expect(progress.type).toBe('3d');
-      expect(progress.requirements.masteryCount).toEqual({
-        current: 150,
-        required: 200
+      expect(progress.requirements.quizzesCompleted).toEqual({
+        current: 15,
+        required: 20
       });
     });
 

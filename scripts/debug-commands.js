@@ -97,13 +97,17 @@
 
   /**
    * Unlock all tracks
+   * NOTE: Keep in sync with TRACK_REGISTRY in config/track-registry.js
    */
   window.debugUnlockAllTracks = function() {
     const userId = getCurrentUserId();
     const key = getGameStateKey(userId);
     const state = JSON.parse(localStorage.getItem(key) || '{}');
 
-    state.unlockedTracks = ['shanghai-2d', 'monaco-2d', 'silverstone-2d', 'shanghai-3d', 'night-race-3d'];
+    state.unlockedTracks = [
+      'shanghai-2d', 'monaco-2d', 'silverstone-2d',
+      'shanghai-3d', 'monaco-3d', 'silverstone-3d', 'night-race-3d'
+    ];
 
     localStorage.setItem(key, JSON.stringify(state));
     console.log('✅ All tracks unlocked! Refreshing...');

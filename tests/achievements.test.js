@@ -93,6 +93,39 @@ describe('Achievements Config', () => {
       expect(achievement.check(state)).toBe(true);
     });
 
+    it('quiz-master-10: 完成10套题应该返回 true', () => {
+      const state = {
+        learning: {
+          totalQuizzes: 10
+        }
+      };
+
+      const achievement = ACHIEVEMENTS['quiz-master-10'];
+      expect(achievement.check(state)).toBe(true);
+    });
+
+    it('quiz-master-20: 完成20套题应该返回 true', () => {
+      const state = {
+        learning: {
+          totalQuizzes: 20
+        }
+      };
+
+      const achievement = ACHIEVEMENTS['quiz-master-20'];
+      expect(achievement.check(state)).toBe(true);
+    });
+
+    it('quiz-master-50: 完成50套题应该返回 true', () => {
+      const state = {
+        learning: {
+          totalQuizzes: 50
+        }
+      };
+
+      const achievement = ACHIEVEMENTS['quiz-master-50'];
+      expect(achievement.check(state)).toBe(true);
+    });
+
     it('word-collector-50: 掌握50个单词应该返回 true', () => {
       const state = {
         learning: {
@@ -101,6 +134,28 @@ describe('Achievements Config', () => {
       };
 
       const achievement = ACHIEVEMENTS['word-collector-50'];
+      expect(achievement.check(state)).toBe(true);
+    });
+
+    it('word-master-100: 掌握100个单词应该返回 true', () => {
+      const state = {
+        learning: {
+          totalWordsMastered: 100
+        }
+      };
+
+      const achievement = ACHIEVEMENTS['word-master-100'];
+      expect(achievement.check(state)).toBe(true);
+    });
+
+    it('word-master-200: 掌握200个单词应该返回 true', () => {
+      const state = {
+        learning: {
+          totalWordsMastered: 200
+        }
+      };
+
+      const achievement = ACHIEVEMENTS['word-master-200'];
       expect(achievement.check(state)).toBe(true);
     });
   });
@@ -115,6 +170,24 @@ describe('Achievements Config', () => {
           expect(ach.reward.track.length).toBeGreaterThan(0);
         }
       });
+    });
+
+    it('quiz-master-20 应该解锁 shanghai-3d 赛道', () => {
+      expect(ACHIEVEMENTS['quiz-master-20'].reward.track).toBe('shanghai-3d');
+    });
+
+    it('quiz-master-50 应该解锁 monaco-3d 赛道', () => {
+      expect(ACHIEVEMENTS['quiz-master-50'].reward.track).toBe('monaco-3d');
+    });
+
+    it('word-master-100 应该奖励燃油币而非赛道', () => {
+      const achievement = ACHIEVEMENTS['word-master-100'];
+      expect(achievement.reward.track).toBeUndefined();
+      expect(achievement.reward.fuelCoins).toBe(100);
+    });
+
+    it('word-master-200 应该解锁 silverstone-3d 赛道', () => {
+      expect(ACHIEVEMENTS['word-master-200'].reward.track).toBe('silverstone-3d');
     });
 
     it('fuelCoins 奖励应该是正数', () => {

@@ -151,8 +151,10 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
     it('应返回 FeatureFlags 启用的赛道', () => {
       const tracks = game.getAvailableTracks();
       // Epic 5 默认启用完整 3D 赛道，不完整的 3D 赛道仍过滤
-      expect(tracks.length).toBe(4);
+      expect(tracks.length).toBe(6);
       expect(tracks.map(t => t.id)).toContain('shanghai-3d');
+      expect(tracks.map(t => t.id)).toContain('monaco-3d');
+      expect(tracks.map(t => t.id)).toContain('silverstone-3d');
       expect(tracks.map(t => t.id)).not.toContain('night-race-3d');
     });
 

@@ -187,8 +187,10 @@ describe('TrackFactory', () => {
       expect(trackIds).toContain('monaco-2d');
       expect(trackIds).toContain('silverstone-2d');
       expect(trackIds).toContain('shanghai-3d');
+      expect(trackIds).toContain('monaco-3d');
+      expect(trackIds).toContain('silverstone-3d');
       expect(trackIds).not.toContain('night-race-3d');
-      expect(trackIds.length).toBe(4);
+      expect(trackIds.length).toBe(6);
     });
 
     it('should return no tracks when both features disabled', () => {
