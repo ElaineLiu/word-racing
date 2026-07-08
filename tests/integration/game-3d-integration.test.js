@@ -109,8 +109,8 @@ describe('Game 3D integration', () => {
     game.car.finished = true;
     game._showResults();
 
-    // 比赛结束时扣费：1 圈 × 10 = 10 金币
-    expect(gameState.get('fuelCoins')).toBe(90);
+    // 比赛结束时扣费：1 圈 × 20 = 20 金币
+    expect(gameState.get('fuelCoins')).toBe(80);
   });
 
   it('should not double deduct while race preparation is pending', async () => {
@@ -131,7 +131,7 @@ describe('Game 3D integration', () => {
     game._showResults();
 
     // 只扣一次
-    expect(gameState.get('fuelCoins')).toBe(90);
+    expect(gameState.get('fuelCoins')).toBe(80);
   });
 
   it('should prepare a 3D race with player, AI cars, ranking, and shared state', async () => {
@@ -166,8 +166,8 @@ describe('Game 3D integration', () => {
     game.car.finished = true;
     game._showResults();
 
-    // 比赛结束时扣费：1 圈 × 10 = 10 金币
-    expect(gameState.get('fuelCoins')).toBe(90);
+    // 比赛结束时扣费：1 圈 × 20 = 20 金币
+    expect(gameState.get('fuelCoins')).toBe(80);
   });
 
   it('should update, render, and finish 3D races with ranking payload', async () => {

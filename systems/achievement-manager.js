@@ -97,6 +97,9 @@ export class AchievementManager {
     if (achievement.reward.fuelCoins) {
       this.#gameState.modify('fuelCoins', achievement.reward.fuelCoins);
     }
+    if (achievement.reward.gearCoins) {
+      this.#gameState.modify('gearCoins', achievement.reward.gearCoins);
+    }
 
     // 发送事件
     this.#eventBus.emit(Events.ACHIEVEMENT_UNLOCKED, { achievement });

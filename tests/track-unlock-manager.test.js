@@ -82,7 +82,7 @@ describe('TrackUnlockManager', () => {
       expect(progress.unlocked).toBe(false);
       expect(progress.type).toBe('3d');
       expect(progress.requirements).toBeDefined();
-      expect(progress.requirements.quizzesCompleted.required).toBe(20);
+      expect(progress.requirements.quizzesCompleted.required).toBe(30);
     });
 
     it('should return null for unknown track', () => {

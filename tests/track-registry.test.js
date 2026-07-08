@@ -270,10 +270,10 @@ describe('Track Registry', () => {
         expect(track.trackWidth).toBe(90);
       });
 
-      it('应该有 quizzesCompleted 解锁要求（20道）', () => {
+      it('应该有 quizzesCompleted 解锁要求（30套）', () => {
         const track = TRACK_REGISTRY['shanghai-3d'];
         expect(track.unlockRequirements).toBeDefined();
-        expect(track.unlockRequirements.quizzesCompleted).toBe(20);
+        expect(track.unlockRequirements.quizzesCompleted).toBe(30);
         expect(track.unlockRequirements.masteryCount).toBeUndefined();
       });
 
@@ -341,10 +341,10 @@ describe('Track Registry', () => {
         expect(track.trackWidth).toBe(70);
       });
 
-      it('应该有 masteryCount: 200 解锁要求', () => {
+      it('应该有 quizzesCompleted: 100 解锁要求', () => {
         const track = TRACK_REGISTRY['silverstone-3d'];
         expect(track.unlockRequirements).toBeDefined();
-        expect(track.unlockRequirements.masteryCount).toBe(200);
+        expect(track.unlockRequirements.quizzesCompleted).toBe(100);
       });
 
       it('应该有有效的 sceneConfig', () => {

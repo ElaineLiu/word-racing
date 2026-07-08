@@ -87,16 +87,16 @@ describe('成就解锁集成流程', () => {
   });
 
   describe('完美连击成就', () => {
-    it('单套题全对应解锁 perfect-streak 成就并发放金币', () => {
-      const initialCoins = controller.gameState.get('fuelCoins');
+    it('单套题全对应解锁 perfect-streak 成就并发放装备币', () => {
+      const initialGearCoins = controller.gameState.get('gearCoins');
 
       completeOneQuiz(controller, ALL_CORRECT);
 
       const achievements = controller.gameState.get('achievements');
       expect(achievements).toContain('perfect-streak');
 
-      const finalCoins = controller.gameState.get('fuelCoins');
-      expect(finalCoins).toBeGreaterThanOrEqual(initialCoins + 50);
+      const finalGearCoins = controller.gameState.get('gearCoins');
+      expect(finalGearCoins).toBeGreaterThanOrEqual(initialGearCoins + 5);
     });
 
     it('单套题不全对不应解锁 perfect-streak 成就', () => {

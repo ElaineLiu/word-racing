@@ -62,7 +62,7 @@ export const TRACK_REGISTRY = {
       { x: 370, y: 205 },
     ],
     trackWidth: 90,
-    unlockRequirements: {}  // 默认解锁，无要求
+    unlockRequirements: { quizzesCompleted: 1 }
   },
 
   /**
@@ -203,8 +203,7 @@ export const TRACK_REGISTRY = {
     ],
     trackWidth: 90,  // 高速赛道（与上海同宽）
     unlockRequirements: {
-      // 与成就 'word-collector-50' 对齐：掌握 50 个单词
-      masteryCount: 50
+      quizzesCompleted: 20
     }
   },
 
@@ -243,7 +242,7 @@ export const TRACK_REGISTRY = {
     ],
     trackWidth: 90,
     unlockRequirements: {
-      quizzesCompleted: 20
+      quizzesCompleted: 30
     },
     sceneConfig: {
       camera: {
@@ -408,7 +407,7 @@ export const TRACK_REGISTRY = {
     ],
     trackWidth: 70,
     unlockRequirements: {
-      masteryCount: 200
+      quizzesCompleted: 100
     },
     sceneConfig: {
       camera: {
