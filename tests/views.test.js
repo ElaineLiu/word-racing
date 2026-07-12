@@ -271,7 +271,7 @@ describe('HomeView', () => {
     expect(document.getElementById('home-gear-coins').textContent).toBe('50');
 
     // 学习进度
-    expect(document.getElementById('home-quizzes-today').textContent).toBe('1/3');
+    expect(document.getElementById('home-quizzes-today').textContent).toBe('1/20');
     expect(document.getElementById('home-words-mastered').textContent).toBe('25 words');
   });
 

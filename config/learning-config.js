@@ -67,7 +67,7 @@ export function isComplexMode(mode) {
 
 export const LEARNING = {
   // 每日学习
-  DAILY_QUIZ_COUNT: 3,              // 每天套数
+  DAILY_QUIZ_COUNT: 20,              // 每天套数
   QUIZ_QUESTION_COUNT: 10,          // 每套题数
 
   // 出题策略

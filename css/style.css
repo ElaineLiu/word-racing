@@ -1412,47 +1412,30 @@ html, body {
     padding: var(--space-md) 0;
 }
 
-.quiz-indicators {
-    display: flex;
-    justify-content: center;
-    gap: var(--space-md);
+.quiz-progress-bar-container {
+    width: 100%;
+    height: 24px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    overflow: hidden;
     margin-bottom: var(--space-sm);
+    border: 1px solid var(--border-default);
 }
 
-.quiz-dot {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-default);
+.quiz-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-green), #4CAF50);
+    border-radius: 12px;
+    transition: width 0.4s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 12px;
     font-weight: 700;
-    font-size: 14px;
-    color: var(--text-tertiary);
-    transition: all var(--transition-base);
-}
-
-.quiz-dot::after {
-    content: attr(data-quiz);
-}
-
-.quiz-dot.completed {
-    background: rgba(0, 200, 83, 0.15);
-    border-color: var(--accent-green);
-    color: var(--accent-green);
-}
-
-.quiz-dot.current {
-    background: rgba(255, 215, 0, 0.15);
-    border-color: var(--accent-gold);
-    color: var(--accent-gold);
-    animation: pulse-gold 2s infinite;
-}
-
-.quiz-dot.locked {
-    opacity: 0.5;
+    color: #fff;
+    min-width: 0;
+    padding: 0 8px;
+    white-space: nowrap;
 }
 
 @keyframes pulse-gold {
@@ -1464,37 +1447,6 @@ html, body {
     text-align: center;
     font-size: 13px;
     color: var(--text-secondary);
-}
-
-.learning-goals {
-    display: flex;
-    gap: var(--space-sm);
-    padding: var(--space-sm) 0;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.goal-item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    padding: var(--space-xs) var(--space-sm);
-    background: var(--bg-secondary);
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    color: var(--text-secondary);
-    border: 1px solid var(--border-default);
-    transition: all var(--transition-fast);
-}
-
-.goal-item.achieved {
-    background: rgba(0, 200, 83, 0.1);
-    border-color: rgba(0, 200, 83, 0.3);
-    color: var(--accent-green);
-}
-
-.goal-icon {
-    font-size: 14px;
 }
 
 .learning-stats {
@@ -1530,7 +1482,6 @@ html, body {
 
 /* Collapsed state */
 .learning-panel.collapsed .learning-progress,
-.learning-panel.collapsed .learning-goals,
 .learning-panel.collapsed .learning-stats {
     display: none;
 }

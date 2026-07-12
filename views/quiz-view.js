@@ -517,7 +517,7 @@ export class QuizView extends BaseView {
         this.showQuestion();
       } else if (questions === null) {
         // 今日配额已用完
-        alert('You have completed all 3 quizzes for today! Come back tomorrow.');
+        alert(`You have completed all ${LEARNING.DAILY_QUIZ_COUNT} quizzes for today! Come back tomorrow.`);
       } else {
         // 题目生成失败（可能是词库问题）
         console.error('[QuizView] Failed to generate questions:', { questions });
