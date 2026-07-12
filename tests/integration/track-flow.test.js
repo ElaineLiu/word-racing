@@ -77,8 +77,8 @@ describe('Track System Integration', () => {
       game.car.finished = true;
       game._showResults();
 
-      // 比赛结束时扣费：1 圈 × 20 = 20 金币
-      expect(gameState.get('fuelCoins')).toBe(80);
+      // 比赛结束时扣费：1 圈 × 10 = 10 金币
+      expect(gameState.get('fuelCoins')).toBe(90);
     });
   });
 

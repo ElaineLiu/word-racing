@@ -216,7 +216,7 @@ export const GAME = {
   MAX_LAPS: 5,
 
   // Fuel cost per lap (in Fuel Coins)
-  FUEL_COST_PER_LAP: 20,
+  FUEL_COST_PER_LAP: 10,
 
   // Leaderboard
   MAX_LEADERBOARD_ENTRIES: 20,
