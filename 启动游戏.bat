@@ -20,7 +20,7 @@ if %errorlevel% equ 0 (
     exit /b 0
 )
 
-:: Try Python 3 (some systems have python3 alias)
+:: Try Python 3
 where python3 >nul 2>nul
 if %errorlevel% equ 0 (
     echo [OK] Using Python 3
@@ -44,6 +44,11 @@ if %errorlevel% equ 0 (
     exit /b 0
 )
 
-echo [FAIL] Python or Node.js not found.
-echo Install Python from python.org or Node.js from nodejs.org
+:: Fallback: PowerShell (built into Windows 10/11, no admin required)
+echo [OK] Using PowerShell (built-in)
+echo Open http://localhost:%PORT%
+echo Press Ctrl+C to stop
+echo.
+start "" http://localhost:%PORT%
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0serve.ps1"
 pause
