@@ -67,8 +67,8 @@ describe('QuizSessionManager', () => {
     });
 
     it('should return null when all quizzes completed', () => {
-      // Complete 3 quizzes
-      for (let i = 0; i < 3; i++) {
+      // Complete all 20 quizzes
+      for (let i = 0; i < 20; i++) {
         dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
       }
 
@@ -285,7 +285,7 @@ describe('QuizSessionManager', () => {
       const stats = sessionManager.getTodayStats();
 
       expect(stats.quizzesCompleted).toBe(0);
-      expect(stats.remainingQuizzes).toBe(3);
+      expect(stats.remainingQuizzes).toBe(20);
     });
 
     it('should update after quiz completion', () => {
@@ -296,7 +296,7 @@ describe('QuizSessionManager', () => {
 
       const stats = sessionManager.getTodayStats();
       expect(stats.quizzesCompleted).toBe(1);
-      expect(stats.remainingQuizzes).toBe(2);
+      expect(stats.remainingQuizzes).toBe(19);
     });
   });
 
@@ -332,7 +332,7 @@ describe('QuizSessionManager', () => {
     it('should check if can start next quiz', () => {
       expect(sessionManager.canStartNextQuiz()).toBe(true);
 
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 20; i++) {
         dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
       }
 

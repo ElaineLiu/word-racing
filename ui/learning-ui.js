@@ -63,15 +63,10 @@ export class LearningUI {
         <span class="learning-title">TODAY'S PIT STOPS</span>
       </div>
       <div class="learning-progress">
-        <div class="quiz-indicators" id="quiz-indicators">
-          <div class="quiz-dot" data-quiz="1"></div>
-          <div class="quiz-dot" data-quiz="2"></div>
-          <div class="quiz-dot" data-quiz="3"></div>
+        <div class="quiz-progress-bar-container">
+          <div class="quiz-progress-bar" id="quiz-progress-bar"></div>
+          <div class="quiz-progress-text" id="quiz-progress-text"></div>
         </div>
-        <div class="quiz-progress-text" id="quiz-progress-text"></div>
-      </div>
-      <div class="learning-goals" id="learning-goals">
-        <!-- Goals rendered here -->
       </div>
       <div class="learning-stats" id="learning-stats">
         <!-- Stats rendered here -->
@@ -86,7 +81,6 @@ export class LearningUI {
    */
   update() {
     this.updateDailyProgress();
-    this.updateGoals();
     this.updateStats();
   }
 
@@ -95,54 +89,25 @@ export class LearningUI {
    */
   updateDailyProgress() {
     const progress = this.#dailyManager.getTodayProgress();
-    const indicators = document.querySelectorAll('#quiz-indicators .quiz-dot');
+    const completed = progress.quizzesCompleted;
+    const total = LEARNING.DAILY_QUIZ_COUNT;
+    const percent = Math.min(100, Math.round((completed / total) * 100));
 
-    indicators.forEach((dot, idx) => {
-      const quizNum = idx + 1;
-      dot.classList.remove('completed', 'current', 'locked');
+    const progressBar = document.getElementById('quiz-progress-bar');
+    if (progressBar) {
+      progressBar.style.width = `${percent}%`;
+      progressBar.textContent = percent > 0 ? `${percent}%` : '';
+    }
 
-      if (quizNum <= progress.quizzesCompleted) {
-        dot.classList.add('completed');
-        dot.title = `Quiz ${quizNum} completed`;
-      } else if (quizNum === progress.quizzesCompleted + 1) {
-        dot.classList.add('current');
-        dot.title = `Current quiz`;
-      } else {
-        dot.classList.add('locked');
-        dot.title = `Quiz ${quizNum} (locked)`;
-      }
-    });
-
-    // 进度文字
     const progressText = document.getElementById('quiz-progress-text');
     if (progressText) {
       const remaining = this.#dailyManager.getRemainingQuizzes();
       if (remaining > 0) {
-        progressText.textContent = `${progress.quizzesCompleted}/${LEARNING.DAILY_QUIZ_COUNT} completed, ${remaining} remaining`;
+        progressText.textContent = `${completed}/${total} completed, ${remaining} remaining`;
       } else {
         progressText.textContent = 'All quizzes completed!';
       }
     }
-  }
-
-  /**
-   * 更新目标状态
-   */
-  updateGoals() {
-    const goalsContainer = document.getElementById('learning-goals');
-    if (!goalsContainer) return;
-
-    const goals = this.#dailyManager.checkDailyGoals();
-    const goalsList = [
-      { key: 'dailyComplete', name: `Complete ${goals.dailyComplete.target} quizzes`, achieved: goals.dailyComplete.achieved },
-    ];
-
-    goalsContainer.innerHTML = goalsList.map(g => `
-      <div class="goal-item ${g.achieved ? 'achieved' : ''}">
-        <span class="goal-icon">${g.achieved ? '✓' : '○'}</span>
-        <span class="goal-name">${g.name}</span>
-      </div>
-    `).join('');
   }
 
   /**
@@ -234,7 +199,7 @@ export class LearningUI {
    */
   #showGoalCompleteMessage(goals) {
     const messages = [];
-    if (goals.dailyComplete.achieved) messages.push('3 quizzes completed!');
+    if (goals.dailyComplete.achieved) messages.push(`${LEARNING.DAILY_QUIZ_COUNT} quizzes completed!`);
 
     // 在完成界面显示
     const completePanel = document.getElementById('quiz-complete');

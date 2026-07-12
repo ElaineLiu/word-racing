@@ -152,11 +152,11 @@ describe('ReportView', () => {
     expect(container.textContent).toContain('Basic Passed');
   });
 
-  it('shows English daily goals with clear copy', () => {
+  it('shows today quiz progress with clear copy', () => {
     const view = new ReportView(eventBus, mockLC);
     view.mount();
 
     const container = document.getElementById('report-today-stats');
-    expect(container.textContent).toContain('Complete 3 quizzes');
+    expect(container.textContent).toContain('Today\'s Quizzes');
   });
 });

@@ -2,6 +2,7 @@
  * ReportView - 学习进度报告页面
  */
 import { BaseView } from './base-view.js';
+import { LEARNING } from '../config/learning-config.js';
 
 const STATUS_LABELS = {
   unlearned: 'Not Started',
@@ -55,20 +56,14 @@ export class ReportView extends BaseView {
     if (!container || !this.#learningController) return;
 
     const progress = this.#learningController.getDailyProgress?.() || {};
-    const goals = this.#learningController.dailyManager?.checkDailyGoals?.() || {};
 
     container.innerHTML = `
-      <div class="stat-row"><span>Today's Quizzes</span><strong>${progress.quizzesCompleted || 0} / 3</strong></div>
+      <div class="stat-row"><span>Today's Quizzes</span><strong>${progress.quizzesCompleted || 0} / ${LEARNING.DAILY_QUIZ_COUNT}</strong></div>
       <div class="stat-row"><span>New Words</span><strong>${progress.newWordsLearned || 0}</strong></div>
       <div class="stat-row"><span>Reviewed Words</span><strong>${progress.wordsReviewed || 0}</strong></div>
       <div class="stat-row"><span>Best Combo</span><strong>${progress.maxCombo || 0}</strong></div>
       <div class="stat-row"><span>Fuel Coins</span><strong>${progress.fuelCoinsEarned || 0}</strong></div>
       <div class="stat-row"><span>Gear Coins</span><strong>${progress.gearCoinsEarned || 0}</strong></div>
-      <div class="goals-section">
-        <div class="goal ${goals.dailyComplete?.achieved ? 'achieved' : ''}">
-          ${goals.dailyComplete?.achieved ? '✓' : '○'} Complete ${goals.dailyComplete?.target || 3} quizzes
-        </div>
-      </div>
     `;
   }
 

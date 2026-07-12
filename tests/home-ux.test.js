@@ -15,7 +15,7 @@ describe('Home UX information architecture', () => {
     expect(html).toContain('class="home-hero"');
     expect(html).toContain('class="home-primary-action"');
     expect(html).toContain('Start Today\'s Practice');
-    expect(html).toContain('Daily goal: 3 quizzes');
+    expect(html).toContain('Up to 20 quizzes per day');
     expect(html).toContain('Earn fuel from practice, then spend it on the track.');
   });
 

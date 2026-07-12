@@ -190,8 +190,8 @@ describe('DailyManager', () => {
       expect(goals.dailyComplete.progress).toBe(0);
     });
 
-    it('should achieve dailyComplete after 3 quizzes', () => {
-      for (let i = 0; i < 3; i++) {
+    it('should achieve dailyComplete after 20 quizzes', () => {
+      for (let i = 0; i < 20; i++) {
         dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
       }
 
@@ -211,9 +211,9 @@ describe('DailyManager', () => {
       expect(result.achieved).toEqual([]);
     });
 
-    it('should mark dailyComplete when 3 quizzes done', () => {
-      // Complete 3 quizzes
-      for (let i = 0; i < 3; i++) {
+    it('should mark dailyComplete when 20 quizzes done', () => {
+      // Complete 20 quizzes
+      for (let i = 0; i < 20; i++) {
         dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 9 });
       }
 
@@ -228,7 +228,7 @@ describe('DailyManager', () => {
       const handler = vi.fn();
       eventBus.on(Events.DAILY_GOAL_COMPLETE, handler);
 
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 20; i++) {
         dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 9 });
       }
       dailyManager.settleDailyRewards();
@@ -241,7 +241,7 @@ describe('DailyManager', () => {
 
   describe('history', () => {
     it('should save to history on settle', () => {
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 20; i++) {
         dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
       }
       dailyManager.settleDailyRewards();
@@ -272,20 +272,21 @@ describe('DailyManager', () => {
 
   describe('utility methods', () => {
     it('should return remaining quizzes', () => {
-      expect(dailyManager.getRemainingQuizzes()).toBe(3);
+      expect(dailyManager.getRemainingQuizzes()).toBe(20);
 
       dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
-      expect(dailyManager.getRemainingQuizzes()).toBe(2);
+      expect(dailyManager.getRemainingQuizzes()).toBe(19);
 
-      dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
-      dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
+      for (let i = 0; i < 19; i++) {
+        dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
+      }
       expect(dailyManager.getRemainingQuizzes()).toBe(0);
     });
 
     it('should check if can continue quiz', () => {
       expect(dailyManager.canContinueQuiz()).toBe(true);
 
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 20; i++) {
         dailyManager.completeQuiz({ totalQuestions: 10, correctCount: 8 });
       }
       expect(dailyManager.canContinueQuiz()).toBe(false);

@@ -4,7 +4,7 @@
 
 import { BaseView } from './base-view.js';
 import { Events } from '../core/event-bus.js';
-import { GAME } from '../config/game-config.js';
+import { LEARNING } from '../config/learning-config.js';
 
 export class HomeView extends BaseView {
   #game;
@@ -58,7 +58,7 @@ export class HomeView extends BaseView {
 
     // 今日答题数
     const todayQuizzes = daily.todayQuizzes || 0;
-    const maxQuizzes = 3; // LEARNING.DAILY_QUIZ_COUNT
+    const maxQuizzes = LEARNING.DAILY_QUIZ_COUNT;
     this.setText('#home-quizzes-today', `${todayQuizzes}/${maxQuizzes}`);
 
     // 已掌握单词数
