@@ -80,14 +80,19 @@
                 </div>
             </div>
 
-            <!-- Settings Dropdown (positioned by JS) -->
-            <div id="settings-dropdown" class="settings-dropdown" style="display:none;">
-                <button id="reset-daily-btn" class="settings-menu-item">Reset Daily Practice Limit</button>
-                <button id="reset-week-btn" class="settings-menu-item">Reset This Week</button>
-                <button id="reset-all-btn" class="settings-menu-item reset-danger">Reset All Data</button>
-            </div>
-
         </div>
+    </div>
+
+    <!-- Settings Dropdown (global, positioned by JS) -->
+    <div id="settings-dropdown" class="settings-dropdown" style="display:none;">
+        <button id="reset-daily-btn" class="settings-menu-item">Reset Daily Practice Limit</button>
+        <button id="reset-week-btn" class="settings-menu-item">Reset This Week</button>
+        <button id="reset-all-btn" class="settings-menu-item reset-danger">Reset All Data</button>
+        <hr class="settings-divider">
+        <button id="export-data-btn" class="settings-menu-item">Export Data</button>
+        <button id="import-data-btn" class="settings-menu-item">Import Data</button>
+        <input type="file" id="import-data-input" accept=".json" style="display:none;">
+        <button id="auto-save-btn" class="settings-menu-item" style="display:none;">Auto-Save: OFF</button>
     </div>
 
     <!-- Page 2: Quiz -->

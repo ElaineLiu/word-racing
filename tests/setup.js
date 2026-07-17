@@ -11,7 +11,7 @@ class MockLocalStorage {
     this._store = {};
   }
   getItem(key) {
-    return this._store[key] || null;
+    return this._store.hasOwnProperty(key) ? this._store[key] : null;
   }
   setItem(key, value) {
     this._store[key] = String(value);
@@ -21,6 +21,12 @@ class MockLocalStorage {
   }
   clear() {
     this._store = {};
+  }
+  get length() {
+    return Object.keys(this._store).length;
+  }
+  key(index) {
+    return Object.keys(this._store)[index] || null;
   }
 }
 
