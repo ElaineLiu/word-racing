@@ -12,7 +12,10 @@
     "test:quiz": "vitest run tests/quiz.test.js",
     "test:game": "vitest run tests/game.test.js",
     "serve": "npx serve .",
-    "start": "npx serve ."
+    "start": "npx serve .",
+    "build": "node scripts/build.js",
+    "pack": "npm run build && cd dist && tar -czf word-racing.tar.gz word-racing && echo 'dist/word-racing.tar.gz created'",
+    "pack:zip": "npm run build && cd dist && powershell -Command \"Compress-Archive -Path word-racing -DestinationPath word-racing.zip -Force\" && echo 'dist/word-racing.zip created'"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^1.6.0",
