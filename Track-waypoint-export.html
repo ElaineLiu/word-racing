@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Track Waypoint Builder</title>
+    <style>
+        canvas { border: 1px solid #333; background-size: contain; background-repeat: no-repeat; }
+        .panel { padding: 10px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <button onclick="clearPoints()">Clear</button>
+        <button onclick="exportJSON()">Export Waypoints</button>
+        <span id="status" style="color:red; font-weight:bold;"></span>
+    </div>
+    <canvas id="trackCanvas" width="1200" height="800" style="background-image: url('silverstone-track-map2.jpg');"></canvas>
+    <textarea id="output" rows="10" cols="100"></textarea>
+
+<script>
+    const canvas = document.getElementById('trackCanvas');
+    const ctx = canvas.getContext('2d');
+    let waypoints = [];
+    const SAMPLES_PER_SEGMENT = 24;
+
+    // 监听点击，记录坐标
+    canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.round(e.clientX - rect.left);
+        const y = Math.round(e.clientY - rect.top);
+        waypoints.push({x, y});
+        render();
+    });
+
+    // 这里复用 track.js 中的数学逻辑
+    function catmullRom(p0, p1, p2, p3, t) {
+        const t2 = t * t;
+        const t3 = t2 * t;
+        return 0.5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (-p0 + 3 * p1 - 3 * p2 + p3) * t3);
+    }
+
+    function generateSmoothCurve() {
+        if(waypoints.length < 4) return [];
+        const points = [];
+        const n = waypoints.length;
+        for (let i = 0; i < n; i++) {
+            const p0 = waypoints[(i - 1 + n) % n];
+            const p1 = waypoints[i];
+            const p2 = waypoints[(i + 1) % n];
+            const p3 = waypoints[(i + 2) % n];
+            for (let j = 0; j < SAMPLES_PER_SEGMENT; j++) {
+                const t = j / SAMPLES_PER_SEGMENT;
+                points.push({
+                    x: catmullRom(p0.x, p1.x, p2.x, p3.x, t),
+                    y: catmullRom(p0.y, p1.y, p2.y, p3.y, t)
+                });
+            }
+        }
+        return points;
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 绘制 Waypoints
+        ctx.fillStyle = 'blue';
+        waypoints.forEach(p => {
+            ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
+        });
+
+        const curve = generateSmoothCurve();
+        if(curve.length > 0) {
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(curve[0].x, curve[0].y);
+            curve.forEach(p => ctx.lineTo(p.x, p.y));
+            ctx.closePath();
+            ctx.stroke();
+            
+            // 此处可引入你的 hasCenterlineIntersection 函数进行实时校验
+            // document.getElementById('status').innerText = checkIntersection(curve) ? "Intersection Detected!" : "Valid Track";
+        }
+    }
+
+    function exportJSON() {
+        document.getElementById('output').value = JSON.stringify(waypoints, null, 2);
+    }
+    function clearPoints() { waypoints = []; render(); }
+</script>
+</body>
+</html>
