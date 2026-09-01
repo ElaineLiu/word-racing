@@ -4,6 +4,8 @@
   "description": "F1-themed English vocabulary game for kids",
   "type": "module",
   "scripts": {
+    "validate:data": "node scripts/validate-wordsets.js",
+    "validate:data:strict": "node scripts/validate-wordsets.js --strict",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -18,10 +20,11 @@
     "pack:zip": "npm run build && cd dist && powershell -Command \"Compress-Archive -Path word-racing -DestinationPath word-racing.zip -Force\" && echo 'dist/word-racing.zip created'"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^1.6.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "esbuild": "^0.25.0",
     "jsdom": "^24.0.0",
     "serve": "^14.2.0",
-    "vitest": "^1.6.0"
+    "vitest": "^4.1.11"
   },
   "keywords": [
     "game",
@@ -30,6 +33,10 @@
     "f1",
     "racing"
   ],
+  "engines": {
+    "node": ">=24 <25",
+    "npm": ">=11 <12"
+  },
   "license": "MIT",
   "dependencies": {
     "three": "^0.184.0"
