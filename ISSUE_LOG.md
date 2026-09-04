@@ -639,6 +639,71 @@ selectTrack(trackId) {
 
 ---
 
+### #016 - QuizView 强制简单模式导致 mastered 长期为 0
+**发现时间**: 2026-09-04
+**问题类型**: 业务逻辑与状态一致性缺陷
+**严重程度**: 高
+
+**问题描述**:
+真实用户完成约 100 套题后，首页 mastered words 仍为 0。
+
+**原因分析**:
+1. `LearningController` 默认题型偏好是 `auto`，但 `QuizView.#syncModeButtons()` 在首次挂载时把它改成 `simple`。
+2. mastered 要求同一单词同时通过简单和复杂题；长期仅出简单题时该状态不可达。
+3. 首页读取 `GameState.learning.totalWordsMastered`，报告读取 `ProgressTracker`；累加式汇总可能与持久化逐词状态漂移，遗忘时也不会回减。
+
+**解决方案**:
+1. UI 初始化只同步视觉状态，不再改写 `auto` 业务偏好。
+2. 掌握分类与默认出题集合分离；QUALIFYING 属于复杂能力，但默认自适应复杂题仍只使用 RADIO_MSG。
+3. LAP_REVIEW 按 `originalMode` 更新掌握状态。
+4. Controller 初始化和每次答题后，根据 ProgressTracker 当前 mastered 数校准 GameState 汇总。
+5. 增加真实 Controller + QuizView + localStorage 刷新恢复集成测试。
+
+**预防措施**:
+1. ✅ UI 的默认选中样式不得反向覆盖业务层默认配置。
+2. ✅ 状态机测试必须证明目标状态在真实 UI 调用链中可达。
+3. ✅ 持久化测试必须重建真实对象模拟刷新，并核对派生汇总。
+4. ✅ 掌握能力分类和默认出题比例必须使用不同配置。
+
+**相关文件**:
+- `views/quiz-view.js`
+- `learning/learning-controller.js`
+- `learning/progress-tracker.js`
+- `learning/adaptive-selector.js`
+- `config/reward-policy.js`
+- `tests/mastery-persistence.test.js`
+
+---
+
+### #017 - 重复答题事件可能被记到下一题
+**发现时间**: 2026-09-04
+**问题类型**: 幂等性缺陷
+**严重程度**: 高
+
+**问题描述**:
+Controller 保存一题答案后立即通过答案数量推进当前索引。迟到或重复的 UI 事件如果再次调用相同接口，可能被当作下一题答案并再次发币。
+
+**原因分析**:
+业务接口只接收选项索引，无法确认事件对应的是哪一道已展示题目；SessionManager 也未拒绝重复或乱序的 `questionIndex`。
+
+**解决方案**:
+1. UI 提交时携带实际渲染的题目对象，Controller 拒绝与当前题不一致的迟到事件。
+2. SessionManager 仅接受预期顺序且尚未保存的 questionIndex。
+3. 保留 Controller 旧单参数调用，避免破坏既有非 UI 调用方。
+
+**预防措施**:
+1. ✅ 会引发资源变化的 UI 事件必须携带稳定业务上下文，不能只携带按钮索引。
+2. ✅ 幂等保护同时放在 UI、Controller 和持久化会话边界。
+3. ✅ 测试必须核对重复提交后的答案数量和奖励余额，而不只检查返回值。
+
+**相关文件**:
+- `views/quiz-view.js`
+- `learning/learning-controller.js`
+- `learning/quiz-session.js`
+- `tests/mastery-persistence.test.js`
+
+---
+
 ## 统计数据
 
 **总问题数**: 7

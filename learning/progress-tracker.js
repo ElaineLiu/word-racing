@@ -11,12 +11,10 @@
 import { Events } from '../core/event-bus.js';
 import {
   MASTERY_STATUS,
-  QUESTION_MODES,
-  isSimpleMode,
-  isComplexMode,
   createDefaultProgress,
   LEARNING,
 } from '../config/learning-config.js';
+import { getMasteryGroup, MASTERY_GROUP } from '../config/reward-policy.js';
 
 /**
  * ProgressTracker - 单词进度追踪器
@@ -99,9 +97,10 @@ export class ProgressTracker {
    * @param {string} mode - 题型
    * @param {boolean} correct - 是否答对
    * @param {number} [wordId] - 单词ID
+   * @param {string|null} [originalMode] - LAP_REVIEW 内部实际题型
    * @returns {Object} 更新后的状态
    */
-  updateStatus(wordText, mode, correct, wordId = null) {
+  updateStatus(wordText, mode, correct, wordId = null, originalMode = null) {
     let progress = this.#progress.get(wordText);
     const today = new Date().toISOString().split('T')[0];
 
@@ -119,9 +118,9 @@ export class ProgressTracker {
 
     // 更新答对/答错计数
     if (correct) {
-      this.#handleCorrect(progress, mode);
+      this.#handleCorrect(progress, mode, originalMode);
     } else {
-      this.#handleWrong(progress, mode);
+      this.#handleWrong(progress, mode, originalMode);
     }
 
     // 计算新状态
@@ -139,12 +138,13 @@ export class ProgressTracker {
   /**
    * 处理答对逻辑
    */
-  #handleCorrect(progress, mode) {
-    if (isSimpleMode(mode)) {
+  #handleCorrect(progress, mode, originalMode) {
+    const group = getMasteryGroup(mode, originalMode);
+    if (group === MASTERY_GROUP.SIMPLE) {
       progress.simpleCorrect = true;
       // 答对后清除该题型的错误计数
       progress.simpleWrongCount = 0;
-    } else if (isComplexMode(mode)) {
+    } else if (group === MASTERY_GROUP.COMPLEX) {
       progress.complexCorrect = true;
       // 答对后清除该题型的错误计数
       progress.complexWrongCount = 0;
@@ -154,12 +154,13 @@ export class ProgressTracker {
   /**
    * 处理答错逻辑
    */
-  #handleWrong(progress, mode) {
-    if (isSimpleMode(mode)) {
+  #handleWrong(progress, mode, originalMode) {
+    const group = getMasteryGroup(mode, originalMode);
+    if (group === MASTERY_GROUP.SIMPLE) {
       progress.simpleWrongCount++;
       // 答错时重置该题型的通过状态
       progress.simpleCorrect = false;
-    } else if (isComplexMode(mode)) {
+    } else if (group === MASTERY_GROUP.COMPLEX) {
       progress.complexWrongCount++;
       // 答错时重置该题型的通过状态
       progress.complexCorrect = false;

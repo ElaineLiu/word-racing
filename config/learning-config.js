@@ -39,8 +39,15 @@ export const MASTERY_STATUS = {
  */
 export const QUESTION_MODES = {
   SIMPLE: ['PIT_BOARD', 'STRATEGY'],
-  COMPLEX: ['RADIO_MSG'],
+  COMPLEX: ['RADIO_MSG', 'QUALIFYING'],
   REVIEW: ['LAP_REVIEW'],
+};
+
+// 默认自适应出题集合与掌握能力分类分离。QUALIFYING 属于复杂能力，
+// 但阶段 A2 不把它加入默认自适应题型比例。
+export const DEFAULT_QUESTION_MODES = {
+  SIMPLE: ['PIT_BOARD', 'STRATEGY'],
+  COMPLEX: ['RADIO_MSG'],
 };
 
 /**
@@ -94,24 +101,6 @@ export const LEARNING = {
     DAILY_STATS: 'wr_daily_stats',
     QUIZ_SESSION: 'wr_quiz_session',
     GAME_STATE: 'wr_game_state',
-  },
-};
-
-// ============================================================================
-// REWARDS - 奖励配置
-// ============================================================================
-
-export const REWARDS = {
-  // 每题奖励
-  perCorrectSimple: { fuel: 3, gear: 0 },    // 简单题答对
-  perCorrectComplex: { fuel: 5, gear: 0 },   // 复杂题答对
-  perWrong: { fuel: 0, gear: 0 },            // 答错无奖励
-
-  // 正确率奖励（每套题完成时发放装备币）
-  accuracyBonus: {
-    100: { gear: 3 },  // 100%正确率
-    80: { gear: 2 },   // ≥80%
-    60: { gear: 1 },   // ≥60%
   },
 };
 

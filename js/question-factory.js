@@ -8,6 +8,7 @@
  */
 
 import { QuizModes, getMode, getReviewMode, getBaseModes } from '../quiz/mode-registry.js';
+import { calculateQuestionReward } from '../config/reward-policy.js';
 
 export class DistractorEngine {
     /**
@@ -191,7 +192,7 @@ export class QuestionFactory {
             mode: mode,
             modeLabel: useChinese && modeDef.labelCn ? modeDef.labelCn : modeDef.label,
             modeIcon: modeDef.icon,
-            reward: { ...modeDef.reward },
+            reward: calculateQuestionReward({ mode }),
             wordId: word.id,
             level: word.level,
             options: options,
@@ -286,11 +287,10 @@ export class QuestionFactory {
         const question = QuestionFactory.createQuestion(word, chosenMode, level, eligibleWords, useChinese);
         if (question) {
             // Keep original mode for rendering, mark as review for rewards
-            const reviewDef = getMode('LAP_REVIEW');
             question.originalMode = chosenMode;  // Preserve for rendering
             question.isReview = true;
             question.modeLabel = '[Review] ' + question.modeLabel;
-            question.reward = { ...reviewDef.reward };
+            question.reward = calculateQuestionReward({ mode: 'LAP_REVIEW', originalMode: chosenMode });
         }
         return question;
     }

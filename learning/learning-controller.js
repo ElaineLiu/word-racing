@@ -20,7 +20,8 @@ import { QuizSessionManager } from './quiz-session.js';
 import { AdaptiveSelector } from './adaptive-selector.js';
 import { LearningUI } from '../ui/learning-ui.js';
 import { AchievementManager } from '../systems/achievement-manager.js';
-import { LEARNING, REWARDS } from '../config/learning-config.js';
+import { LEARNING } from '../config/learning-config.js';
+import { calculateAccuracyBonus, calculateQuestionReward } from '../config/reward-policy.js';
 
 export class LearningController {
   #eventBus;
@@ -45,6 +46,7 @@ export class LearningController {
     this.#userId = userId;
     this.#gameState = new GameState(this.#eventBus, userId);
     this.#progressTracker = new ProgressTracker(this.#eventBus, 'shanghai-zhongkao', userId);
+    this.#syncMasteredSummary();
     this.#dailyManager = new DailyManager(this.#eventBus, this.#gameState, userId);
     this.#sessionManager = new QuizSessionManager(this.#eventBus, this.#dailyManager, this.#progressTracker, userId);
     this.#achievementManager = new AchievementManager(this.#eventBus, this.#gameState);
@@ -181,9 +183,10 @@ export class LearningController {
   /**
    * 提交答案
    * @param {number} selectedIndex - 选择的选项索引
+   * @param {Object|null} [expectedQuestion] - UI 实际展示的题目，用于拒绝迟到/重复事件
    * @returns {Object} 答题结果
    */
-  submitAnswer(selectedIndex) {
+  submitAnswer(selectedIndex, expectedQuestion = null) {
     const question = this.getCurrentQuestion();
 
     // Debug logging
@@ -195,7 +198,7 @@ export class LearningController {
       timestamp: Date.now()
     });
 
-    if (!question) return null;
+    if (!question || (expectedQuestion && expectedQuestion !== question)) return null;
 
     // Check if already answered (prevent duplicate submission)
     if (question.answered) {
@@ -207,17 +210,8 @@ export class LearningController {
     const currentQuiz = this.#sessionManager.getCurrentSession();
 
     // 计算奖励
-    let fuelCoins = 0;
-    let gearCoins = 0;
-    if (correct) {
-      if (question.mode === 'PIT_BOARD' || question.mode === 'STRATEGY') {
-        fuelCoins = REWARDS.perCorrectSimple.fuel;
-        gearCoins = REWARDS.perCorrectSimple.gear;
-      } else {
-        fuelCoins = REWARDS.perCorrectComplex.fuel;
-        gearCoins = REWARDS.perCorrectComplex.gear;
-      }
-    }
+    const reward = correct ? calculateQuestionReward(question) : { fuel: 0, gear: 0 };
+    const { fuel: fuelCoins, gear: gearCoins } = reward;
 
     // 保存答案
     const result = this.#sessionManager.saveAnswer({
@@ -228,6 +222,7 @@ export class LearningController {
       fuelCoins,
       gearCoins,
     });
+    if (!result.accepted) return null;
 
     // Mark question as answered
     question.answered = true;
@@ -237,7 +232,13 @@ export class LearningController {
     // 更新单词进度
     const wordText = question.correctWord || question.word;
     const prevStatus = this.#progressTracker.getStatus(wordText)?.status;
-    const newProgress = this.#progressTracker.updateStatus(wordText, question.mode, correct, question.wordId);
+    this.#progressTracker.updateStatus(
+      wordText,
+      question.mode,
+      correct,
+      question.wordId,
+      question.originalMode
+    );
 
     // 持久化单词进度
     this.#progressTracker.save();
@@ -249,10 +250,7 @@ export class LearningController {
     }
 
     // 更新统计：是否新掌握这个单词
-    const isNowMastered = newProgress.status === 'mastered' && prevStatus !== 'mastered';
-    if (isNowMastered) {
-      this.#gameState.modify('learning.totalWordsMastered', 1);
-    }
+    this.#syncMasteredSummary();
 
     // 更新每日进度
     const isNewWord = correct && isNewlySeen;
@@ -297,17 +295,7 @@ export class LearningController {
     this.#gameState.set('learning.lastPerfectQuiz', isPerfect);
 
     // 正确率奖励（装备币）
-    const accuracy = result.totalQuestions > 0
-      ? result.correctCount / result.totalQuestions
-      : 0;
-    let accuracyBonus = { gear: 0 };
-    if (accuracy >= 1.0) {
-      accuracyBonus = REWARDS.accuracyBonus[100];
-    } else if (accuracy >= 0.8) {
-      accuracyBonus = REWARDS.accuracyBonus[80];
-    } else if (accuracy >= 0.6) {
-      accuracyBonus = REWARDS.accuracyBonus[60];
-    }
+    const accuracyBonus = calculateAccuracyBonus(result.correctCount, result.totalQuestions);
     if (accuracyBonus.gear > 0) {
       this.#gameState.modify('gearCoins', accuracyBonus.gear);
     }
@@ -495,5 +483,12 @@ export class LearningController {
 
   get learningUI() {
     return this.#learningUI;
+  }
+
+  #syncMasteredSummary() {
+    const mastered = this.#progressTracker.getStats().mastered;
+    if (this.#gameState.get('learning.totalWordsMastered') !== mastered) {
+      this.#gameState.set('learning.totalWordsMastered', mastered);
+    }
   }
 }

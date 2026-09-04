@@ -72,10 +72,9 @@ export class QuizView extends BaseView {
       complexBtn?.classList.add('active');
       simpleBtn?.classList.remove('active');
     } else {
-      // auto 模式：默认选中 Basic
-      simpleBtn?.classList.add('active');
+      // auto 模式：保持自适应，不把视觉默认值写回业务状态。
+      simpleBtn?.classList.remove('active');
       complexBtn?.classList.remove('active');
-      this.#learningController?.setModePreference('simple');
     }
   }
 
@@ -257,14 +256,14 @@ export class QuizView extends BaseView {
         if (idx === q.correctIndex) btn.classList.add('correct');
         if (idx === q.selected && !q.correct) btn.classList.add('wrong');
       } else {
-        btn.addEventListener('click', () => this.#handleAnswer(idx));
+        btn.addEventListener('click', () => this.#handleAnswer(idx, q));
       }
 
       container.appendChild(btn);
     });
   }
 
-  #handleAnswer(idx) {
+  #handleAnswer(idx, expectedQuestion = null) {
     // Debug logging
     console.log('[QuizView] #handleAnswer called', {
       idx,
@@ -283,7 +282,7 @@ export class QuizView extends BaseView {
 
     // 优先使用 LearningController
     if (this.#learningController) {
-      result = this.#learningController.submitAnswer(idx);
+      result = this.#learningController.submitAnswer(idx, expectedQuestion);
       if (!result) return;
     } else {
       result = this.#quiz.submitAnswer(idx);
@@ -475,7 +474,7 @@ export class QuizView extends BaseView {
         : this.#quiz.getCurrentQuestion();
       if (q && !q.answered) {
         const wrongIndex = (q.correctIndex + 1) % 4;
-        this.#handleAnswer(wrongIndex);
+        this.#handleAnswer(wrongIndex, q);
       }
     });
 
