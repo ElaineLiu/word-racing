@@ -11,7 +11,14 @@
  */
 import { QuestionFactory } from './question-factory.js';
 import { QUIZ } from '../config/game-config.js';
-import { loadWordSet, loadLastSelection, getAvailableWordSets, getCurrentWordSetInfo, switchWordSet } from '../quiz/wordset-loader.js';
+import {
+    getAvailableWordSets,
+    getCurrentWordSetId,
+    getCurrentWordSetInfo,
+    loadLastSelection,
+    loadWordSet,
+    switchWordSet,
+} from '../quiz/wordset-loader.js';
 
 export class VocabularyQuiz {
     constructor() {
@@ -54,7 +61,7 @@ export class VocabularyQuiz {
      */
     async switchWordSet(wordSetId) {
         this.words = await switchWordSet(wordSetId);
-        this.currentWordSetId = wordSetId;
+        this.currentWordSetId = getCurrentWordSetId();
         this.loaded = this.words.length > 0;
         return this.loaded;
     }
@@ -122,14 +129,15 @@ export class VocabularyQuiz {
     // ==================== Word Loading ====================
 
     /**
-     * Load words from specified wordset or use last selection
+     * Load the Shanghai Zhongkao wordset.
+     * Loading errors are surfaced so no progress is recorded against temporary data.
      * @param {string} [wordSetId] - Optional wordset ID to load
      */
     async loadWords(wordSetId = null) {
         try {
             if (wordSetId) {
                 this.words = await loadWordSet(wordSetId);
-                this.currentWordSetId = wordSetId;
+                this.currentWordSetId = getCurrentWordSetId();
             } else {
                 // Load last selection or default
                 const lastSelection = await loadLastSelection();
@@ -143,28 +151,10 @@ export class VocabularyQuiz {
             }
         } catch (e) {
             console.error('Failed to load words:', e);
-            this.words = this._getFallbackWords();
-            this.loaded = true;
-            // Notify callback with fallback words
-            if (this.onWordsLoaded) {
-                this.onWordsLoaded(this.words);
-            }
+            this.words = [];
+            this.loaded = false;
+            throw e;
         }
-    }
-
-    _getFallbackWords() {
-        return [
-            { id: 1, word: 'speed', meaning_cn: '速度', meaning_en: 'how fast something goes', phonetic: '/spiːd/', sentence: 'The speed of the car was amazing.', level: 2, category: 'abstract' },
-            { id: 2, word: 'brake', meaning_cn: '刹车', meaning_en: 'to make a vehicle stop', phonetic: '/breɪk/', sentence: 'The driver hit the brake before the corner.', level: 2, category: 'transport' },
-            { id: 3, word: 'champion', meaning_cn: '冠军', meaning_en: 'the winner of a competition', phonetic: '/ˈtʃæmpiən/', sentence: 'The champion lifted the trophy.', level: 3, category: 'sports' },
-            { id: 4, word: 'engine', meaning_cn: '引擎', meaning_en: 'the part that makes a machine go', phonetic: '/ˈendʒɪn/', sentence: 'The engine roared as the race started.', level: 3, category: 'transport' },
-            { id: 5, word: 'trophy', meaning_cn: '奖杯', meaning_en: 'a prize you win', phonetic: '/ˈtroʊfi/', sentence: 'The trophy was made of gold.', level: 2, category: 'objects' },
-            { id: 6, word: 'dangerous', meaning_cn: '危险的', meaning_en: 'not safe, could cause harm', phonetic: '/ˈdeɪndʒərəs/', sentence: 'Racing in the rain is dangerous.', level: 2, category: 'adjectives' },
-            { id: 7, word: 'track', meaning_cn: '赛道', meaning_en: 'a path for racing', phonetic: '/træk/', sentence: 'The track was wet after the rain.', level: 2, category: 'places' },
-            { id: 8, word: 'practice', meaning_cn: '练习', meaning_en: 'to do something again to get better', phonetic: '/ˈpræktɪs/', sentence: 'The driver practices on the track every morning.', level: 2, category: 'actions' },
-            { id: 9, word: 'accident', meaning_cn: '事故', meaning_en: 'something bad that happens by chance', phonetic: '/ˈæksɪdənt/', sentence: 'There was an accident on the first lap.', level: 3, category: 'abstract' },
-            { id: 10, word: 'celebrate', meaning_cn: '庆祝', meaning_en: 'to do something fun because of good news', phonetic: '/ˈselɪbreɪt/', sentence: 'The team celebrated the victory.', level: 3, category: 'actions' },
-        ];
     }
 
     // ==================== Quiz Generation ====================

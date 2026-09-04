@@ -10,16 +10,25 @@ import { DistractorEngine } from '../js/question-factory.js';
 describe('VocabularyQuiz', () => {
   let quiz;
 
+  const testWords = [
+    { id: 1, word: 'speed', meaning_cn: '速度', meaning_en: 'fast', phonetic: '/spiːd/', sentence: 'Speed matters.', level: 2, category: 'abstract' },
+    { id: 2, word: 'brake', meaning_cn: '刹车', meaning_en: 'stop', phonetic: '/breɪk/', sentence: 'Use the brake.', level: 2, category: 'actions' },
+    { id: 3, word: 'engine', meaning_cn: '引擎', meaning_en: 'motor', phonetic: '/ˈendʒɪn/', sentence: 'The engine runs.', level: 2, category: 'objects' },
+    { id: 4, word: 'track', meaning_cn: '赛道', meaning_en: 'path', phonetic: '/træk/', sentence: 'The track is dry.', level: 2, category: 'places' },
+    { id: 5, word: 'trophy', meaning_cn: '奖杯', meaning_en: 'prize', phonetic: '/ˈtroʊfi/', sentence: 'Win the trophy.', level: 2, category: 'objects' },
+  ];
+
   beforeEach(() => {
+    localStorage.clear();
     quiz = new VocabularyQuiz();
-    // Use fallback words instead of loading from network
-    quiz.words = quiz._getFallbackWords();
+    quiz.words = testWords;
     quiz.loaded = true;
   });
 
   describe('word loading', () => {
-    it('should have fallback words', () => {
-      expect(quiz._getFallbackWords().length).toBe(10);
+    it('should use explicit test fixtures rather than a runtime fallback', () => {
+      expect(quiz.words).toHaveLength(5);
+      expect(quiz._getFallbackWords).toBeUndefined();
     });
   });
 

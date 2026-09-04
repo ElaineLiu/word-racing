@@ -527,7 +527,7 @@
       "category": "places"
     },
     {
-      "id": 39,
+      "id": 1809,
       "word": "alarm",
       "phonetic": "/əˈlɑːrm/",
       "meaning_cn": "警报",
@@ -882,7 +882,7 @@
       "category": "actions"
     },
     {
-      "id": 64,
+      "id": 1810,
       "word": "apple",
       "phonetic": "/ˈæpl/",
       "meaning_cn": "苹果",
@@ -1026,7 +1026,7 @@
       "pos": "n."
     },
     {
-      "id": 76,
+      "id": 1811,
       "word": "article",
       "phonetic": "/ˈɑːrtɪkl/",
       "meaning_cn": "文章",
@@ -1157,7 +1157,7 @@
       "pos": "n."
     },
     {
-      "id": 79,
+      "id": 1812,
       "word": "attract",
       "phonetic": "/əˈtrækt/",
       "meaning_cn": "吸引",
@@ -1180,7 +1180,7 @@
       "pos": "adj."
     },
     {
-      "id": 81,
+      "id": 1813,
       "word": "audience",
       "phonetic": "/ˈɔːdiəns/",
       "meaning_cn": "观众",
@@ -1274,7 +1274,7 @@
       "category": "adjectives"
     },
     {
-      "id": 93,
+      "id": 1814,
       "word": "average",
       "phonetic": "/ˈævərɪdʒ/",
       "meaning_cn": "平均的；普通的",
@@ -1825,7 +1825,7 @@
       "pos": "n."
     },
     {
-      "id": 138,
+      "id": 1815,
       "word": "belong",
       "phonetic": "/bɪˈlɒŋ/",
       "meaning_cn": "属；附属",
@@ -1945,7 +1945,7 @@
       "pos": "n."
     },
     {
-      "id": 148,
+      "id": 1816,
       "word": "birthday",
       "phonetic": "/ˈbɜːrθdeɪ/",
       "meaning_cn": "生日",
@@ -1992,7 +1992,7 @@
       "pos": "v."
     },
     {
-      "id": 151,
+      "id": 1817,
       "word": "black",
       "phonetic": "/blæk/",
       "meaning_cn": "黑色",
@@ -2136,7 +2136,7 @@
       "pos": "v."
     },
     {
-      "id": 163,
+      "id": 1818,
       "word": "book",
       "phonetic": "/bʊk/",
       "meaning_cn": "预订",
@@ -2352,7 +2352,7 @@
       "pos": "n."
     },
     {
-      "id": 96,
+      "id": 1819,
       "word": "breathe",
       "phonetic": "/briːð/",
       "meaning_cn": "呼吸",
@@ -2363,7 +2363,7 @@
       "category": "actions"
     },
     {
-      "id": 181,
+      "id": 1820,
       "word": "bridge",
       "phonetic": "/brɪdʒ/",
       "meaning_cn": "桥",
@@ -2483,7 +2483,7 @@
       "pos": "v."
     },
     {
-      "id": 191,
+      "id": 1821,
       "word": "build",
       "phonetic": "/bɪld/",
       "meaning_cn": "建造 过去式和过去分词都为built 近义：put up",
@@ -2639,7 +2639,7 @@
       "pos": "prep."
     },
     {
-      "id": 204,
+      "id": 1822,
       "word": "bye",
       "phonetic": "/baɪ/",
       "meaning_cn": "再见",
@@ -2711,7 +2711,7 @@
       "pos": "adj."
     },
     {
-      "id": 125,
+      "id": 1823,
       "word": "camera",
       "phonetic": "/ˈkæmərə/",
       "meaning_cn": "相机",
@@ -2722,7 +2722,7 @@
       "category": "objects"
     },
     {
-      "id": 210,
+      "id": 1824,
       "word": "camp",
       "phonetic": "/kæmp/",
       "meaning_cn": "夏令营；野营",
@@ -2974,7 +2974,7 @@
       "pos": "n."
     },
     {
-      "id": 15,
+      "id": 1825,
       "word": "celebrate",
       "phonetic": "/ˈselɪbreɪt/",
       "meaning_cn": "庆祝",
@@ -3045,7 +3045,7 @@
       "pos": "n."
     },
     {
-      "id": 236,
+      "id": 1826,
       "word": "chair",
       "phonetic": "/tʃeər/",
       "meaning_cn": "椅子",
@@ -3069,7 +3069,7 @@
       "pos": "n."
     },
     {
-      "id": 238,
+      "id": 1827,
       "word": "change",
       "phonetic": "/tʃeɪndʒ/",
       "meaning_cn": "改变；变化；更换；兑换（零钱） n. 零钱；找头；变化",
@@ -3105,7 +3105,7 @@
       "pos": "n."
     },
     {
-      "id": 84,
+      "id": 1828,
       "word": "character",
       "phonetic": "/ˈkærəktər/",
       "meaning_cn": "性格，人物",
@@ -3320,7 +3320,7 @@
       "pos": "adj."
     },
     {
-      "id": 152,
+      "id": 1829,
       "word": "chocolate",
       "phonetic": "/ˈtʃɒklət/",
       "meaning_cn": "巧克力",
@@ -3703,7 +3703,7 @@
       "pos": "v."
     },
     {
-      "id": 127,
+      "id": 1830,
       "word": "collection",
       "phonetic": "/kəˈlekʃən/",
       "meaning_cn": "收藏，收集",
@@ -3750,7 +3750,7 @@
       "pos": "v."
     },
     {
-      "id": 206,
+      "id": 1831,
       "word": "comfortable",
       "phonetic": "/ˈkʌmftəbl/",
       "meaning_cn": "舒适的",
@@ -3773,7 +3773,7 @@
       "pos": "adj."
     },
     {
-      "id": 73,
+      "id": 1832,
       "word": "communicate",
       "phonetic": "/kəˈmjuːnɪkeɪt/",
       "meaning_cn": "交流，沟通",
@@ -3796,7 +3796,7 @@
       "pos": "n."
     },
     {
-      "id": 141,
+      "id": 1833,
       "word": "compare",
       "phonetic": "/kəmˈper/",
       "meaning_cn": "比较",
@@ -3807,7 +3807,7 @@
       "category": "actions"
     },
     {
-      "id": 196,
+      "id": 1834,
       "word": "competition",
       "phonetic": "/ˌkɒmpəˈtɪʃən/",
       "meaning_cn": "比赛，竞赛",
@@ -3818,7 +3818,7 @@
       "category": "abstract"
     },
     {
-      "id": 137,
+      "id": 1835,
       "word": "complain",
       "phonetic": "/kəmˈpleɪn/",
       "meaning_cn": "抱怨",
@@ -3913,7 +3913,7 @@
       "pos": "n."
     },
     {
-      "id": 28,
+      "id": 1836,
       "word": "confident",
       "phonetic": "/ˈkɒnfɪdənt/",
       "meaning_cn": "自信的",
@@ -3948,7 +3948,7 @@
       "pos": "n."
     },
     {
-      "id": 167,
+      "id": 1837,
       "word": "connect",
       "phonetic": "/kəˈnekt/",
       "meaning_cn": "连接",
@@ -3959,7 +3959,7 @@
       "category": "actions"
     },
     {
-      "id": 147,
+      "id": 1838,
       "word": "consider",
       "phonetic": "/kənˈsɪdər/",
       "meaning_cn": "考虑",
@@ -4042,7 +4042,7 @@
       "pos": "adj."
     },
     {
-      "id": 199,
+      "id": 1839,
       "word": "conversation",
       "phonetic": "/ˌkɒnvəˈseɪʃən/",
       "meaning_cn": "对话，交谈",
@@ -4209,7 +4209,7 @@
       "pos": "n."
     },
     {
-      "id": 170,
+      "id": 1840,
       "word": "cousin",
       "phonetic": "/ˈkʌzən/",
       "meaning_cn": "堂/表兄弟姊妹",
@@ -4256,7 +4256,7 @@
       "pos": "n."
     },
     {
-      "id": 69,
+      "id": 1841,
       "word": "create",
       "phonetic": "/kriˈeɪt/",
       "meaning_cn": "创造",
@@ -4291,7 +4291,7 @@
       "pos": "n."
     },
     {
-      "id": 80,
+      "id": 1842,
       "word": "crowd",
       "phonetic": "/kraʊd/",
       "meaning_cn": "人群",
@@ -4470,7 +4470,7 @@
       "pos": "n."
     },
     {
-      "id": 117,
+      "id": 1843,
       "word": "danger",
       "phonetic": "/ˈdeɪndʒər/",
       "meaning_cn": "危险",
@@ -4481,7 +4481,7 @@
       "category": "abstract"
     },
     {
-      "id": 31,
+      "id": 1844,
       "word": "dangerous",
       "phonetic": "/ˈdeɪndʒərəs/",
       "meaning_cn": "危险的",
@@ -4696,7 +4696,7 @@
       "pos": "v."
     },
     {
-      "id": 207,
+      "id": 1845,
       "word": "delicious",
       "phonetic": "/dɪˈlɪʃəs/",
       "meaning_cn": "美味的",
@@ -4707,7 +4707,7 @@
       "category": "adjectives"
     },
     {
-      "id": 158,
+      "id": 1846,
       "word": "deliver",
       "phonetic": "/dɪˈlɪvər/",
       "meaning_cn": "递送，交付",
@@ -4766,7 +4766,7 @@
       "pos": "v."
     },
     {
-      "id": 131,
+      "id": 1847,
       "word": "describe",
       "phonetic": "/dɪˈskraɪb/",
       "meaning_cn": "描述",
@@ -4825,7 +4825,7 @@
       "pos": "n."
     },
     {
-      "id": 3,
+      "id": 1848,
       "word": "destroy",
       "phonetic": "/dɪˈstrɔɪ/",
       "meaning_cn": "破坏，毁坏",
@@ -4861,7 +4861,7 @@
       "pos": "adj."
     },
     {
-      "id": 68,
+      "id": 1849,
       "word": "develop",
       "phonetic": "/dɪˈveləp/",
       "meaning_cn": "发展，开发",
@@ -5028,7 +5028,7 @@
       "pos": "n."
     },
     {
-      "id": 53,
+      "id": 1850,
       "word": "direction",
       "phonetic": "/dəˈrekʃən/",
       "meaning_cn": "方向",
@@ -5099,7 +5099,7 @@
       "pos": "n."
     },
     {
-      "id": 149,
+      "id": 1851,
       "word": "disappear",
       "phonetic": "/ˌdɪsəˈpɪər/",
       "meaning_cn": "消失",
@@ -5110,7 +5110,7 @@
       "category": "actions"
     },
     {
-      "id": 29,
+      "id": 1852,
       "word": "disappointed",
       "phonetic": "/ˌdɪsəˈpɔɪntɪd/",
       "meaning_cn": "失望的",
@@ -5133,7 +5133,7 @@
       "pos": "n."
     },
     {
-      "id": 58,
+      "id": 1853,
       "word": "discover",
       "phonetic": "/dɪsˈkʌvər/",
       "meaning_cn": "发现",
@@ -5144,7 +5144,7 @@
       "category": "actions"
     },
     {
-      "id": 132,
+      "id": 1854,
       "word": "discuss",
       "phonetic": "/dɪˈskʌs/",
       "meaning_cn": "讨论",
@@ -5203,7 +5203,7 @@
       "pos": "v."
     },
     {
-      "id": 52,
+      "id": 1855,
       "word": "distance",
       "phonetic": "/ˈdɪstəns/",
       "meaning_cn": "距离",
@@ -5550,7 +5550,7 @@
       "pos": "n."
     },
     {
-      "id": 111,
+      "id": 1856,
       "word": "earthquake",
       "phonetic": "/ˈɜːrθkweɪk/",
       "meaning_cn": "地震",
@@ -5621,7 +5621,7 @@
       "pos": "n."
     },
     {
-      "id": 194,
+      "id": 1857,
       "word": "education",
       "phonetic": "/ˌedʒuˈkeɪʃən/",
       "meaning_cn": "教育",
@@ -5728,7 +5728,7 @@
       "pos": "adj."
     },
     {
-      "id": 162,
+      "id": 1858,
       "word": "electricity",
       "phonetic": "/ɪˌlekˈtrɪsəti/",
       "meaning_cn": "电力",
@@ -5751,7 +5751,7 @@
       "pos": "adj."
     },
     {
-      "id": 113,
+      "id": 1859,
       "word": "elephant",
       "phonetic": "/ˈelɪfənt/",
       "meaning_cn": "大象",
@@ -5834,7 +5834,7 @@
       "pos": "v."
     },
     {
-      "id": 139,
+      "id": 1860,
       "word": "encourage",
       "phonetic": "/ɪnˈkʌrɪdʒ/",
       "meaning_cn": "鼓励",
@@ -5869,7 +5869,7 @@
       "pos": "n."
     },
     {
-      "id": 55,
+      "id": 1861,
       "word": "energy",
       "phonetic": "/ˈenərdʒi/",
       "meaning_cn": "能量，精力",
@@ -5880,7 +5880,7 @@
       "category": "abstract"
     },
     {
-      "id": 41,
+      "id": 1862,
       "word": "engine",
       "phonetic": "/ˈendʒɪn/",
       "meaning_cn": "引擎，发动机",
@@ -5891,7 +5891,7 @@
       "category": "transport"
     },
     {
-      "id": 229,
+      "id": 1863,
       "word": "engineer",
       "phonetic": "/ˌendʒɪˈnɪər/",
       "meaning_cn": "工程师",
@@ -6022,7 +6022,7 @@
       "pos": "n."
     },
     {
-      "id": 5,
+      "id": 1864,
       "word": "environment",
       "phonetic": "/ɪnˈvaɪrənmənt/",
       "meaning_cn": "环境",
@@ -6058,7 +6058,7 @@
       "pos": "n."
     },
     {
-      "id": 89,
+      "id": 1865,
       "word": "especially",
       "phonetic": "/ɪˈspeʃəli/",
       "meaning_cn": "尤其，特别",
@@ -6201,7 +6201,7 @@
       "pos": "adv."
     },
     {
-      "id": 56,
+      "id": 1866,
       "word": "examine",
       "phonetic": "/ɪɡˈzæmɪn/",
       "meaning_cn": "检查",
@@ -6224,7 +6224,7 @@
       "pos": "n."
     },
     {
-      "id": 220,
+      "id": 1867,
       "word": "excellent",
       "phonetic": "/ˈeksələnt/",
       "meaning_cn": "优秀的",
@@ -6259,7 +6259,7 @@
       "pos": "v."
     },
     {
-      "id": 26,
+      "id": 1868,
       "word": "excited",
       "phonetic": "/ɪkˈsaɪtɪd/",
       "meaning_cn": "兴奋的",
@@ -6294,7 +6294,7 @@
       "pos": "v."
     },
     {
-      "id": 95,
+      "id": 1869,
       "word": "exercise",
       "phonetic": "/ˈeksərsaɪz/",
       "meaning_cn": "锻炼，运动",
@@ -6305,7 +6305,7 @@
       "category": "actions"
     },
     {
-      "id": 179,
+      "id": 1870,
       "word": "exhibition",
       "phonetic": "/ˌeksɪˈbɪʃən/",
       "meaning_cn": "展览",
@@ -6364,7 +6364,7 @@
       "pos": "adj."
     },
     {
-      "id": 74,
+      "id": 1871,
       "word": "experience",
       "phonetic": "/ɪkˈspɪəriəns/",
       "meaning_cn": "经验，经历",
@@ -6375,7 +6375,7 @@
       "category": "abstract"
     },
     {
-      "id": 161,
+      "id": 1872,
       "word": "experiment",
       "phonetic": "/ɪkˈsperɪmənt/",
       "meaning_cn": "实验",
@@ -6398,7 +6398,7 @@
       "pos": "v."
     },
     {
-      "id": 133,
+      "id": 1873,
       "word": "explain",
       "phonetic": "/ɪkˈspleɪn/",
       "meaning_cn": "解释",
@@ -6481,7 +6481,7 @@
       "pos": "n."
     },
     {
-      "id": 1,
+      "id": 1874,
       "word": "factory",
       "phonetic": "/ˈfæktəri/",
       "meaning_cn": "工厂",
@@ -6493,7 +6493,7 @@
       "type": "complex"
     },
     {
-      "id": 66,
+      "id": 1875,
       "word": "fail",
       "phonetic": "/feɪl/",
       "meaning_cn": "失败",
@@ -6552,7 +6552,7 @@
       "pos": "n."
     },
     {
-      "id": 33,
+      "id": 1876,
       "word": "famous",
       "phonetic": "/ˈfeɪməs/",
       "meaning_cn": "著名的",
@@ -6947,7 +6947,7 @@
       "pos": "n."
     },
     {
-      "id": 50,
+      "id": 1877,
       "word": "finish",
       "phonetic": "/ˈfɪnɪʃ/",
       "meaning_cn": "完成，终点",
@@ -7054,7 +7054,7 @@
       "pos": "v."
     },
     {
-      "id": 123,
+      "id": 1878,
       "word": "flag",
       "phonetic": "/flæɡ/",
       "meaning_cn": "旗子",
@@ -7077,7 +7077,7 @@
       "pos": "n."
     },
     {
-      "id": 218,
+      "id": 1879,
       "word": "flat",
       "phonetic": "/flæt/",
       "meaning_cn": "平坦的",
@@ -7112,7 +7112,7 @@
       "pos": "n."
     },
     {
-      "id": 112,
+      "id": 1880,
       "word": "flood",
       "phonetic": "/flʌd/",
       "meaning_cn": "洪水",
@@ -7315,7 +7315,7 @@
       "pos": "adj."
     },
     {
-      "id": 172,
+      "id": 1881,
       "word": "foreigner",
       "phonetic": "/ˈfɒrənər/",
       "meaning_cn": "外国人",
@@ -7662,7 +7662,7 @@
       "pos": "n."
     },
     {
-      "id": 43,
+      "id": 1882,
       "word": "fuel",
       "phonetic": "/ˈfjuːəl/",
       "meaning_cn": "燃料",
@@ -7769,7 +7769,7 @@
       "pos": "n."
     },
     {
-      "id": 105,
+      "id": 1883,
       "word": "garden",
       "phonetic": "/ˈɡɑːrdən/",
       "meaning_cn": "花园",
@@ -7840,7 +7840,7 @@
       "pos": "adj."
     },
     {
-      "id": 212,
+      "id": 1884,
       "word": "gentle",
       "phonetic": "/ˈdʒentl/",
       "meaning_cn": "温柔的，温和的",
@@ -7995,7 +7995,7 @@
       "pos": "adj."
     },
     {
-      "id": 195,
+      "id": 1885,
       "word": "government",
       "phonetic": "/ˈɡʌvərnmənt/",
       "meaning_cn": "政府",
@@ -8474,7 +8474,7 @@
       "pos": "n."
     },
     {
-      "id": 94,
+      "id": 1886,
       "word": "healthy",
       "phonetic": "/ˈhelθi/",
       "meaning_cn": "健康的",
@@ -8605,7 +8605,7 @@
       "pos": "adv."
     },
     {
-      "id": 83,
+      "id": 1887,
       "word": "hero",
       "phonetic": "/ˈhɪəroʊ/",
       "meaning_cn": "英雄",
@@ -8976,7 +8976,7 @@
       "pos": "adv."
     },
     {
-      "id": 88,
+      "id": 1888,
       "word": "however",
       "phonetic": "/haʊˈevər/",
       "meaning_cn": "然而，不过",
@@ -9179,7 +9179,7 @@
       "pos": "n."
     },
     {
-      "id": 57,
+      "id": 1889,
       "word": "imagine",
       "phonetic": "/ɪˈmædʒɪn/",
       "meaning_cn": "想象",
@@ -9190,7 +9190,7 @@
       "category": "actions"
     },
     {
-      "id": 90,
+      "id": 1890,
       "word": "immediately",
       "phonetic": "/ɪˈmiːdiətli/",
       "meaning_cn": "立即，马上",
@@ -9249,7 +9249,7 @@
       "pos": "n."
     },
     {
-      "id": 67,
+      "id": 1891,
       "word": "improve",
       "phonetic": "/ɪmˈpruːv/",
       "meaning_cn": "改善，提高",
@@ -9284,7 +9284,7 @@
       "pos": "n."
     },
     {
-      "id": 142,
+      "id": 1892,
       "word": "include",
       "phonetic": "/ɪnˈkluːd/",
       "meaning_cn": "包括，包含",
@@ -9319,7 +9319,7 @@
       "pos": "n."
     },
     {
-      "id": 144,
+      "id": 1893,
       "word": "increase",
       "phonetic": "/ɪnˈkriːs/",
       "meaning_cn": "增加，提高",
@@ -9330,7 +9330,7 @@
       "category": "actions"
     },
     {
-      "id": 237,
+      "id": 1894,
       "word": "independent",
       "phonetic": "/ˌɪndɪˈpendənt/",
       "meaning_cn": "独立的",
@@ -9377,7 +9377,7 @@
       "pos": "n."
     },
     {
-      "id": 13,
+      "id": 1895,
       "word": "information",
       "phonetic": "/ˌɪnfərˈmeɪʃən/",
       "meaning_cn": "信息",
@@ -9520,7 +9520,7 @@
       "pos": "prep."
     },
     {
-      "id": 62,
+      "id": 1896,
       "word": "introduce",
       "phonetic": "/ˌɪntrəˈdjuːs/",
       "meaning_cn": "介绍",
@@ -9531,7 +9531,7 @@
       "category": "actions"
     },
     {
-      "id": 12,
+      "id": 1897,
       "word": "invent",
       "phonetic": "/ɪnˈvent/",
       "meaning_cn": "发明",
@@ -9578,7 +9578,7 @@
       "pos": "v."
     },
     {
-      "id": 128,
+      "id": 1898,
       "word": "invitation",
       "phonetic": "/ˌɪnvɪˈteɪʃən/",
       "meaning_cn": "邀请",
@@ -9613,7 +9613,7 @@
       "pos": "n."
     },
     {
-      "id": 108,
+      "id": 1899,
       "word": "island",
       "phonetic": "/ˈaɪlənd/",
       "meaning_cn": "岛屿",
@@ -9780,7 +9780,7 @@
       "pos": "n."
     },
     {
-      "id": 51,
+      "id": 1900,
       "word": "journey",
       "phonetic": "/ˈdʒɜːrni/",
       "meaning_cn": "旅程",
@@ -9923,7 +9923,7 @@
       "pos": "n."
     },
     {
-      "id": 164,
+      "id": 1901,
       "word": "keyboard",
       "phonetic": "/ˈkiːbɔːrd/",
       "meaning_cn": "键盘",
@@ -10090,7 +10090,7 @@
       "pos": "n."
     },
     {
-      "id": 75,
+      "id": 1902,
       "word": "knowledge",
       "phonetic": "/ˈnɒlɪdʒ/",
       "meaning_cn": "知识",
@@ -10377,7 +10377,7 @@
       "pos": "n."
     },
     {
-      "id": 182,
+      "id": 1903,
       "word": "library",
       "phonetic": "/ˈlaɪbrəri/",
       "meaning_cn": "图书馆",
@@ -10508,7 +10508,7 @@
       "pos": "n."
     },
     {
-      "id": 121,
+      "id": 1904,
       "word": "liquid",
       "phonetic": "/ˈlɪkwɪd/",
       "meaning_cn": "液体",
@@ -10711,7 +10711,7 @@
       "pos": "n."
     },
     {
-      "id": 211,
+      "id": 1905,
       "word": "lovely",
       "phonetic": "/ˈlʌvli/",
       "meaning_cn": "可爱的，美好的",
@@ -10794,7 +10794,7 @@
       "pos": "n."
     },
     {
-      "id": 11,
+      "id": 1906,
       "word": "machine",
       "phonetic": "/məˈʃiːn/",
       "meaning_cn": "机器",
@@ -10817,7 +10817,7 @@
       "pos": "adj."
     },
     {
-      "id": 129,
+      "id": 1907,
       "word": "magazine",
       "phonetic": "/ˌmæɡəˈziːn/",
       "meaning_cn": "杂志",
@@ -10924,7 +10924,7 @@
       "pos": "n."
     },
     {
-      "id": 124,
+      "id": 1908,
       "word": "map",
       "phonetic": "/mæp/",
       "meaning_cn": "地图",
@@ -10983,7 +10983,7 @@
       "pos": "v."
     },
     {
-      "id": 54,
+      "id": 1909,
       "word": "material",
       "phonetic": "/məˈtɪəriəl/",
       "meaning_cn": "材料，物质",
@@ -11078,7 +11078,7 @@
       "pos": "adj."
     },
     {
-      "id": 97,
+      "id": 1910,
       "word": "medicine",
       "phonetic": "/ˈmedɪsɪn/",
       "meaning_cn": "药，医学",
@@ -11521,7 +11521,7 @@
       "pos": "n."
     },
     {
-      "id": 106,
+      "id": 1911,
       "word": "mountain",
       "phonetic": "/ˈmaʊntən/",
       "meaning_cn": "山",
@@ -11580,7 +11580,7 @@
       "pos": "n."
     },
     {
-      "id": 180,
+      "id": 1912,
       "word": "museum",
       "phonetic": "/mjuːˈziːəm/",
       "meaning_cn": "博物馆",
@@ -11639,7 +11639,7 @@
       "pos": "n."
     },
     {
-      "id": 214,
+      "id": 1913,
       "word": "narrow",
       "phonetic": "/ˈnæroʊ/",
       "meaning_cn": "狭窄的",
@@ -11698,7 +11698,7 @@
       "pos": "adj."
     },
     {
-      "id": 110,
+      "id": 1914,
       "word": "nature",
       "phonetic": "/ˈneɪtʃər/",
       "meaning_cn": "自然",
@@ -11757,7 +11757,7 @@
       "pos": "adv."
     },
     {
-      "id": 203,
+      "id": 1915,
       "word": "necessary",
       "phonetic": "/ˈnesəseri/",
       "meaning_cn": "必要的",
@@ -11816,7 +11816,7 @@
       "pos": "pron."
     },
     {
-      "id": 27,
+      "id": 1916,
       "word": "nervous",
       "phonetic": "/ˈnɜːrvəs/",
       "meaning_cn": "紧张的",
@@ -11887,7 +11887,7 @@
       "pos": "n."
     },
     {
-      "id": 130,
+      "id": 1917,
       "word": "newspaper",
       "phonetic": "/ˈnjuːzpeɪpər/",
       "meaning_cn": "报纸",
@@ -12162,7 +12162,7 @@
       "pos": "v."
     },
     {
-      "id": 78,
+      "id": 1918,
       "word": "observe",
       "phonetic": "/əbˈzɜːrv/",
       "meaning_cn": "观察",
@@ -12185,7 +12185,7 @@
       "pos": "n."
     },
     {
-      "id": 107,
+      "id": 1919,
       "word": "ocean",
       "phonetic": "/ˈoʊʃən/",
       "meaning_cn": "海洋",
@@ -12412,7 +12412,7 @@
       "pos": "v."
     },
     {
-      "id": 168,
+      "id": 1920,
       "word": "operate",
       "phonetic": "/ˈɒpəreɪt/",
       "meaning_cn": "操作，运行",
@@ -12435,7 +12435,7 @@
       "pos": "n."
     },
     {
-      "id": 85,
+      "id": 1921,
       "word": "opinion",
       "phonetic": "/əˈpɪnjən/",
       "meaning_cn": "观点，看法",
@@ -12866,7 +12866,7 @@
       "pos": "n."
     },
     {
-      "id": 175,
+      "id": 1922,
       "word": "passenger",
       "phonetic": "/ˈpæsɪndʒər/",
       "meaning_cn": "乘客",
@@ -12901,7 +12901,7 @@
       "pos": "prep."
     },
     {
-      "id": 98,
+      "id": 1923,
       "word": "patient",
       "phonetic": "/ˈpeɪʃənt/",
       "meaning_cn": "耐心的，病人",
@@ -13020,7 +13020,7 @@
       "pos": "adj."
     },
     {
-      "id": 226,
+      "id": 1924,
       "word": "performance",
       "phonetic": "/pərˈfɔːrməns/",
       "meaning_cn": "表现，性能",
@@ -13031,7 +13031,7 @@
       "category": "abstract"
     },
     {
-      "id": 86,
+      "id": 1925,
       "word": "perhaps",
       "phonetic": "/pərˈhæps/",
       "meaning_cn": "也许，可能",
@@ -13174,7 +13174,7 @@
       "pos": "n."
     },
     {
-      "id": 174,
+      "id": 1926,
       "word": "pilot",
       "phonetic": "/ˈpaɪlət/",
       "meaning_cn": "飞行员",
@@ -13557,7 +13557,7 @@
       "pos": "v."
     },
     {
-      "id": 2,
+      "id": 1927,
       "word": "pollution",
       "phonetic": "/pəˈluːʃən/",
       "meaning_cn": "污染",
@@ -13617,7 +13617,7 @@
       "pos": "n."
     },
     {
-      "id": 202,
+      "id": 1928,
       "word": "possible",
       "phonetic": "/ˈpɒsəbl/",
       "meaning_cn": "可能的",
@@ -13712,7 +13712,7 @@
       "pos": "n."
     },
     {
-      "id": 32,
+      "id": 1929,
       "word": "powerful",
       "phonetic": "/ˈpaʊərfl/",
       "meaning_cn": "强大的，有力的",
@@ -13723,7 +13723,7 @@
       "category": "adjectives"
     },
     {
-      "id": 23,
+      "id": 1930,
       "word": "practice",
       "phonetic": "/ˈpræktɪs/",
       "meaning_cn": "练习",
@@ -13782,7 +13782,7 @@
       "pos": "v."
     },
     {
-      "id": 63,
+      "id": 1931,
       "word": "prepare",
       "phonetic": "/prɪˈper/",
       "meaning_cn": "准备",
@@ -13853,7 +13853,7 @@
       "pos": "adj."
     },
     {
-      "id": 146,
+      "id": 1932,
       "word": "prevent",
       "phonetic": "/prɪˈvent/",
       "meaning_cn": "防止，预防",
@@ -13948,7 +13948,7 @@
       "pos": "adj."
     },
     {
-      "id": 92,
+      "id": 1933,
       "word": "probably",
       "phonetic": "/ˈprɒbəbli/",
       "meaning_cn": "可能，大概",
@@ -13983,7 +13983,7 @@
       "pos": "v."
     },
     {
-      "id": 143,
+      "id": 1934,
       "word": "produce",
       "phonetic": "/prəˈdjuːs/",
       "meaning_cn": "生产，制造",
@@ -14018,7 +14018,7 @@
       "pos": "adj."
     },
     {
-      "id": 169,
+      "id": 1935,
       "word": "programme",
       "phonetic": "/ˈproʊɡræm/",
       "meaning_cn": "程序，节目",
@@ -14053,7 +14053,7 @@
       "pos": "n."
     },
     {
-      "id": 135,
+      "id": 1936,
       "word": "promise",
       "phonetic": "/ˈprɒmɪs/",
       "meaning_cn": "承诺，保证",
@@ -14088,7 +14088,7 @@
       "pos": "adv."
     },
     {
-      "id": 4,
+      "id": 1937,
       "word": "protect",
       "phonetic": "/prəˈtekt/",
       "meaning_cn": "保护",
@@ -14100,7 +14100,7 @@
       "type": "complex"
     },
     {
-      "id": 30,
+      "id": 1938,
       "word": "proud",
       "phonetic": "/praʊd/",
       "meaning_cn": "骄傲的，自豪的",
@@ -14135,7 +14135,7 @@
       "pos": "n."
     },
     {
-      "id": 60,
+      "id": 1939,
       "word": "provide",
       "phonetic": "/prəˈvaɪd/",
       "meaning_cn": "提供",
@@ -14374,7 +14374,7 @@
       "pos": "n."
     },
     {
-      "id": 104,
+      "id": 1940,
       "word": "rain",
       "phonetic": "/reɪn/",
       "meaning_cn": "雨",
@@ -14517,7 +14517,7 @@
       "pos": "n."
     },
     {
-      "id": 61,
+      "id": 1941,
       "word": "receive",
       "phonetic": "/rɪˈsiːv/",
       "meaning_cn": "收到，接收",
@@ -14564,7 +14564,7 @@
       "pos": "v."
     },
     {
-      "id": 232,
+      "id": 1942,
       "word": "record",
       "phonetic": "/ˈrekərd/",
       "meaning_cn": "记录",
@@ -14575,7 +14575,7 @@
       "category": "abstract"
     },
     {
-      "id": 6,
+      "id": 1943,
       "word": "recycle",
       "phonetic": "/riːˈsaɪkl/",
       "meaning_cn": "回收利用",
@@ -14598,7 +14598,7 @@
       "pos": "n."
     },
     {
-      "id": 145,
+      "id": 1944,
       "word": "reduce",
       "phonetic": "/rɪˈdjuːs/",
       "meaning_cn": "减少，降低",
@@ -14717,7 +14717,7 @@
       "pos": "v."
     },
     {
-      "id": 150,
+      "id": 1945,
       "word": "remind",
       "phonetic": "/rɪˈmaɪnd/",
       "meaning_cn": "提醒",
@@ -14728,7 +14728,7 @@
       "category": "actions"
     },
     {
-      "id": 40,
+      "id": 1946,
       "word": "repair",
       "phonetic": "/rɪˈper/",
       "meaning_cn": "修理，修复",
@@ -14775,7 +14775,7 @@
       "pos": "n."
     },
     {
-      "id": 235,
+      "id": 1947,
       "word": "responsibility",
       "phonetic": "/rɪˌspɒnsəˈbɪləti/",
       "meaning_cn": "责任",
@@ -14810,7 +14810,7 @@
       "pos": "n."
     },
     {
-      "id": 156,
+      "id": 1948,
       "word": "restaurant",
       "phonetic": "/ˈrestərɒnt/",
       "meaning_cn": "餐厅",
@@ -14965,7 +14965,7 @@
       "pos": "v."
     },
     {
-      "id": 120,
+      "id": 1949,
       "word": "robot",
       "phonetic": "/ˈroʊbɒt/",
       "meaning_cn": "机器人",
@@ -15060,7 +15060,7 @@
       "pos": "n."
     },
     {
-      "id": 216,
+      "id": 1950,
       "word": "rough",
       "phonetic": "/rʌf/",
       "meaning_cn": "粗糙的，崎岖的",
@@ -15191,7 +15191,7 @@
       "pos": "adv."
     },
     {
-      "id": 38,
+      "id": 1951,
       "word": "safety",
       "phonetic": "/ˈseɪfti/",
       "meaning_cn": "安全",
@@ -15262,7 +15262,7 @@
       "pos": "adj."
     },
     {
-      "id": 153,
+      "id": 1952,
       "word": "sandwich",
       "phonetic": "/ˈsænwɪtʃ/",
       "meaning_cn": "三明治",
@@ -15381,7 +15381,7 @@
       "pos": "n."
     },
     {
-      "id": 177,
+      "id": 1953,
       "word": "scientist",
       "phonetic": "/ˈsaɪəntɪst/",
       "meaning_cn": "科学家",
@@ -15404,7 +15404,7 @@
       "pos": "n."
     },
     {
-      "id": 165,
+      "id": 1954,
       "word": "screen",
       "phonetic": "/skriːn/",
       "meaning_cn": "屏幕",
@@ -15943,7 +15943,7 @@
       "pos": "n."
     },
     {
-      "id": 77,
+      "id": 1955,
       "word": "signal",
       "phonetic": "/ˈsɪɡnəl/",
       "meaning_cn": "信号，手势",
@@ -16074,7 +16074,7 @@
       "pos": "n."
     },
     {
-      "id": 189,
+      "id": 1956,
       "word": "situation",
       "phonetic": "/ˌsɪtʃuˈeɪʃən/",
       "meaning_cn": "情况，处境",
@@ -16541,7 +16541,7 @@
       "pos": "n."
     },
     {
-      "id": 16,
+      "id": 1957,
       "word": "speed",
       "phonetic": "/spiːd/",
       "meaning_cn": "速度",
@@ -16840,7 +16840,7 @@
       "pos": "n."
     },
     {
-      "id": 36,
+      "id": 1958,
       "word": "straight",
       "phonetic": "/streɪt/",
       "meaning_cn": "直的，笔直的",
@@ -16863,7 +16863,7 @@
       "pos": "adj."
     },
     {
-      "id": 155,
+      "id": 1959,
       "word": "strawberry",
       "phonetic": "/ˈstrɔːbəri/",
       "meaning_cn": "草莓",
@@ -16994,7 +16994,7 @@
       "pos": "n."
     },
     {
-      "id": 65,
+      "id": 1960,
       "word": "succeed",
       "phonetic": "/səkˈsiːd/",
       "meaning_cn": "成功",
@@ -17041,7 +17041,7 @@
       "pos": "adj."
     },
     {
-      "id": 91,
+      "id": 1961,
       "word": "suddenly",
       "phonetic": "/ˈsʌdənli/",
       "meaning_cn": "突然地",
@@ -17076,7 +17076,7 @@
       "pos": "n."
     },
     {
-      "id": 134,
+      "id": 1962,
       "word": "suggest",
       "phonetic": "/səˈdʒest/",
       "meaning_cn": "建议",
@@ -17483,7 +17483,7 @@
       "pos": "v."
     },
     {
-      "id": 176,
+      "id": 1963,
       "word": "teacher",
       "phonetic": "/ˈtiːtʃər/",
       "meaning_cn": "老师",
@@ -17518,7 +17518,7 @@
       "pos": "n."
     },
     {
-      "id": 14,
+      "id": 1964,
       "word": "technology",
       "phonetic": "/tekˈnɒlədʒi/",
       "meaning_cn": "技术",
@@ -17577,7 +17577,7 @@
       "pos": "v."
     },
     {
-      "id": 71,
+      "id": 1965,
       "word": "temperature",
       "phonetic": "/ˈtemprətʃər/",
       "meaning_cn": "温度",
@@ -17624,7 +17624,7 @@
       "pos": "n."
     },
     {
-      "id": 209,
+      "id": 1966,
       "word": "terrible",
       "phonetic": "/ˈterəbl/",
       "meaning_cn": "糟糕的",
@@ -18235,7 +18235,7 @@
       "pos": "n."
     },
     {
-      "id": 193,
+      "id": 1967,
       "word": "tradition",
       "phonetic": "/trəˈdɪʃən/",
       "meaning_cn": "传统",
@@ -18258,7 +18258,7 @@
       "pos": "adj."
     },
     {
-      "id": 7,
+      "id": 1968,
       "word": "traffic",
       "phonetic": "/ˈtræfɪk/",
       "meaning_cn": "交通",
@@ -18666,7 +18666,7 @@
       "pos": "adj."
     },
     {
-      "id": 126,
+      "id": 1969,
       "word": "uniform",
       "phonetic": "/ˈjuːnɪfɔːrm/",
       "meaning_cn": "制服，校服",
@@ -18965,7 +18965,7 @@
       "pos": "n."
     },
     {
-      "id": 82,
+      "id": 1970,
       "word": "volunteer",
       "phonetic": "/ˌvɒlənˈtɪər/",
       "meaning_cn": "志愿者",
@@ -19168,7 +19168,7 @@
       "pos": "v."
     },
     {
-      "id": 99,
+      "id": 1971,
       "word": "weather",
       "phonetic": "/ˈweðər/",
       "meaning_cn": "天气",
@@ -19191,7 +19191,7 @@
       "pos": "n."
     },
     {
-      "id": 166,
+      "id": 1972,
       "word": "website",
       "phonetic": "/ˈwebsaɪt/",
       "meaning_cn": "网站",
@@ -19502,7 +19502,7 @@
       "pos": "adj."
     },
     {
-      "id": 103,
+      "id": 1973,
       "word": "wind",
       "phonetic": "/wɪnd/",
       "meaning_cn": "风",
@@ -20077,7 +20077,7 @@
       "pos": "so"
     },
     {
-      "id": 138,
+      "id": 1974,
       "word": "apologize",
       "phonetic": "/əˈpɒlədʒaɪz/",
       "meaning_cn": "道歉",
@@ -20784,7 +20784,7 @@
       "pos": "up"
     },
     {
-      "id": 73,
+      "id": 1975,
       "word": "communicate",
       "phonetic": "/kəˈmjuːnɪkeɪt/",
       "meaning_cn": "交流，沟通",
@@ -20795,7 +20795,7 @@
       "category": "actions"
     },
     {
-      "id": 21,
+      "id": 1976,
       "word": "compete",
       "phonetic": "/kəmˈpiːt/",
       "meaning_cn": "竞争，比赛",
@@ -20806,7 +20806,7 @@
       "category": "sports"
     },
     {
-      "id": 137,
+      "id": 1977,
       "word": "complain",
       "phonetic": "/kəmˈpleɪn/",
       "meaning_cn": "抱怨",
@@ -20949,7 +20949,7 @@
       "pos": "other"
     },
     {
-      "id": 139,
+      "id": 1978,
       "word": "encourage",
       "phonetic": "/ɪnˈkʌrɪdʒ/",
       "meaning_cn": "鼓励",
@@ -22760,7 +22760,7 @@
       "pos": "to"
     },
     {
-      "id": 63,
+      "id": 1979,
       "word": "prepare",
       "phonetic": "/prɪˈper/",
       "meaning_cn": "准备",
@@ -22771,7 +22771,7 @@
       "category": "actions"
     },
     {
-      "id": 146,
+      "id": 1980,
       "word": "prevent",
       "phonetic": "/prɪˈvent/",
       "meaning_cn": "防止，预防",
@@ -22782,7 +22782,7 @@
       "category": "actions"
     },
     {
-      "id": 4,
+      "id": 1981,
       "word": "protect",
       "phonetic": "/prəˈtekt/",
       "meaning_cn": "保护",
@@ -22794,7 +22794,7 @@
       "type": "complex"
     },
     {
-      "id": 60,
+      "id": 1982,
       "word": "provide",
       "phonetic": "/prəˈvaɪd/",
       "meaning_cn": "提供",
