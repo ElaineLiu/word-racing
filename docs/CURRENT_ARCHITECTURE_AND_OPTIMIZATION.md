@@ -260,17 +260,15 @@ EXPOSED
 
 ### 7.1 P0：功能正确性与数据一致性
 
-#### 7.1.1 奖励规则存在两套配置
+#### 7.1.1 奖励规则存在两套配置（阶段 A2 已解决）
 
-`config/learning-config.js` 的实际奖励是简单题 3、复杂题 5；`config/game-config.js` 和 `quiz/mode-registry.js` 又定义 10/15 等另一套奖励。`VocabularyQuiz`、`QuizEngine` 和 `LearningController` 并存，使维护者很难判断哪套生效。
+`config/reward-policy.js` 现在是奖励与掌握分类的唯一权威实现。简单题答对奖励 3 燃油币，复杂题答对奖励 5 燃油币；正确率达到 60%/80%/100% 分别奖励 1/2/3 装备币。新旧答题链路和模式注册表均调用同一策略。
 
-建议：建立唯一 `EconomyService` 或唯一奖励配置；所有答题入口只调用 `calculateReward(question, context)`，删除重复表和旧答题链路。
+#### 7.1.2 题型分类不完整（阶段 A2 已解决）
 
-#### 7.1.2 题型分类不完整
+QUALIFYING 已明确映射为复杂掌握能力，但与默认自适应出题集合分离，因此不会改变现有默认题型比例。LAP_REVIEW 使用其 `originalMode` 计算掌握状态和奖励。
 
-`QuestionFactory` 和模式注册表支持 QUALIFYING，但学习掌握分类的复杂题只有 RADIO_MSG。QUALIFYING 答题不会可靠推进 simple/complex 掌握状态；LAP_REVIEW 也需要明确使用其内部真实题型更新掌握度。
-
-建议：把掌握维度从二元 simple/complex 改为能力标签，例如 recognition、recall、context、pronunciation；短期至少把全部模式映射到明确分类并加集成测试。
+同时修复了 QuizView 初始化时把 `auto` 强制改为 `simple` 的问题。旧行为会让孩子长期只答简单题，无法满足“简单+复杂均通过”的 mastered 条件。现在默认自适应流程会在后续套题安排复杂检查，并从 `ProgressTracker` 的持久化逐词状态校准 GameState 的 mastered 汇总。
 
 #### 7.1.3 词库配置与构建漂移（阶段 A1 已解决）
 

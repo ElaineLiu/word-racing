@@ -93,18 +93,6 @@ export const ECONOMY = {
       description: 'Upgrade body (weight -5%)',
     },
   ],
-
-  // Question mode rewards
-  REWARDS: {
-    PIT_BOARD: { fuel: 10, gear: 0 },
-    RADIO_MSG: { fuel: 10, gear: 0 },
-    STRATEGY: { fuel: 15, gear: 0 },
-    QUALIFYING: { fuel: 0, gear: 15 },
-    LAP_REVIEW: { fuel: 0, gear: 5 },
-    COMBO_BONUS: { gear: 5 },
-    COMBO_THRESHOLD: 3,           // every 3 consecutive correct
-    QUIZ_SCORE_BASE: 50,          // points per correct answer
-  },
 };
 
 // ============================================================================

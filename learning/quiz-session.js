@@ -236,6 +236,18 @@ export class QuizSessionManager {
       this.startDailySession();
     }
 
+    const expectedIndex = this.#session.answers.length;
+    if (answer.questionIndex !== expectedIndex ||
+        this.#session.answers.some(saved => saved.questionIndex === answer.questionIndex)) {
+      return {
+        accepted: false,
+        answeredCount: this.#session.answers.length,
+        totalQuestions: this.#session.questions.length,
+        combo: this.#session.combo,
+        isComplete: this.#session.answers.length >= this.#session.questions.length,
+      };
+    }
+
     // 记录答案
     this.#session.answers.push({
       questionIndex: answer.questionIndex,
@@ -272,6 +284,7 @@ export class QuizSessionManager {
     });
 
     return {
+      accepted: true,
       answeredCount: this.#session.answers.length,
       totalQuestions: this.#session.questions.length,
       combo: this.#session.combo,

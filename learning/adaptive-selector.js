@@ -10,7 +10,7 @@
  */
 
 import { Events } from '../core/event-bus.js';
-import { MASTERY_STATUS, LEARNING, QUESTION_MODES, isSimpleMode, isComplexMode } from '../config/learning-config.js';
+import { MASTERY_STATUS, LEARNING, DEFAULT_QUESTION_MODES } from '../config/learning-config.js';
 import { QuestionFactory } from '../js/question-factory.js';
 
 /**
@@ -166,20 +166,20 @@ export class AdaptiveSelector {
   #selectModeForWrongWord(progress, modePreference) {
     // 如果用户明确选择了简单题或复杂题，按用户选择
     if (modePreference === LEARNING.MODE_PREFERENCE.SIMPLE) {
-      return this.#getRandomMode(QUESTION_MODES.SIMPLE);
+      return this.#getRandomMode(DEFAULT_QUESTION_MODES.SIMPLE);
     }
     if (modePreference === LEARNING.MODE_PREFERENCE.COMPLEX) {
-      return this.#getRandomMode(QUESTION_MODES.COMPLEX);
+      return this.#getRandomMode(DEFAULT_QUESTION_MODES.COMPLEX);
     }
 
     // AUTO 模式：优先选择答错过的题型
     if (progress.complexWrongCount > progress.simpleWrongCount) {
-      return this.#getRandomMode(QUESTION_MODES.COMPLEX);
+      return this.#getRandomMode(DEFAULT_QUESTION_MODES.COMPLEX);
     } else if (progress.simpleWrongCount > 0) {
-      return this.#getRandomMode(QUESTION_MODES.SIMPLE);
+      return this.#getRandomMode(DEFAULT_QUESTION_MODES.SIMPLE);
     }
     // 都没错过或都错过，随机
-    return this.#getRandomMode([...QUESTION_MODES.SIMPLE, ...QUESTION_MODES.COMPLEX]);
+    return this.#getRandomMode([...DEFAULT_QUESTION_MODES.SIMPLE, ...DEFAULT_QUESTION_MODES.COMPLEX]);
   }
 
   // ==================== 检查词 ====================
@@ -211,8 +211,8 @@ export class AdaptiveSelector {
 
       // 根据需要检查的题型选择
       const mode = progress.needMode === 'simple'
-        ? this.#getRandomMode(QUESTION_MODES.SIMPLE)
-        : this.#getRandomMode(QUESTION_MODES.COMPLEX);
+        ? this.#getRandomMode(DEFAULT_QUESTION_MODES.SIMPLE)
+        : this.#getRandomMode(DEFAULT_QUESTION_MODES.COMPLEX);
 
       const question = this.#createQuestion(wordData, mode, eligibleWords, useChinese, false);
       if (question) {
@@ -249,12 +249,12 @@ export class AdaptiveSelector {
       // 根据偏好选择题型
       let mode;
       if (modePreference === LEARNING.MODE_PREFERENCE.SIMPLE) {
-        mode = this.#getRandomMode(QUESTION_MODES.SIMPLE);
+        mode = this.#getRandomMode(DEFAULT_QUESTION_MODES.SIMPLE);
       } else if (modePreference === LEARNING.MODE_PREFERENCE.COMPLEX) {
-        mode = this.#getRandomMode(QUESTION_MODES.COMPLEX);
+        mode = this.#getRandomMode(DEFAULT_QUESTION_MODES.COMPLEX);
       } else {
         // AUTO: 新词先出简单题
-        mode = this.#getRandomMode(QUESTION_MODES.SIMPLE);
+        mode = this.#getRandomMode(DEFAULT_QUESTION_MODES.SIMPLE);
       }
 
       const question = this.#createQuestion(wordData, mode, eligibleWords, useChinese, false);

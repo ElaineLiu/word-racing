@@ -1,3 +1,5 @@
+import { calculateQuestionReward } from '../config/reward-policy.js';
+
 /**
  * Mode Registry - Data-driven quiz mode definitions
  * Adding new modes only requires editing this file
@@ -9,7 +11,6 @@ export const QuizModes = {
     label: 'PIT BOARD',
     labelCn: '词→义',
     icon: 'PB',
-    reward: { fuel: 10, gear: 0 },
     description: 'Read the word, pick the right meaning',
     difficulty: 1,
     // How to build the question
@@ -25,7 +26,6 @@ export const QuizModes = {
     label: 'RADIO',
     labelCn: '填空',
     icon: 'RM',
-    reward: { fuel: 10, gear: 0 },
     description: 'Fill in the blank in the sentence',
     difficulty: 2,
     promptType: 'sentenceBlank',  // Sentence with blank
@@ -40,7 +40,6 @@ export const QuizModes = {
     label: 'STRATEGY',
     labelCn: '义→词',
     icon: 'SC',
-    reward: { fuel: 15, gear: 0 },
     description: 'Read the definition, pick the right word',
     difficulty: 2,
     promptType: 'meaning',        // Definition as question
@@ -55,7 +54,6 @@ export const QuizModes = {
     label: 'QUALIFYING',
     labelCn: '音标',
     icon: 'QF',
-    reward: { fuel: 0, gear: 15 },
     description: 'Read the phonetic, pick the right word',
     difficulty: 3,
     promptType: 'phonetic',       // Phonetic as question
@@ -70,7 +68,6 @@ export const QuizModes = {
     label: 'LAP REVIEW',
     labelCn: '复习',
     icon: 'LR',
-    reward: { fuel: 0, gear: 5 },
     description: 'Review a word you got wrong',
     difficulty: 0,  // Adaptive
     promptType: 'adaptive',       // Uses one of the base modes
@@ -148,15 +145,5 @@ export function getReviewMode(reviewCount, useChinese = false) {
  * @returns {{ fuel: number, gear: number }}
  */
 export function calculateReward(modeKey, combo = 0) {
-  const mode = getMode(modeKey);
-  if (!mode) return { fuel: 0, gear: 0 };
-
-  const reward = { ...mode.reward };
-
-  // Combo bonus: every 3 consecutive correct = 5 gear coins
-  if (combo > 0 && combo % 3 === 0) {
-    reward.gear = (reward.gear || 0) + 5;
-  }
-
-  return reward;
+  return calculateQuestionReward({ mode: modeKey });
 }

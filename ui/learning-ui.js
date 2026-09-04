@@ -9,7 +9,7 @@
  */
 
 import { Events } from '../core/event-bus.js';
-import { LEARNING, REWARDS } from '../config/learning-config.js';
+import { LEARNING } from '../config/learning-config.js';
 
 export class LearningUI {
   #eventBus;

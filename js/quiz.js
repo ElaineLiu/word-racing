@@ -11,6 +11,7 @@
  */
 import { QuestionFactory } from './question-factory.js';
 import { QUIZ } from '../config/game-config.js';
+import { calculateQuestionReward } from '../config/reward-policy.js';
 import {
     getAvailableWordSets,
     getCurrentWordSetId,
@@ -390,15 +391,9 @@ export class VocabularyQuiz {
             this.score += 50;
             this.combo++;
 
-            // Mode-based rewards (fallback for old-format questions)
-            const reward = question.reward || { fuel: 10, gear: 0 };
+            const reward = calculateQuestionReward(question);
             this.fuelCoinsEarned += reward.fuel || 0;
             this.gearCoinsEarned += reward.gear || 0;
-
-            // Combo bonus: every 3 consecutive correct = 5 gear coins
-            if (this.combo > 0 && this.combo % 3 === 0) {
-                this.gearCoinsEarned += 5;
-            }
 
             // If this was a review question and the word was in wrongWords, track it
             if (question.isReview || question.mode === 'LAP_REVIEW') {
