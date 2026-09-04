@@ -1,188 +1,148 @@
 /**
- * WordSetLoader - 词库动态加载器
- * 支持多词库切换、动态加载、缓存管理
+ * WordSetLoader - 单一运行时词库加载器
+ *
+ * 阶段 A1 起，应用只允许加载上海中考考纲词库。旧版或无效选择会被
+ * 幂等迁移到默认 ID；词库加载失败时抛出明确错误，禁止用临时词库继续记账。
  */
 
-// 词库缓存
-const cache = new Map();
+export const DEFAULT_WORD_SET_ID = 'shanghai-zhongkao';
+export const WORD_SET_STORAGE_KEY = 'wr_wordset_config';
 
-// 当前词库状态
+const DEFAULT_WORD_SET = Object.freeze({
+  id: DEFAULT_WORD_SET_ID,
+  name: '上海中考考纲',
+  description: '2025年上海中考英语考纲词汇（1982词）',
+  source: '2025年上海中考英语考纲词汇',
+  difficultyRange: [1, 5],
+  totalWords: 1982,
+  file: 'data/words-shanghai-zhongkao.json',
+  tags: ['中考', '考纲', '上海', '初中'],
+  gradeLevel: '7-9',
+  geLevel: '2-4',
+  isDefault: true,
+});
+
+const cache = new Map();
 let currentWordSet = null;
 let currentConfig = null;
 
-// 存储键
-const STORAGE_KEY = 'wr_wordset_config';
+function getDefaultConfig() {
+  return {
+    version: 3,
+    defaultWordSet: DEFAULT_WORD_SET_ID,
+    wordSets: [{ ...DEFAULT_WORD_SET }],
+    difficultyLevels: {
+      1: { label: '基础', description: '最常用基础词汇 (GE 1-2)', ge: '1-2' },
+      2: { label: '初级', description: '课本核心词汇 (GE 2-2.5)', ge: '2-2.5' },
+      3: { label: '中级', description: '中考核心词汇 (GE 2.5-3)', ge: '2.5-3' },
+      4: { label: '进阶', description: '中考拓展词汇 (GE 3-3.5)', ge: '3-3.5' },
+      5: { label: '高级', description: '超纲词汇 (GE 3.5-4+)', ge: '3.5-4' },
+    },
+  };
+}
 
-/**
- * 加载词库配置
- * @returns {Promise<Object>}
- */
+function saveSelection(wordSetId) {
+  try {
+    localStorage.setItem(WORD_SET_STORAGE_KEY, wordSetId);
+  } catch (_) {
+    // localStorage 不可用时仍允许只读运行。
+  }
+}
+
+function migrateSelection(wordSetId) {
+  if (wordSetId !== DEFAULT_WORD_SET_ID) saveSelection(DEFAULT_WORD_SET_ID);
+  currentWordSet = DEFAULT_WORD_SET_ID;
+  return DEFAULT_WORD_SET_ID;
+}
+
 export async function loadConfig() {
   if (currentConfig) return currentConfig;
 
   try {
     const response = await fetch('data/wordsets-config.json');
-    currentConfig = await response.json();
-    return currentConfig;
-  } catch (e) {
-    console.error('[WordSetLoader] Failed to load config:', e);
-    return getDefaultConfig();
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const config = await response.json();
+    const validSingleSet = config?.defaultWordSet === DEFAULT_WORD_SET_ID
+      && Array.isArray(config.wordSets)
+      && config.wordSets.length === 1
+      && config.wordSets[0]?.id === DEFAULT_WORD_SET_ID;
+    if (!validSingleSet) throw new Error('配置未声明唯一的上海中考考纲词库');
+    currentConfig = config;
+  } catch (error) {
+    console.warn('[WordSetLoader] 词库配置加载失败，使用内置上海中考配置：', error);
+    currentConfig = getDefaultConfig();
   }
+
+  return currentConfig;
 }
 
-/**
- * 加载指定词库
- * @param {string} wordSetId - 词库ID
- * @returns {Promise<Array>} 词汇数组
- */
-export async function loadWordSet(wordSetId) {
-  // 检查缓存
-  if (cache.has(wordSetId)) {
-    return cache.get(wordSetId);
-  }
+export async function loadWordSet(wordSetId = DEFAULT_WORD_SET_ID) {
+  const resolvedId = migrateSelection(wordSetId);
+  if (cache.has(resolvedId)) return cache.get(resolvedId);
+
+  const config = await loadConfig();
+  const wordSet = config.wordSets[0];
 
   try {
-    const config = await loadConfig();
-    const wordSet = config.wordSets.find(ws => ws.id === wordSetId);
-
-    if (!wordSet) {
-      console.error(`[WordSetLoader] WordSet not found: ${wordSetId}`);
-      return [];
+    const response = await fetch(wordSet.file);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    if (!Array.isArray(data?.words) || data.words.length === 0) {
+      throw new Error('词库文件没有可用单词');
     }
 
-    const response = await fetch(wordSet.file);
-    const data = await response.json();
-    const words = data.words || [];
-
-    // 缓存结果
-    cache.set(wordSetId, words);
-    currentWordSet = wordSetId;
-
-    // 保存选择
-    saveSelection(wordSetId);
-
-    console.log(`[WordSetLoader] Loaded ${words.length} words from ${wordSet.name}`);
-    return words;
-  } catch (e) {
-    console.error(`[WordSetLoader] Failed to load wordset ${wordSetId}:`, e);
-    return [];
+    cache.set(resolvedId, data.words);
+    currentWordSet = resolvedId;
+    saveSelection(resolvedId);
+    console.log(`[WordSetLoader] Loaded ${data.words.length} words from ${wordSet.name}`);
+    return data.words;
+  } catch (error) {
+    throw new Error(`无法加载“${wordSet.name}”词库：${error.message}`, { cause: error });
   }
 }
 
-/**
- * 获取当前词库ID
- * @returns {string}
- */
 export function getCurrentWordSetId() {
-  return currentWordSet || localStorage.getItem(STORAGE_KEY) || 'shanghai-grade6';
+  const saved = currentWordSet || localStorage.getItem(WORD_SET_STORAGE_KEY);
+  return migrateSelection(saved);
 }
 
-/**
- * 获取当前词库信息
- * @returns {Promise<Object|null>}
- */
 export async function getCurrentWordSetInfo() {
   const config = await loadConfig();
-  const id = getCurrentWordSetId();
-  return config.wordSets.find(ws => ws.id === id) || null;
+  migrateSelection(getCurrentWordSetId());
+  return config.wordSets[0];
 }
 
-/**
- * 获取所有可用词库列表
- * @returns {Promise<Array>}
- */
 export async function getAvailableWordSets() {
   const config = await loadConfig();
-  return config.wordSets.map(ws => ({
-    id: ws.id,
-    name: ws.name,
-    description: ws.description,
-    totalWords: ws.totalWords,
-    tags: ws.tags,
-  }));
+  const wordSet = config.wordSets[0];
+  return [{
+    id: wordSet.id,
+    name: wordSet.name,
+    description: wordSet.description,
+    totalWords: wordSet.totalWords,
+    tags: wordSet.tags,
+  }];
 }
 
-/**
- * 切换词库
- * @param {string} wordSetId
- * @returns {Promise<Array>}
- */
 export async function switchWordSet(wordSetId) {
-  const words = await loadWordSet(wordSetId);
-  if (words.length > 0) {
-    currentWordSet = wordSetId;
-    saveSelection(wordSetId);
-  }
-  return words;
+  return loadWordSet(wordSetId);
 }
 
-/**
- * 预加载所有词库（可选）
- * @returns {Promise<void>}
- */
 export async function preloadAllWordSets() {
-  const config = await loadConfig();
-  await Promise.all(config.wordSets.map(ws => loadWordSet(ws.id)));
+  await loadWordSet(DEFAULT_WORD_SET_ID);
 }
 
-/**
- * 清除缓存
- */
 export function clearCache() {
   cache.clear();
+  currentWordSet = null;
+  currentConfig = null;
 }
 
-/**
- * 保存选择到 localStorage
- */
-function saveSelection(wordSetId) {
-  try {
-    localStorage.setItem(STORAGE_KEY, wordSetId);
-  } catch (e) {}
-}
-
-/**
- * 加载上次选择的词库
- * @returns {Promise<string>}
- */
 export async function loadLastSelection() {
-  const config = await loadConfig();
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved && config.wordSets.some(ws => ws.id === saved)) {
-    return saved;
-  }
-  return config.defaultWordSet;
+  return migrateSelection(localStorage.getItem(WORD_SET_STORAGE_KEY));
 }
 
-/**
- * 获取难度等级定义
- * @returns {Promise<Object>}
- */
 export async function getDifficultyLevels() {
   const config = await loadConfig();
   return config.difficultyLevels;
-}
-
-/**
- * 默认配置（离线备用）
- */
-function getDefaultConfig() {
-  return {
-    version: 1,
-    defaultWordSet: 'shanghai-grade6',
-    wordSets: [{
-      id: 'shanghai-grade6',
-      name: '沪教版六年级',
-      description: '默认词库',
-      totalWords: 240,
-      file: 'data/words.json',
-    }],
-    difficultyLevels: {
-      "1": { label: "基础", description: "最常用基础词汇" },
-      "2": { label: "初级", description: "课本核心词汇" },
-      "3": { label: "中级", description: "拓展词汇" },
-      "4": { label: "进阶", description: "挑战词汇" },
-      "5": { label: "高级", description: "超纲词汇" },
-    },
-  };
 }

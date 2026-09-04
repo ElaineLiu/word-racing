@@ -375,6 +375,14 @@ html, body {
     padding: var(--space-lg);
 }
 
+#quiz-wordset-label {
+    margin-bottom: var(--space-sm);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+}
+
 /* --- Quiz Type Selector --- */
 #quiz-type-selector {
     display: flex;

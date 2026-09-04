@@ -34,11 +34,11 @@ cp -r quiz      "${PACKAGE_DIR}/"
 cp -r rendering "${PACKAGE_DIR}/"
 cp -r 3d        "${PACKAGE_DIR}/"
 
-# Data (word lists + track data only, not dev scripts)
-cp -r data      "${PACKAGE_DIR}/"
-rm -f "${PACKAGE_DIR}/data/update-log.txt"
-rm -f "${PACKAGE_DIR}/data/update-progress.json"
-rm -f "${PACKAGE_DIR}/data/vocabulary-supplement-"*.md
+# Runtime data only. Archived wordsets must never enter a package.
+mkdir -p "${PACKAGE_DIR}/data"
+cp data/wordsets-config.json "${PACKAGE_DIR}/data/"
+cp data/words-shanghai-zhongkao.json "${PACKAGE_DIR}/data/"
+cp data/tracks.json "${PACKAGE_DIR}/data/"
 
 # CSS
 cp -r css "${PACKAGE_DIR}/"

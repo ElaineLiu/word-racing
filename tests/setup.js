@@ -33,10 +33,29 @@ class MockLocalStorage {
 // Set up global mocks
 global.localStorage = new MockLocalStorage();
 
-// Mock fetch for words.json
+// Mock the only runtime wordset and its configuration.
 global.fetch = async (url) => {
-  if (url.includes('words.json')) {
+  if (url.includes('wordsets-config.json')) {
     return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        version: 3,
+        defaultWordSet: 'shanghai-zhongkao',
+        wordSets: [{
+          id: 'shanghai-zhongkao',
+          name: '上海中考考纲',
+          totalWords: 1982,
+          file: 'data/words-shanghai-zhongkao.json',
+        }],
+        difficultyLevels: {},
+      }),
+    };
+  }
+  if (url.includes('words-shanghai-zhongkao.json')) {
+    return {
+      ok: true,
+      status: 200,
       json: async () => ({
         words: [
           { id: 1, word: 'speed', meaning_cn: '速度', meaning_en: 'how fast something goes', phonetic: '/spiːd/', sentence: 'The speed of the car was amazing.', level: 2, category: 'abstract' },

@@ -33,10 +33,6 @@ const dataFiles = {};
 const dataFileList = [
   'wordsets-config.json',
   'words-shanghai-zhongkao.json',
-  'words-shanghai-g6.json',
-  'words-f1.json',
-  'words-raz-h.json',
-  'words-raz-i.json',
   'tracks.json',
 ];
 
@@ -170,5 +166,13 @@ console.log('  index.html (importmap removed, bundle.js injected)');
 
 // ─── 7. Size summary ──────────────────────────────────────────────────
 const bundleSize = readFileSync(join(DIST, 'js', 'bundle.js')).length;
+const bundledDataNames = Object.keys(dataFiles);
+const forbiddenWordsets = bundledDataNames.filter(name =>
+  name.startsWith('words-') && name !== 'words-shanghai-zhongkao.json'
+);
+if (forbiddenWordsets.length > 0) {
+  throw new Error(`Archived wordsets entered the build: ${forbiddenWordsets.join(', ')}`);
+}
 console.log(`\n✅ Build complete: ${DIST}`);
 console.log(`   bundle.js: ${(bundleSize / 1024).toFixed(0)} KB`);
+console.log(`   runtime wordset: words-shanghai-zhongkao.json only`);
