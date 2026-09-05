@@ -7,7 +7,16 @@ const CONFIG_PATH = join(ROOT, 'data', 'wordsets-config.json');
 const DEFAULT_ID = 'shanghai-zhongkao';
 const EXPECTED_FILE = normalize('data/words-shanghai-zhongkao.json');
 const EXPECTED_COUNT = 1639;
-const REQUIRED_FIELDS = ['id', 'word', 'meaning_cn', 'phonetic', 'level', 'category', 'pos', 'source2025'];
+const REQUIRED_FIELDS = ['id', 'word', 'meaning_cn', 'meaning_en', 'phonetic', 'level', 'category', 'pos', 'source2025'];
+const COLLAPSED_COLLOCATION_PATTERNS = [
+  /getstuckin/i,
+  /doingsth/i,
+  /takeanactivepartin/i,
+  /lookforwardto/i,
+  /accordingto/i,
+  /inadditionto/i,
+  /beableto/i,
+];
 const errors = [];
 
 function readJson(path) {
@@ -64,6 +73,13 @@ if (config) {
             const value = word[field];
             if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
               errors.push(`${set.id}: missing ${field} at index ${index}`);
+            }
+          }
+          for (const collocation of word.collocations || []) {
+            for (const pattern of COLLAPSED_COLLOCATION_PATTERNS) {
+              if (pattern.test(collocation)) {
+                errors.push(`${set.id}: collapsed collocation ${JSON.stringify(collocation)} at index ${index}`);
+              }
             }
           }
         });

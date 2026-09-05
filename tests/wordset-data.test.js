@@ -26,7 +26,7 @@ describe('runtime wordset data contract', () => {
 
   it('contains exactly 1,639 handbook words with unique ids and exact spellings', () => {
     const { words } = readJson('data/words-shanghai-zhongkao.json');
-    const required = ['id', 'word', 'meaning_cn', 'phonetic', 'level', 'category', 'pos', 'source2025'];
+    const required = ['id', 'word', 'meaning_cn', 'meaning_en', 'phonetic', 'level', 'category', 'pos', 'source2025'];
 
     expect(words).toHaveLength(1639);
     expect(new Set(words.map(word => word.id)).size).toBe(1639);
@@ -41,6 +41,26 @@ describe('runtime wordset data contract', () => {
     expect(existsSync(resolve(root, 'data/words-shanghai-g6.json'))).toBe(false);
     expect(existsSync(resolve(root, 'data/archive/legacy-wordsets/words.json'))).toBe(true);
     expect(existsSync(resolve(root, 'data/archive/legacy-wordsets/words-shanghai-g6.json'))).toBe(true);
+  });
+
+  it('contains complete English definitions and spaced handbook collocations', () => {
+    const { words } = readJson('data/words-shanghai-zhongkao.json');
+    const collocations = words.flatMap(word => word.collocations || []);
+    const collapsedPatterns = [
+      /getstuckin/i,
+      /doingsth/i,
+      /takeanactivepartin/i,
+      /lookforwardto/i,
+      /accordingto/i,
+      /inadditionto/i,
+      /beableto/i,
+    ];
+
+    expect(words.every(word => word.meaning_en.trim())).toBe(true);
+    expect(collocations).toContainEqual(expect.stringContaining('be/get stuck in'));
+    for (const collocation of collocations) {
+      for (const pattern of collapsedPatterns) expect(collocation).not.toMatch(pattern);
+    }
   });
 
   it('tracks handbook provenance and question eligibility for every word', () => {

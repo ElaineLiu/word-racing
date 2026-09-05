@@ -34,11 +34,13 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("handbook", type=Path)
     parser.add_argument("legacy", type=Path)
+    parser.add_argument("definitions", type=Path)
     parser.add_argument("output", type=Path)
     args = parser.parse_args()
 
     handbook = json.loads(args.handbook.read_text(encoding="utf-8"))
     legacy = json.loads(args.legacy.read_text(encoding="utf-8"))
+    definitions = json.loads(args.definitions.read_text(encoding="utf-8"))
     exact: dict[str, list[dict]] = {}
     folded: dict[str, list[dict]] = {}
     for word in legacy["words"]:
@@ -65,7 +67,7 @@ def main() -> None:
             meaning_cn = (old or {}).get("meaning_cn", "待复核")
         sentence = example.get("sentence") or (old or {}).get("sentence", "")
         sentence_cn = example.get("sentence_cn") or (old or {}).get("sentence_cn", "")
-        meaning_en = (old or {}).get("meaning_en", "")
+        meaning_en = (old or {}).get("meaning_en", "") or definitions.get(source["word"], "")
         phonetic = (old or {}).get("phonetic") or f"/{source.get('phonetic_raw', '').strip('/')}/"
         pos = (old or {}).get("pos") or source.get("pos", "")
         level = (old or {}).get("level", 3)
