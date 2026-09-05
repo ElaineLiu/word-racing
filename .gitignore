@@ -17,6 +17,7 @@ yarn.lock
 *.pdf
 data/sources/*.pdf
 tmp/pdfs/
+tmp/
 *.tmp
 *.bak
 *.backup
