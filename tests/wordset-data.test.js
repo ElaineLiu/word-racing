@@ -18,18 +18,19 @@ describe('runtime wordset data contract', () => {
     expect(config.wordSets[0]).toMatchObject({
       id: 'shanghai-zhongkao',
       name: '上海中考考纲',
-      totalWords: 1982,
+      totalWords: 1639,
       file: 'data/words-shanghai-zhongkao.json',
       isDefault: true,
     });
   });
 
-  it('contains exactly 1,982 complete words with unique ids', () => {
+  it('contains exactly 1,639 handbook words with unique ids and exact spellings', () => {
     const { words } = readJson('data/words-shanghai-zhongkao.json');
-    const required = ['id', 'word', 'meaning_cn', 'meaning_en', 'phonetic', 'sentence', 'level', 'category'];
+    const required = ['id', 'word', 'meaning_cn', 'meaning_en', 'phonetic', 'level', 'category', 'pos', 'source2025'];
 
-    expect(words).toHaveLength(1982);
-    expect(new Set(words.map(word => word.id)).size).toBe(1982);
+    expect(words).toHaveLength(1639);
+    expect(new Set(words.map(word => word.id)).size).toBe(1639);
+    expect(new Set(words.map(word => word.word)).size).toBe(1639);
     for (const word of words) {
       for (const field of required) expect(word[field]).not.toBeFalsy();
     }
@@ -40,6 +41,38 @@ describe('runtime wordset data contract', () => {
     expect(existsSync(resolve(root, 'data/words-shanghai-g6.json'))).toBe(false);
     expect(existsSync(resolve(root, 'data/archive/legacy-wordsets/words.json'))).toBe(true);
     expect(existsSync(resolve(root, 'data/archive/legacy-wordsets/words-shanghai-g6.json'))).toBe(true);
+  });
+
+  it('contains complete English definitions and spaced handbook collocations', () => {
+    const { words } = readJson('data/words-shanghai-zhongkao.json');
+    const collocations = words.flatMap(word => word.collocations || []);
+    const collapsedPatterns = [
+      /getstuckin/i,
+      /doingsth/i,
+      /takeanactivepartin/i,
+      /lookforwardto/i,
+      /accordingto/i,
+      /inadditionto/i,
+      /beableto/i,
+    ];
+
+    expect(words.every(word => word.meaning_en.trim())).toBe(true);
+    expect(collocations).toContainEqual(expect.stringContaining('be/get stuck in'));
+    for (const collocation of collocations) {
+      for (const pattern of collapsedPatterns) expect(collocation).not.toMatch(pattern);
+    }
+  });
+
+  it('tracks handbook provenance and question eligibility for every word', () => {
+    const { words } = readJson('data/words-shanghai-zhongkao.json');
+
+    for (const word of words) {
+      expect(word.source2025.document).toBe('2025-shanghai-handbook');
+      expect(word.source2025.page).toBeGreaterThanOrEqual(7);
+      expect(word.source2025.page).toBeLessThanOrEqual(284);
+      expect(word.question_eligibility.meaning).toBe(true);
+      expect(word.question_eligibility.sentence).toBe(Boolean(word.sentence));
+    }
   });
 
   it('shows the sole wordset name without rendering a wordset selector', () => {

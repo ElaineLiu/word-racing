@@ -169,6 +169,11 @@ export class QuestionFactory {
      * @returns {object} Unified question data structure
      */
     static createQuestion(word, mode, level, eligibleWords, useChinese = false) {
+        // Handbook entries without a reliable example remain valid meaning
+        // questions, but must never produce a fill-in-the-blank giveaway.
+        if (mode === 'RADIO_MSG' && !word.sentence) {
+            mode = 'PIT_BOARD';
+        }
         const modeDef = getMode(mode);
         if (!modeDef) {
             console.error('Unknown question mode:', mode);
