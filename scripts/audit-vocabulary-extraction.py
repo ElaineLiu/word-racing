@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 def norm(value: str) -> str:
-    return re.sub(r"\s+", " ", value.strip().lower())
+    return re.sub(r"\s+", " ", value.strip())
 
 
 def main() -> None:
@@ -34,32 +34,33 @@ def main() -> None:
         "",
         "## 输入摘要",
         "",
-        f"- 文档：`{extracted['source']['filename']}`",
-        f"- 页数：{extracted['source']['pages']}",
-        f"- 抽取词条记录：{extracted['summary']['entry_records']}",
-        f"- 规范化单词数：{extracted['summary']['unique_normalized_words']}",
-        f"- 带例句记录：{extracted['summary']['records_with_examples']}",
-        f"- 带搭配记录：{extracted['summary']['records_with_collocations']}",
-        f"- 待人工复核记录：{extracted['summary']['needs_review_records']}",
+        f"- 文档：`{extracted['source']['document']}`（PDF 不提交）",
+        f"- OCR 校验页数：{extracted['source']['ocr_pages_verified']}",
+        f"- 词汇正文页：{extracted['source']['chapter_pages']}",
+        f"- 主词条：{extracted['summary']['entries']}",
+        f"- 带例句记录：{extracted['summary']['with_examples']}",
+        f"- 带搭配记录：{extracted['summary']['with_collocations']}",
+        f"- 归属词形：{extracted['summary']['word_forms']}",
+        f"- 待人工复核记录：{extracted['summary']['needs_review']}",
         "",
         "## ID 迁移信号",
         "",
-        f"- 可按英文词复用现有 ID：{len(set(extracted_words) & set(current_words))}",
-        f"- 手册中新增候选：{len(handbook_only)}",
-        f"- 现有词库未在手册抽取结果中识别：{len(current_only)}（需复核，不自动删除）",
+        f"- 运行时与结构化手册交集：{len(set(extracted_words) & set(current_words))}",
+        f"- 结构化手册未进入运行时：{len(handbook_only)}",
+        f"- 运行时非手册词条：{len(current_only)}",
+        f"- 复用旧 ID：{current['meta'].get('legacy_ids_reused', '未知')}",
         "",
         "## 当前限制",
         "",
-        "- PDF 嵌入字体会造成少量音标和中文字符错译。",
-        "- 词形变化与主词条需要在规范化阶段重新归属。",
-        "- 待复核条目不得进入默认题目集合。",
-        "- 例句和搭配将在题目生成阶段做目标词、答案唯一性和题干泄漏校验。",
+        "- `needs_review` 主要标识无直接例句、异常音标或水印干扰记录。",
+        "- 无英文释义时基础题回退中文释义；无例句时不得生成句子填空题。",
+        "- 例句和搭配进入题目生成前仍需做目标词、答案唯一性和题干泄漏校验。",
         "",
         "## 待复核样本",
         "",
     ]
     lines.extend(
-        f"- 第{item['page']}页 `{item['word']}`：{item['definition_raw']}"
+        f"- 第{item['page']}页 `{item['word']}`：{item['meaning_cn']}"
         for item in review[:50]
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)

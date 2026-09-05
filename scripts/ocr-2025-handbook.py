@@ -22,6 +22,11 @@ def main() -> None:
     parser.add_argument("--start-page", type=int, default=1)
     parser.add_argument("--end-page", type=int, default=0)
     parser.add_argument("--append", action="store_true")
+    parser.add_argument(
+        "--page-output-dir",
+        type=Path,
+        help="Write one resumable UTF-8 text file per page instead of one stream",
+    )
     args = parser.parse_args()
 
     render_dir = args.output.parent / "rendered-pages"
@@ -39,6 +44,24 @@ def main() -> None:
     if args.end_page:
         images = [image for image in images if int(image.stem.split("-")[-1]) <= args.end_page]
     ocr = RapidOCR()
+    if args.page_output_dir:
+        args.page_output_dir.mkdir(parents=True, exist_ok=True)
+        pending = []
+        for image in images:
+            page_number = int(image.stem.split("-")[-1])
+            page_output = args.page_output_dir / f"page-{page_number:03d}.txt"
+            if not page_output.exists():
+                pending.append((image, page_number, page_output))
+        for index, (image, page_number, page_output) in enumerate(pending, start=1):
+            try:
+                result, _ = ocr(str(image))
+                text = "\n".join(item[1] for item in (result or []))
+            except Exception as error:  # keep the batch resumable
+                text = f"OCR_ERROR: {type(error).__name__}: {error}"
+            page_output.write_text(text + "\n", encoding="utf-8")
+            print(f"OCR page {page_number} ({index}/{len(pending)})", flush=True)
+        return
+
     with args.output.open("a" if args.append else "w", encoding="utf-8") as stream:
         for index, image in enumerate(images, start=1):
             page_number = int(image.stem.split("-")[-1])
