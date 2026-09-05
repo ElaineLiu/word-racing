@@ -6,8 +6,8 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CONFIG_PATH = join(ROOT, 'data', 'wordsets-config.json');
 const DEFAULT_ID = 'shanghai-zhongkao';
 const EXPECTED_FILE = normalize('data/words-shanghai-zhongkao.json');
-const EXPECTED_COUNT = 1982;
-const REQUIRED_FIELDS = ['id', 'word', 'meaning_cn', 'meaning_en', 'phonetic', 'sentence', 'level', 'category'];
+const EXPECTED_COUNT = 1639;
+const REQUIRED_FIELDS = ['id', 'word', 'meaning_cn', 'phonetic', 'level', 'category', 'pos', 'source2025'];
 const errors = [];
 
 function readJson(path) {
@@ -54,9 +54,12 @@ if (config) {
         }
 
         const ids = new Set();
+        const exactWords = new Set();
         words.forEach((word, index) => {
           if (ids.has(word.id)) errors.push(`${set.id}: duplicate word id ${word.id} at index ${index}`);
           ids.add(word.id);
+          if (exactWords.has(word.word)) errors.push(`${set.id}: duplicate exact word ${word.word} at index ${index}`);
+          exactWords.add(word.word);
           for (const field of REQUIRED_FIELDS) {
             const value = word[field];
             if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
@@ -64,6 +67,9 @@ if (config) {
             }
           }
         });
+        if (data?.meta?.total_words !== EXPECTED_COUNT) {
+          errors.push(`${set.id}: meta.total_words must be ${EXPECTED_COUNT}`);
+        }
       }
     }
   }

@@ -11,7 +11,7 @@ const config = {
   wordSets: [{
     id: DEFAULT_ID,
     name: '上海中考考纲',
-    totalWords: 1982,
+    totalWords: 1639,
     file: WORDS_URL,
   }],
   difficultyLevels: {},
@@ -46,7 +46,7 @@ describe('WordSetLoader single-wordset policy', () => {
     const loader = await importLoader();
 
     expect(await loader.getAvailableWordSets()).toEqual([
-      expect.objectContaining({ id: DEFAULT_ID, name: '上海中考考纲', totalWords: 1982 }),
+      expect.objectContaining({ id: DEFAULT_ID, name: '上海中考考纲', totalWords: 1639 }),
     ]);
     await expect(loader.loadWordSet(DEFAULT_ID)).resolves.toEqual(words);
     expect(localStorage.getItem('wr_wordset_config')).toBe(DEFAULT_ID);

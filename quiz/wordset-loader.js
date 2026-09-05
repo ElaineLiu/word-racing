@@ -11,10 +11,10 @@ export const WORD_SET_STORAGE_KEY = 'wr_wordset_config';
 const DEFAULT_WORD_SET = Object.freeze({
   id: DEFAULT_WORD_SET_ID,
   name: '上海中考考纲',
-  description: '2025年上海中考英语考纲词汇（1982词）',
+  description: '2025年上海中考英语考纲词汇用法手册（1639个主词条）',
   source: '2025年上海中考英语考纲词汇',
   difficultyRange: [1, 5],
-  totalWords: 1982,
+  totalWords: 1639,
   file: 'data/words-shanghai-zhongkao.json',
   tags: ['中考', '考纲', '上海', '初中'],
   gradeLevel: '7-9',

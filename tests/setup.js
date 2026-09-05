@@ -45,7 +45,7 @@ global.fetch = async (url) => {
         wordSets: [{
           id: 'shanghai-zhongkao',
           name: '上海中考考纲',
-          totalWords: 1982,
+          totalWords: 1639,
           file: 'data/words-shanghai-zhongkao.json',
         }],
         difficultyLevels: {},
