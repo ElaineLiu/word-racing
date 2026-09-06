@@ -48,6 +48,22 @@ describe('Track', () => {
       expect(track.points.length).toBe(expectedPoints);
     });
 
+    it('should keep the redesigned Shanghai centerline within its point budget', () => {
+      expect(track.waypoints).toHaveLength(70);
+      expect(track.samplesPerSegment).toBe(24);
+      expect(track.points).toHaveLength(1680);
+      expect(track.points.length).toBeLessThanOrEqual(2000);
+    });
+
+    it('should keep every centerline point inside the 1400x800 canvas', () => {
+      for (const point of track.points) {
+        expect(point.x).toBeGreaterThanOrEqual(0);
+        expect(point.x).toBeLessThanOrEqual(1400);
+        expect(point.y).toBeGreaterThanOrEqual(0);
+        expect(point.y).toBeLessThanOrEqual(800);
+      }
+    });
+
     it('should create a closed loop (first and last points should connect)', () => {
       const first = track.points[0];
       const last = track.points[track.points.length - 1];

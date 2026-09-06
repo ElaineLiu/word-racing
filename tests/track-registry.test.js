@@ -6,6 +6,11 @@
 
 import { describe, it, expect } from 'vitest';
 import { TRACK_REGISTRY } from '../config/track-registry.js';
+import { TRACK } from '../config/game-config.js';
+import {
+  SHANGHAI_2D_TRACK_WIDTH,
+  SHANGHAI_2D_WAYPOINTS,
+} from '../config/tracks/shanghai-2d.js';
 
 const SAMPLES_PER_SEGMENT = 24;
 
@@ -357,12 +362,44 @@ describe('Track Registry', () => {
   });
 
   describe('上海赛道几何安全', () => {
-    it.each(['shanghai-2d', 'shanghai-3d'])('%s 中心线不应该自交或过近', (trackId) => {
+    it.each(['shanghai-2d', 'shanghai-3d'])('%s 中心线不应该自交', (trackId) => {
       const track = TRACK_REGISTRY[trackId];
       const points = generateSmoothCurve(track.waypoints);
 
       expect(hasCenterlineIntersection(points, track.waypoints.length)).toBe(false);
+    });
+
+    it('shanghai-3d 应该保持原有的中心线间距保护', () => {
+      const track = TRACK_REGISTRY['shanghai-3d'];
+      const points = generateSmoothCurve(track.waypoints);
+
       expect(getMinimumNonAdjacentSegmentDistance(points, track.waypoints.length)).toBeGreaterThan(track.trackWidth);
+    });
+
+    it('shanghai-2d 应该完整使用新版70点坐标，且不改变起终点', () => {
+      const track = TRACK_REGISTRY['shanghai-2d'];
+
+      expect(track.waypoints).toBe(SHANGHAI_2D_WAYPOINTS);
+      expect(track.waypoints).toHaveLength(70);
+      expect(track.waypoints[0]).toEqual({ x: 505, y: 483 });
+      expect(track.waypoints.at(-1)).toEqual({ x: 498, y: 514 });
+      expect(track.trackWidth).toBe(SHANGHAI_2D_TRACK_WIDTH);
+      expect(track.samplesPerSegment).toBe(24);
+    });
+
+    it('默认2D赛道入口应该与注册表共享同一权威配置', () => {
+      expect(TRACK.WAYPOINTS).toBe(SHANGHAI_2D_WAYPOINTS);
+      expect(TRACK.WIDTH).toBe(SHANGHAI_2D_TRACK_WIDTH);
+      expect(TRACK.SAMPLES_PER_SEGMENT).toBe(24);
+    });
+
+    it('shanghai-3d 应该保持旧版20点几何不变', () => {
+      const track = TRACK_REGISTRY['shanghai-3d'];
+
+      expect(track.waypoints).toHaveLength(20);
+      expect(track.waypoints[0]).toEqual({ x: 250, y: 90 });
+      expect(track.waypoints.at(-1)).toEqual({ x: 370, y: 205 });
+      expect(track.trackWidth).toBe(90);
     });
     it.each(['shanghai-2d', 'shanghai-3d'])('%s 应该有明显左右转变化', (trackId) => {
       const track = TRACK_REGISTRY[trackId];

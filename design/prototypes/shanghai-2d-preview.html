@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shanghai 2D Track Preview</title>
+  <style>
+    body { margin: 0; background: #071019; color: #e8f5ff; font: 14px system-ui; }
+    main { max-width: 1400px; margin: 0 auto; padding: 16px; }
+    h1 { margin: 0 0 8px; font-size: 20px; }
+    p { margin: 0 0 12px; color: #9eb6c7; }
+    canvas { width: 100%; height: auto; border: 1px solid #294052; background: #0b1622; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Shanghai International Circuit — 2D Candidate</h1>
+    <p>70 waypoints · 50 px width · 24 samples/segment · cyan dot = start/finish</p>
+    <canvas id="preview" width="1400" height="800"></canvas>
+  </main>
+  <script type="module">
+    import { Track } from '../../js/track.js';
+    import { TRACK_REGISTRY } from '../../config/track-registry.js';
+
+    const config = TRACK_REGISTRY['shanghai-2d'];
+    const track = new Track(config.waypoints, config.trackWidth, config.samplesPerSegment);
+    const canvas = document.querySelector('#preview');
+    const ctx = canvas.getContext('2d');
+    track.render(ctx);
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 255, 255, .55)';
+    for (const point of config.waypoints) {
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#00e5ff';
+    ctx.beginPath();
+    ctx.arc(track.startPos.x, track.startPos.y, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  </script>
+</body>
+</html>

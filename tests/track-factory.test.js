@@ -4,6 +4,7 @@ import { Track } from '../js/track.js';
 import { GameState } from '../core/game-state.js';
 import { EventBus } from '../core/event-bus.js';
 import { FeatureFlags } from '../config/feature-flags.js';
+import { TRACK_REGISTRY } from '../config/track-registry.js';
 
 describe('TrackFactory', () => {
   let eventBus;
@@ -58,7 +59,8 @@ describe('TrackFactory', () => {
       const track = factory.create('shanghai-2d');
 
       expect(track).toBeInstanceOf(Track);
-      expect(track.trackWidth).toBe(90);
+      expect(track.trackWidth).toBe(TRACK_REGISTRY['shanghai-2d'].trackWidth);
+      expect(track.samplesPerSegment).toBe(TRACK_REGISTRY['shanghai-2d'].samplesPerSegment);
     });
 
     it('should create monaco track with different width', () => {
