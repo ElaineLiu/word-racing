@@ -8,7 +8,7 @@
 import { TRACK, DISPLAY } from '../config/game-config.js';
 
 export class Track {
-    constructor(waypoints = null, trackWidth = null) {
+    constructor(waypoints = null, trackWidth = null, samplesPerSegment = null) {
         this.points = [];       // Smooth track center points
         this.trackWidth = trackWidth != null ? trackWidth : TRACK.WIDTH;
         this.startPos = { x: 0, y: 0, angle: 0 };
@@ -17,7 +17,8 @@ export class Track {
         const sourceWp = waypoints || TRACK.WAYPOINTS;
         this.waypoints = sourceWp.map(wp => ({ ...wp }));
 
-        this._generateSmoothCurve(TRACK.SAMPLES_PER_SEGMENT);
+        this.samplesPerSegment = samplesPerSegment ?? TRACK.SAMPLES_PER_SEGMENT;
+        this._generateSmoothCurve(this.samplesPerSegment);
         this._calculateStartPos();
     }
 
