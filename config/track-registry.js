@@ -1,3 +1,9 @@
+import {
+  SHANGHAI_2D_CANVAS_SIZE,
+  SHANGHAI_2D_TRACK_WIDTH,
+  SHANGHAI_2D_WAYPOINTS,
+} from './tracks/shanghai-2d.js';
+
 /**
  * 赛道注册表 - Track Registry
  *
@@ -23,45 +29,18 @@ export const TRACK_REGISTRY = {
   /**
    * 上海国际赛车场 v2 - 默认赛道（高速 GP 风格）
    * 超长主直道 + 大圆弧高速弯 + 一处发卡，模仿 F1 上赛特征
-   * 画布: 1400×800
+   * Extended 3000×1900 world; player viewport follows the car.
    */
   'shanghai-2d': {
     id: 'shanghai-2d',
     name: 'Shanghai International Circuit',
     type: '2d',
     description: 'High-speed F1 circuit with a long main straight',
-    waypoints: [
-      // 主直道
-      { x: 250, y: 90 },
-      { x: 560, y: 75 },
-      { x: 900, y: 80 },
-      { x: 1160, y: 130 },
-
-      // 右侧高速大弯
-      { x: 1300, y: 260 },
-      { x: 1280, y: 430 },
-      { x: 1120, y: 545 },
-      { x: 880, y: 620 },
-      { x: 660, y: 620 },
-
-      // 下方 S 弯
-      { x: 520, y: 560 },
-      { x: 380, y: 630 },
-      { x: 230, y: 575 },
-
-      // 左下发卡
-      { x: 100, y: 650 },
-      { x: 60, y: 520 },
-      { x: 135, y: 400 },
-      { x: 300, y: 350 },
-
-      // 内侧 S 弯回主直道
-      { x: 445, y: 455 },
-      { x: 610, y: 355 },
-      { x: 540, y: 255 },
-      { x: 370, y: 205 },
-    ],
-    trackWidth: 90,
+    waypoints: SHANGHAI_2D_WAYPOINTS,
+    trackWidth: SHANGHAI_2D_TRACK_WIDTH,
+    canvasSize: SHANGHAI_2D_CANVAS_SIZE,
+    strictBoundary: true,
+    samplesPerSegment: 24,
     unlockRequirements: { quizzesCompleted: 1 }
   },
 

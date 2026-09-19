@@ -142,7 +142,11 @@ export class Car {
         }
 
         // Steering: more responsive at low speeds
-        const turnFactor = Math.min(Math.abs(this.speed) / PHYSICS.TURN_FACTOR_DIVISOR, 1);
+        // The hard-edged Shanghai road can stop the car completely. Keep
+        // steering available at rest so a driver can face back into the road.
+        const turnFactor = track.strictBoundary
+            ? Math.max(0.7, Math.min(Math.abs(this.speed) / PHYSICS.TURN_FACTOR_DIVISOR, 1))
+            : Math.min(Math.abs(this.speed) / PHYSICS.TURN_FACTOR_DIVISOR, 1);
         if (this.input.left) {
             this.angle -= this.turnSpeed * turnFactor * frameScale;
         }
@@ -165,11 +169,40 @@ export class Car {
         if (Math.abs(this.speed) < stopThreshold) this.speed = 0;
 
         // Move car
+        const previousX = this.x;
+        const previousY = this.y;
         this.x += Math.cos(this.angle) * this.speed * frameScale;
         this.y += Math.sin(this.angle) * this.speed * frameScale;
 
+        // Shanghai's closely spaced lanes need a solid road edge. Reject the
+        // movement immediately, before an off-road hop can reach another lane.
+        let onTrackForHandling = onTrack;
+        if (track.strictBoundary && onTrack && !track.isOnTrack(this.x, this.y, this.width / 2)) {
+            const previousDistance = track.getNearestDistance(previousX, previousY);
+            const nextDistance = track.getNearestDistance(this.x, this.y);
+            // A car already in the edge band must be able to steer inward over
+            // several frames. Never allow it to move farther from the road or
+            // into the gap between two lanes.
+            const returningToRoad = track.isOnTrack(this.x, this.y)
+                && nextDistance < previousDistance - 1e-6;
+            if (!returningToRoad) {
+                const slide = this._slideAlongRoadEdge(track, previousX, previousY,
+                    this.x - previousX, this.y - previousY);
+                if (slide) {
+                    this.x = slide.x;
+                    this.y = slide.y;
+                    this.speed *= 0.95;
+                } else {
+                    this.x = previousX;
+                    this.y = previousY;
+                    this.speed *= 0.25;
+                }
+            }
+            onTrackForHandling = true;
+        }
+
         // Off-track handling: track how long car has been off-track
-        if (!onTrack) {
+        if (!onTrackForHandling) {
             this.offTrackTimer += frameScale;
             this.speed *= Math.pow(PHYSICS.OFF_TRACK_EXTRA_FRICTION, frameScale);
 
@@ -190,8 +223,10 @@ export class Car {
         }
 
         // Boundary clamping (keep car in game world)
-        this.x = Math.max(GAME.WORLD_MIN_X, Math.min(GAME.WORLD_MAX_X, this.x));
-        this.y = Math.max(GAME.WORLD_MIN_Y, Math.min(GAME.WORLD_MAX_Y, this.y));
+        const worldMaxX = track.canvasSize ? track.canvasSize.width - GAME.WORLD_MIN_X : GAME.WORLD_MAX_X;
+        const worldMaxY = track.canvasSize ? track.canvasSize.height - GAME.WORLD_MIN_Y : GAME.WORLD_MAX_Y;
+        this.x = Math.max(GAME.WORLD_MIN_X, Math.min(worldMaxX, this.x));
+        this.y = Math.max(GAME.WORLD_MIN_Y, Math.min(worldMaxY, this.y));
 
         // Add skid marks when turning at speed
         if ((this.input.left || this.input.right) && Math.abs(this.speed) > DISPLAY.SKID_MIN_SPEED) {
@@ -258,6 +293,39 @@ export class Car {
             }
         }
         this.lastProgress = progress;
+    }
+
+    /** Preserve the along-road part of a blocked movement instead of making
+     *  the track edge an invisible wall across the entire lane. */
+    _slideAlongRoadEdge(track, x, y, dx, dy) {
+        const points = track.points;
+        const index = Math.round(track.getProgress(x, y) * points.length) % points.length;
+        const before = points[(index - 1 + points.length) % points.length];
+        const after = points[(index + 1) % points.length];
+        const length = Math.hypot(after.x - before.x, after.y - before.y) || 1;
+        const tx = (after.x - before.x) / length;
+        const ty = (after.y - before.y) / length;
+        const along = dx * tx + dy * ty;
+        if (Math.abs(along) < Math.max(0.01, Math.hypot(dx, dy) * 0.2)) return null;
+
+        let slideX = x + along * tx;
+        let slideY = y + along * ty;
+        const clearance = this.width / 2;
+        if (!track.isOnTrack(slideX, slideY, clearance)) {
+            const nearestIndex = Math.round(track.getProgress(slideX, slideY) * points.length) % points.length;
+            const center = points[nearestIndex];
+            const offsetX = slideX - center.x;
+            const offsetY = slideY - center.y;
+            const distance = Math.hypot(offsetX, offsetY);
+            const maxOffset = track.trackWidth / 2 - clearance - 1;
+            if (distance > maxOffset) {
+                slideX = center.x + offsetX * maxOffset / distance;
+                slideY = center.y + offsetY * maxOffset / distance;
+            }
+        }
+        return track.isOnTrack(slideX, slideY, clearance)
+            ? { x: slideX, y: slideY }
+            : null;
     }
 
     /**

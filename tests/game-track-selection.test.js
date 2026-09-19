@@ -60,6 +60,12 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
 
       expect(game.track.trackWidth).toBe(shanghai.trackWidth);
       expect(game.track.waypoints).toEqual(shanghai.waypoints);
+      expect(game.track.canvasSize).toEqual(shanghai.canvasSize);
+      expect(game.car.x).toBe(game.track.startPos.x);
+      expect(game.car.y).toBe(game.track.startPos.y);
+      game.car.update(game.track, 1);
+      expect(game.car.x).toBe(game.track.startPos.x);
+      expect(game.car.y).toBe(game.track.startPos.y);
     });
   });
 
@@ -123,6 +129,18 @@ describe('Game - 赛道选择 (Phase 3.2)', () => {
       game.startRace();
       expect(game.car.x).toBe(game.track.startPos.x);
       expect(game.car.y).toBe(game.track.startPos.y);
+    });
+
+    it('Shanghai: starts on the painted line and survives the first physics frame beyond the old canvas', async () => {
+      await game.startRace();
+      const { startPos, canvasSize } = game.track;
+      expect(canvasSize).toEqual(TRACK_REGISTRY['shanghai-2d'].canvasSize);
+      expect(startPos.y).toBeGreaterThan(800);
+      expect(game.car.x).toBe(startPos.x);
+      expect(game.car.y).toBe(startPos.y);
+      game.car.update(game.track, 1);
+      expect(game.car.x).toBe(startPos.x);
+      expect(game.car.y).toBe(startPos.y);
     });
 
     it('Main: 应更新 RenderSystem 的 track 引用', () => {

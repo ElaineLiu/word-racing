@@ -1,3 +1,9 @@
+import {
+  SHANGHAI_2D_CANVAS_SIZE,
+  SHANGHAI_2D_TRACK_WIDTH,
+  SHANGHAI_2D_WAYPOINTS,
+} from './tracks/shanghai-2d.js';
+
 /**
  * Game Configuration - All game constants in one place
  * This is the single source of truth for all tunable values.
@@ -101,34 +107,15 @@ export const ECONOMY = {
 
 export const TRACK = {
   // Track dimensions
-  WIDTH: 90,                     // track width in pixels (default: Shanghai v2)
-  SAMPLES_PER_SEGMENT: 200,      // spline interpolation samples
+  WIDTH: SHANGHAI_2D_TRACK_WIDTH,
+  // 80 derived controls × 24 samples = 1,920 centerline points.
+  // This is visually smooth while keeping collision/progress scans bounded.
+  SAMPLES_PER_SEGMENT: 24,
 
-  // Waypoints for default circuit (Shanghai v2, 20 control points)
-  // Mirrors track-registry.js shanghai-2d. Update both together.
-  WAYPOINTS: [
-    { x: 120, y: 120 },
-    { x: 300, y: 115 },
-    { x: 500, y: 110 },
-    { x: 700, y: 110 },
-    { x: 900, y: 115 },
-    { x: 1100, y: 130 },
-    { x: 1240, y: 200 },
-    { x: 1300, y: 340 },
-    { x: 1230, y: 480 },
-    { x: 1050, y: 560 },
-    { x: 780, y: 575 },
-    { x: 500, y: 575 },
-    { x: 280, y: 580 },
-    { x: 180, y: 660 },
-    { x: 280, y: 740 },
-    { x: 420, y: 730 },
-    { x: 560, y: 700 },
-    { x: 680, y: 620 },
-    { x: 780, y: 480 },
-    { x: 600, y: 350 },
-    { x: 350, y: 260 },
-  ],
+  // Default construction and registry selection share one authoritative source.
+  WAYPOINTS: SHANGHAI_2D_WAYPOINTS,
+  CANVAS_SIZE: SHANGHAI_2D_CANVAS_SIZE,
+  STRICT_BOUNDARY: true,
 
   // Kerb rendering
   KERB_ANGLE_THRESHOLD: 0.26,    // radians - angle change triggers kerbs

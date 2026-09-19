@@ -1,0 +1,24 @@
+# Shanghai 2D track redesign checklist
+
+- [x] Read `ISSUE_LOG.md`, including track regressions #013 and #014.
+- [x] Read the completed track-v2 design and current track implementation.
+- [x] Isolate work from the existing Mini Reading working tree.
+- [x] Preserve both legacy Shanghai 2D waypoint sources.
+- [x] Add geometry and integration tests for runtime references.
+- [x] Keep `shanghai-3d` geometry unchanged.
+- [x] Verify start position, direction, progress, collision and bounds.
+- [x] Measure generated point count and construction/query performance.
+- [x] Run targeted tests, full Vitest and build.
+- [x] Run `git diff --check` after final documentation updates.
+- [x] Complete a local 2D render smoke test and request user visual validation.
+- [x] Archive the exact 70 user-authored points with an integrity check; derive the 90px runtime route separately.
+- [x] Validate the final 1,920-point centerline: zero self-crossings and 122px+ minimum separation between distinct route sections.
+- [x] Test immediate road-boundary collision using real `Track` and `Car` objects; verify other tracks remain unaffected.
+- [x] Verify the 3000×1900 track world maps correctly into the minimap and that the app initializes without browser console errors.
+- [x] Run final full suite (806 passing), build and geometry/performance checks.
+- [x] Reproduce the user-reported invisible wall in the spiral edge band; test outward block, stationary steering and inward recovery with real Track + Car.
+- [x] Reproduce the second report: mixed forward/outward movement was discarded as one step; test along-road slide and full boundary safety.
+- [x] Check the old 1400×800 viewport against the Shanghai start world coordinate; protect legacy constructor and wrongly supplied world size.
+- [x] Integrate actual Game start/first-frame and Track background/start-line tests; serve browser modules with no-store during user QA.
+- [x] User manually drives Shanghai 2D through the spiral and confirms the corrected start/world-boundary behavior.
+- [x] User visually confirms the two rounded hairpins reported after the successful driving validation.

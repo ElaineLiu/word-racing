@@ -52,7 +52,13 @@ export class TrackFactory {
       }
       throw new Error('Use createAsync for 3D tracks');
     } else if (trackData.type === '2d') {
-      return new Track(trackData.waypoints, trackData.trackWidth);
+      return new Track(
+        trackData.waypoints,
+        trackData.trackWidth,
+        trackData.samplesPerSegment,
+        trackData.canvasSize,
+        trackData.strictBoundary,
+      );
     } else {
       throw new Error(`Unknown track type: ${trackData.type}`);
     }

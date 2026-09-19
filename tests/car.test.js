@@ -5,12 +5,15 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Car } from '../js/car.js';
+import { Track } from '../js/track.js';
+import { TRACK_REGISTRY } from '../config/track-registry.js';
 
 describe('Car', () => {
   let car;
   let mockTrack;
 
   beforeEach(() => {
+    localStorage.clear();
     // Create a car at position (100, 100) facing right (angle = 0)
     car = new Car(100, 100, 0);
 
@@ -23,6 +26,89 @@ describe('Car', () => {
       getTrackNormal: () => ({ x: 0, y: 1, nearestPoint: { x: 100, y: 100 } }),
       points: [{ x: 100, y: 100 }, { x: 110, y: 100 }],
     };
+  });
+
+  describe('real Shanghai 2D road boundary', () => {
+    it('lets a car in the visible edge band move inward instead of trapping it behind an invisible wall', () => {
+      const data = TRACK_REGISTRY['shanghai-2d'];
+      const track = new Track(data.waypoints, data.trackWidth, data.samplesPerSegment, data.canvasSize, data.strictBoundary);
+      const center = track.points[228];
+      const next = track.points[229];
+      const tangent = Math.atan2(next.y - center.y, next.x - center.x);
+      const normal = { x: -Math.sin(tangent), y: Math.cos(tangent) };
+      const edge = { x: center.x + normal.x * 33, y: center.y + normal.y * 33 };
+      expect(track.isOnTrack(edge.x, edge.y)).toBe(true);
+      expect(track.isOnTrack(edge.x, edge.y, 17)).toBe(false);
+
+      const realCar = new Car(edge.x, edge.y, tangent + Math.PI / 2);
+      realCar.speed = 2;
+      realCar.update(track, 3);
+      expect(realCar.x).toBeCloseTo(edge.x);
+      expect(realCar.y).toBeCloseTo(edge.y);
+
+      // Reorient at zero speed, then move toward the centerline one small
+      // step at a time; a single frame cannot clear the whole edge band.
+      realCar.speed = 0;
+      realCar.input.left = true;
+      const beforeTurn = realCar.angle;
+      for (let frame = 0; frame < 100; frame++) realCar.update(track, 3);
+      expect(realCar.angle).toBeLessThan(beforeTurn - 3);
+      realCar.input.left = false;
+      realCar.input.up = true;
+      const beforeDistance = track.getNearestDistance(realCar.x, realCar.y);
+      for (let frame = 0; frame < 10; frame++) realCar.update(track, 3);
+      expect(track.getNearestDistance(realCar.x, realCar.y)).toBeLessThan(beforeDistance);
+      expect(track.isOnTrack(realCar.x, realCar.y)).toBe(true);
+    });
+
+    it('preserves forward progress when a driver scrapes the outer edge of the spiral', () => {
+      const data = TRACK_REGISTRY['shanghai-2d'];
+      const track = new Track(data.waypoints, data.trackWidth, data.samplesPerSegment, data.canvasSize, data.strictBoundary);
+      const center = track.points[228];
+      const next = track.points[229];
+      const tangent = Math.atan2(next.y - center.y, next.x - center.x);
+      const normal = { x: -Math.sin(tangent), y: Math.cos(tangent) };
+      const realCar = new Car(center.x + normal.x * 26, center.y + normal.y * 26, tangent + 0.8);
+      realCar.speed = 2;
+      realCar.input.up = true;
+      const startProgress = track.getProgress(realCar.x, realCar.y);
+
+      for (let frame = 0; frame < 120; frame++) {
+        realCar.update(track, 3);
+        expect(track.isOnTrack(realCar.x, realCar.y, realCar.width / 2)).toBe(true);
+      }
+      expect(track.getProgress(realCar.x, realCar.y)).toBeGreaterThan(startProgress + 0.002);
+    });
+
+    it('blocks a direct hop across the spiral while the car is driving', () => {
+      const data = TRACK_REGISTRY['shanghai-2d'];
+      const track = new Track(data.waypoints, data.trackWidth, data.samplesPerSegment, data.canvasSize, data.strictBoundary);
+      const start = track.points[482];
+      const nearbyOtherLane = track.points[900];
+      const gapMidpoint = {
+        x: (start.x + nearbyOtherLane.x) / 2,
+        y: (start.y + nearbyOtherLane.y) / 2,
+      };
+      expect(track.isOnTrack(gapMidpoint.x, gapMidpoint.y)).toBe(false);
+      const heading = Math.atan2(nearbyOtherLane.y - start.y, nearbyOtherLane.x - start.x);
+      const realCar = new Car(start.x, start.y, heading);
+      realCar.speed = 4;
+      realCar.input.up = true;
+
+      for (let frame = 0; frame < 120; frame++) {
+        realCar.update(track, 3);
+        expect(track.isOnTrack(realCar.x, realCar.y, realCar.width / 2)).toBe(true);
+      }
+
+      expect(Math.hypot(realCar.x - nearbyOtherLane.x, realCar.y - nearbyOtherLane.y)).toBeGreaterThan(80);
+    });
+
+    it('does not impose the Shanghai hard boundary on another 2D track', () => {
+      const data = TRACK_REGISTRY['monaco-2d'];
+      const track = new Track(data.waypoints, data.trackWidth, 24, data.canvasSize, data.strictBoundary);
+
+      expect(track.strictBoundary).toBe(false);
+    });
   });
 
   describe('initialization', () => {
