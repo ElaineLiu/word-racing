@@ -150,8 +150,8 @@ export class RenderSystem {
     const pts = this.#track.points;
     for (let i = 0; i < pts.length; i += 8) {
       const p = pts[i];
-      const sx = mx + (p.x / DISPLAY.CANVAS_WIDTH) * mW;
-      const sy = my + (p.y / DISPLAY.CANVAS_HEIGHT) * mH;
+      const sx = mx + (p.x / (this.#track.canvasSize?.width ?? DISPLAY.CANVAS_WIDTH)) * mW;
+      const sy = my + (p.y / (this.#track.canvasSize?.height ?? DISPLAY.CANVAS_HEIGHT)) * mH;
       if (i === 0) ctx.moveTo(sx, sy);
       else ctx.lineTo(sx, sy);
     }
@@ -160,15 +160,15 @@ export class RenderSystem {
 
     if (pts.length > 0) {
       ctx.fillStyle = '#FFD700';
-      const sx = mx + (pts[0].x / DISPLAY.CANVAS_WIDTH) * mW;
-      const sy = my + (pts[0].y / DISPLAY.CANVAS_HEIGHT) * mH;
+      const sx = mx + (pts[0].x / (this.#track.canvasSize?.width ?? DISPLAY.CANVAS_WIDTH)) * mW;
+      const sy = my + (pts[0].y / (this.#track.canvasSize?.height ?? DISPLAY.CANVAS_HEIGHT)) * mH;
       ctx.beginPath();
       ctx.arc(sx, sy, 3, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    const pix = mx + (this.#car.x / DISPLAY.CANVAS_WIDTH) * mW;
-    const piy = my + (this.#car.y / DISPLAY.CANVAS_HEIGHT) * mH;
+    const pix = mx + (this.#car.x / (this.#track.canvasSize?.width ?? DISPLAY.CANVAS_WIDTH)) * mW;
+    const piy = my + (this.#car.y / (this.#track.canvasSize?.height ?? DISPLAY.CANVAS_HEIGHT)) * mH;
     ctx.fillStyle = '#E53935';
     ctx.fillRect(pix - 2, piy - 2, 4, 4);
 

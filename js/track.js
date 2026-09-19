@@ -8,13 +8,21 @@
 import { TRACK, DISPLAY } from '../config/game-config.js';
 
 export class Track {
-    constructor(waypoints = null, trackWidth = null, samplesPerSegment = null) {
+    constructor(waypoints = null, trackWidth = null, samplesPerSegment = null, canvasSize = null, strictBoundary = null) {
         this.points = [];       // Smooth track center points
         this.trackWidth = trackWidth != null ? trackWidth : TRACK.WIDTH;
+        const sourceWp = waypoints || TRACK.WAYPOINTS;
+        const isShanghai2D = sourceWp === TRACK.WAYPOINTS;
+        // The Shanghai geometry extends beyond the old 1400×800 viewport.
+        // Its world dimensions are authoritative even if a legacy factory
+        // omits them or supplies the viewport size by mistake.
+        this.canvasSize = isShanghai2D ? TRACK.CANVAS_SIZE
+            : (canvasSize ?? { width: DISPLAY.CANVAS_WIDTH, height: DISPLAY.CANVAS_HEIGHT });
+        this.strictBoundary = isShanghai2D ? TRACK.STRICT_BOUNDARY
+            : (strictBoundary ?? false);
         this.startPos = { x: 0, y: 0, angle: 0 };
 
         // Define control waypoints for the circuit
-        const sourceWp = waypoints || TRACK.WAYPOINTS;
         this.waypoints = sourceWp.map(wp => ({ ...wp }));
 
         this.samplesPerSegment = samplesPerSegment ?? TRACK.SAMPLES_PER_SEGMENT;
@@ -40,6 +48,31 @@ export class Track {
         );
     }
 
+    /** Centripetal Catmull-Rom avoids loops and cusps when control-point
+     * spacing is uneven, which is important around tight road hairpins. */
+    _centripetalPoint(p0, p1, p2, p3, t) {
+        const knot = (a, b) => Math.pow(Math.hypot(b.x - a.x, b.y - a.y), 0.5);
+        const t0 = 0;
+        const t1 = t0 + Math.max(knot(p0, p1), 1e-6);
+        const t2 = t1 + Math.max(knot(p1, p2), 1e-6);
+        const t3 = t2 + Math.max(knot(p2, p3), 1e-6);
+        const u = t1 + (t2 - t1) * t;
+        const mix = (a, b, ta, tb) => ({
+            x: ((tb - u) * a.x + (u - ta) * b.x) / (tb - ta),
+            y: ((tb - u) * a.y + (u - ta) * b.y) / (tb - ta),
+        });
+        const a1 = mix(p0, p1, t0, t1);
+        const a2 = mix(p1, p2, t1, t2);
+        const a3 = mix(p2, p3, t2, t3);
+        const mixAt = (a, b, ta, tb, value) => ({
+            x: ((tb - value) * a.x + (value - ta) * b.x) / (tb - ta),
+            y: ((tb - value) * a.y + (value - ta) * b.y) / (tb - ta),
+        });
+        const b1 = mixAt(a1, a2, t0, t2, u);
+        const b2 = mixAt(a2, a3, t1, t3, u);
+        return mixAt(b1, b2, t1, t2, u);
+    }
+
     /**
      * Generate smooth curve from waypoints using Catmull-Rom
      */
@@ -56,10 +89,7 @@ export class Track {
 
             for (let j = 0; j < samplesPerSegment; j++) {
                 const t = j / samplesPerSegment;
-                this.points.push({
-                    x: this._catmullRom(p0.x, p1.x, p2.x, p3.x, t),
-                    y: this._catmullRom(p0.y, p1.y, p2.y, p3.y, t)
-                });
+                this.points.push(this._centripetalPoint(p0, p1, p2, p3, t));
             }
         }
     }
@@ -94,8 +124,8 @@ export class Track {
     /**
      * Check if a position is on the track
      */
-    isOnTrack(x, y) {
-        return this.getNearestDistance(x, y) < this.trackWidth / 2;
+    isOnTrack(x, y, clearance = 0) {
+        return this.getNearestDistance(x, y) < this.trackWidth / 2 - clearance;
     }
 
     /**
@@ -164,21 +194,21 @@ export class Track {
 
         // Draw night ground background
         ctx.fillStyle = '#0B1622';
-        ctx.fillRect(0, 0, DISPLAY.CANVAS_WIDTH, DISPLAY.CANVAS_HEIGHT);
+        ctx.fillRect(0, 0, this.canvasSize.width, this.canvasSize.height);
 
         // Draw subtle grid texture (telemetry-style)
         ctx.strokeStyle = 'rgba(255,255,255,0.025)';
         ctx.lineWidth = 1;
-        for (let y = 0; y < DISPLAY.CANVAS_HEIGHT; y += 24) {
+        for (let y = 0; y < this.canvasSize.height; y += 24) {
             ctx.beginPath();
             ctx.moveTo(0, y);
-            ctx.lineTo(DISPLAY.CANVAS_WIDTH, y);
+            ctx.lineTo(this.canvasSize.width, y);
             ctx.stroke();
         }
-        for (let x = 0; x < DISPLAY.CANVAS_WIDTH; x += 24) {
+        for (let x = 0; x < this.canvasSize.width; x += 24) {
             ctx.beginPath();
             ctx.moveTo(x, 0);
-            ctx.lineTo(x, DISPLAY.CANVAS_HEIGHT);
+            ctx.lineTo(x, this.canvasSize.height);
             ctx.stroke();
         }
 

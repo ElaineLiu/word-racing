@@ -56,6 +56,8 @@ export class TrackFactory {
         trackData.waypoints,
         trackData.trackWidth,
         trackData.samplesPerSegment,
+        trackData.canvasSize,
+        trackData.strictBoundary,
       );
     } else {
       throw new Error(`Unknown track type: ${trackData.type}`);

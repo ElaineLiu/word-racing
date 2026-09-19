@@ -1,4 +1,5 @@
 import {
+  SHANGHAI_2D_CANVAS_SIZE,
   SHANGHAI_2D_TRACK_WIDTH,
   SHANGHAI_2D_WAYPOINTS,
 } from './tracks/shanghai-2d.js';
@@ -107,12 +108,14 @@ export const ECONOMY = {
 export const TRACK = {
   // Track dimensions
   WIDTH: SHANGHAI_2D_TRACK_WIDTH,
-  // 70 authored controls × 24 samples = 1,680 centerline points.
+  // 80 derived controls × 24 samples = 1,920 centerline points.
   // This is visually smooth while keeping collision/progress scans bounded.
   SAMPLES_PER_SEGMENT: 24,
 
   // Default construction and registry selection share one authoritative source.
   WAYPOINTS: SHANGHAI_2D_WAYPOINTS,
+  CANVAS_SIZE: SHANGHAI_2D_CANVAS_SIZE,
+  STRICT_BOUNDARY: true,
 
   // Kerb rendering
   KERB_ANGLE_THRESHOLD: 0.26,    // radians - angle change triggers kerbs

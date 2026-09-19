@@ -1,4 +1,5 @@
 import {
+  SHANGHAI_2D_CANVAS_SIZE,
   SHANGHAI_2D_TRACK_WIDTH,
   SHANGHAI_2D_WAYPOINTS,
 } from './tracks/shanghai-2d.js';
@@ -28,7 +29,7 @@ export const TRACK_REGISTRY = {
   /**
    * 上海国际赛车场 v2 - 默认赛道（高速 GP 风格）
    * 超长主直道 + 大圆弧高速弯 + 一处发卡，模仿 F1 上赛特征
-   * 画布: 1400×800
+   * Extended 3000×1900 world; player viewport follows the car.
    */
   'shanghai-2d': {
     id: 'shanghai-2d',
@@ -37,6 +38,8 @@ export const TRACK_REGISTRY = {
     description: 'High-speed F1 circuit with a long main straight',
     waypoints: SHANGHAI_2D_WAYPOINTS,
     trackWidth: SHANGHAI_2D_TRACK_WIDTH,
+    canvasSize: SHANGHAI_2D_CANVAS_SIZE,
+    strictBoundary: true,
     samplesPerSegment: 24,
     unlockRequirements: { quizzesCompleted: 1 }
   },

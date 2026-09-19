@@ -15,15 +15,15 @@
 <body>
   <main>
     <h1>Shanghai International Circuit — 2D Candidate</h1>
-    <p>70 waypoints · 50 px width · 24 samples/segment · cyan dot = start/finish</p>
-    <canvas id="preview" width="1400" height="800"></canvas>
+    <p>Expanded Shanghai 2D · 80 runtime controls · 90 px width · 24 samples/segment · cyan dot = start/finish</p>
+    <canvas id="preview" width="3000" height="1900"></canvas>
   </main>
   <script type="module">
     import { Track } from '../../js/track.js';
     import { TRACK_REGISTRY } from '../../config/track-registry.js';
 
     const config = TRACK_REGISTRY['shanghai-2d'];
-    const track = new Track(config.waypoints, config.trackWidth, config.samplesPerSegment);
+    const track = new Track(config.waypoints, config.trackWidth, config.samplesPerSegment, config.canvasSize);
     const canvas = document.querySelector('#preview');
     const ctx = canvas.getContext('2d');
     track.render(ctx);
