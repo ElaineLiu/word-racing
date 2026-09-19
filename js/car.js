@@ -275,7 +275,8 @@ export class Car {
         // Lap tracking
         const progress = track.getProgress(this.x, this.y);
         // Detect crossing from ~0.95+ to ~0.05- (finish line)
-        if (this.lastProgress > 0.9 && progress < 0.1 && this.speed > 1) {
+        if (!track.externalLapTracking
+            && this.lastProgress > 0.9 && progress < 0.1 && this.speed > 1) {
             this.lap++;
             const now = Date.now();
             if (this.lapStartTime > 0) {
@@ -292,7 +293,7 @@ export class Car {
                 this.speed *= 0.5;
             }
         }
-        this.lastProgress = progress;
+        if (!track.externalLapTracking) this.lastProgress = progress;
     }
 
     /** Preserve the along-road part of a blocked movement instead of making

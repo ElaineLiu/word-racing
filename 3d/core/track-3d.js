@@ -73,6 +73,7 @@ export class Track3D extends TrackInterface {
   get centerline() { return this.#geometryTrack.centerline; }
   get trackWidth() { return this.#trackData.trackWidth; }
   get canvasSize() { return this.#trackData.canvasSize ? { ...this.#trackData.canvasSize } : null; }
+  get externalLapTracking() { return true; }
 
   // ========== Three.js accessors ==========
 

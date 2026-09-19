@@ -100,6 +100,31 @@ describe('RaceSession3D', () => {
     expect(barriers.every(barrier => barrier.isInstancedMesh)).toBe(true);
   });
 
+  it('should record authoritative 3D lap times and reject progress jumps', () => {
+    const { session } = createSession();
+    const player = session.playerCar;
+    player.raceProgress = 0.99;
+    player._lastRaceProgress = 0.99;
+    session.track.getProgress = value => (
+      typeof value === 'object' && value === player ? 0.01 : 0
+    );
+
+    session.update({ up: false, down: false, left: false, right: false, nitro: false }, 1, 3);
+
+    expect(player.lap).toBe(1);
+    expect(player.lapTimes).toEqual([1000]);
+    expect(player.bestLapTime).toBe(1000);
+
+    session.track.getProgress = value => (
+      typeof value === 'object' && value === player ? 0.5 : 0
+    );
+    session.update({ up: false, down: false, left: false, right: false, nitro: false }, 1 / 60, 3);
+
+    expect(player.lap).toBe(1);
+    expect(player.lapTimes).toHaveLength(1);
+    expect(player.bestLapTime).toBe(1000);
+  });
+
   it('should use injected eventBus for 3D events', () => {
     const eventBus = new EventBus();
     const handler = vi.fn();

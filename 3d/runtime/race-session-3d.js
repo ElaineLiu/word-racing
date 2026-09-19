@@ -17,6 +17,7 @@ export class RaceSession3D {
   #rankingSystem;
   #cameraController;
   #finishOrder = 0;
+  #elapsedMs = 0;
   #disposed = false;
 
   constructor({ trackData, canvas, eventBus, gameState, rendererFactory } = {}) {
@@ -70,6 +71,9 @@ export class RaceSession3D {
     this.cars.forEach(car => {
       car.raceProgress = 0;
       car._lastRaceProgress = this.#track.getProgress(car);
+      car._lapStartedAtMs = 0;
+      car.lapTimes = [];
+      car.bestLapTime = Infinity;
     });
     this.#rankingSystem.update();
   }
@@ -82,6 +86,8 @@ export class RaceSession3D {
 
   update(input, deltaTime = 1 / 60, totalLaps = 3) {
     if (this.#disposed) return;
+
+    this.#elapsedMs += deltaTime * 1000;
 
     this.#playerCar.input = { ...input };
     this.#aiControllers.forEach(controller => controller.update(deltaTime));
@@ -143,9 +149,23 @@ export class RaceSession3D {
     if (delta < -0.5) delta += 1;
     if (delta > 0.5) delta -= 1;
 
+    // A nearby section of the circuit must never count as a sudden fraction
+    // of a lap. Real per-frame progress is far below this threshold.
+    if (Math.abs(delta) > 0.025) delta = 0;
+
     if (delta > 0 && !car.finished) {
+      const previousCompletedLaps = Math.floor(car.raceProgress || 0);
       car.raceProgress = (car.raceProgress || 0) + delta;
-      car.lap = Math.floor(car.raceProgress);
+      const completedLaps = Math.floor(car.raceProgress);
+      if (completedLaps > previousCompletedLaps) {
+        const lapTime = this.#elapsedMs - car._lapStartedAtMs;
+        if (lapTime >= 1000) {
+          car.lapTimes.push(lapTime);
+          car.bestLapTime = Math.min(car.bestLapTime, lapTime);
+        }
+        car._lapStartedAtMs = this.#elapsedMs;
+      }
+      car.lap = completedLaps;
       car.lastProgress = car.raceProgress % 1;
     }
 

@@ -235,11 +235,19 @@ export class TrackBuilder {
     const rotation = new THREE.Quaternion();
     const scale = new THREE.Vector3();
     const up = new THREE.Vector3(0, 1, 0);
+    const validSegments = buildValidEdgeSegmentMask(
+      this.centerPoints, this.edgePoints, side, this.trackWidth
+    );
     let count = 0;
+    let skippedInvalid = 0;
 
     for (let i = 0; i < this.edgePoints.length; i++) {
       const nextIndex = (i + 1) % this.edgePoints.length;
       if (this._isStartFinishClearZone(i) || this._isStartFinishClearZone(nextIndex)) continue;
+      if (!validSegments[i]) {
+        skippedInvalid++;
+        continue;
+      }
       const start = this.edgePoints[i][side];
       const end = this.edgePoints[nextIndex][side];
       const dx = end.x - start.x;
@@ -261,6 +269,7 @@ export class TrackBuilder {
     mesh.name = 'barrier';
     mesh.userData.chevronSide = side;
     mesh.userData.continuousEdgeSegments = true;
+    mesh.userData.skippedInvalidSegments = skippedInvalid;
     this._add(mesh);
   }
 
@@ -385,4 +394,103 @@ function angleDiff(a, b) {
   let diff = Math.abs(b - a);
   if (diff > Math.PI) diff = 2 * Math.PI - diff;
   return diff;
+}
+
+function buildValidEdgeSegmentMask(centerPoints, edgePoints, side, trackWidth) {
+  const count = centerPoints.length;
+  const valid = new Array(count).fill(true);
+
+  for (let i = 0; i < count; i++) {
+    const next = (i + 1) % count;
+    const centerDx = centerPoints[next].x - centerPoints[i].x;
+    const centerDy = centerPoints[next].y - centerPoints[i].y;
+    const edgeDx = edgePoints[next][side].x - edgePoints[i][side].x;
+    const edgeDy = edgePoints[next][side].y - edgePoints[i][side].y;
+    const centerLength = Math.hypot(centerDx, centerDy);
+    const edgeLength = Math.hypot(edgeDx, edgeDy);
+    const directionDot = centerLength > 1e-6 && edgeLength > 1e-6
+      ? (centerDx * edgeDx + centerDy * edgeDy) / (centerLength * edgeLength)
+      : -1;
+
+    // An offset curve folds back when the inner radius is smaller than half
+    // the road width. Do not bridge that fold with a giant crossing barrier.
+    if (directionDot < 0.15 || edgeLength > Math.max(12, centerLength * 3)) {
+      valid[i] = false;
+    }
+  }
+
+  // Offset boundaries can also intersect a later part of the same hairpin
+  // even when each individual segment still points forward. Reject both
+  // sides of those crossings so no guardrail is drawn across the road.
+  const localExclusion = 12;
+  const cellSize = Math.max(20, trackWidth);
+  const spatialIndex = new Map();
+  for (const indexedSide of ['left', 'right']) {
+    for (let index = 0; index < count; index++) {
+      const start = edgePoints[index][indexedSide];
+      const end = edgePoints[(index + 1) % count][indexedSide];
+      const minCellX = Math.floor(Math.min(start.x, end.x) / cellSize);
+      const maxCellX = Math.floor(Math.max(start.x, end.x) / cellSize);
+      const minCellY = Math.floor(Math.min(start.y, end.y) / cellSize);
+      const maxCellY = Math.floor(Math.max(start.y, end.y) / cellSize);
+      const segment = { side: indexedSide, index, start, end };
+      for (let x = minCellX; x <= maxCellX; x++) {
+        for (let y = minCellY; y <= maxCellY; y++) {
+          const key = `${x},${y}`;
+          if (!spatialIndex.has(key)) spatialIndex.set(key, []);
+          spatialIndex.get(key).push(segment);
+        }
+      }
+    }
+  }
+
+  for (let i = 0; i < count; i++) {
+    const a1 = edgePoints[i][side];
+    const a2 = edgePoints[(i + 1) % count][side];
+    const candidates = new Map();
+    const minCellX = Math.floor(Math.min(a1.x, a2.x) / cellSize);
+    const maxCellX = Math.floor(Math.max(a1.x, a2.x) / cellSize);
+    const minCellY = Math.floor(Math.min(a1.y, a2.y) / cellSize);
+    const maxCellY = Math.floor(Math.max(a1.y, a2.y) / cellSize);
+    for (let x = minCellX; x <= maxCellX; x++) {
+      for (let y = minCellY; y <= maxCellY; y++) {
+        for (const candidate of spatialIndex.get(`${x},${y}`) || []) {
+          candidates.set(`${candidate.side}:${candidate.index}`, candidate);
+        }
+      }
+    }
+
+    for (const candidate of candidates.values()) {
+      const j = candidate.index;
+      const cyclicDistance = Math.min(Math.abs(j - i), count - Math.abs(j - i));
+      if (cyclicDistance <= localExclusion) continue;
+      if (segmentsIntersect(a1, a2, candidate.start, candidate.end)) {
+        valid[i] = false;
+        if (candidate.side === side) valid[j] = false;
+      }
+    }
+  }
+
+  // Give a folded cusp a short clear transition instead of leaving a fan of
+  // converging blocks around the single rejected segment.
+  const invalid = valid.map(value => !value);
+  const padding = 6;
+  for (let i = 0; i < count; i++) {
+    if (!invalid[i]) continue;
+    for (let offset = -padding; offset <= padding; offset++) {
+      valid[(i + offset + count) % count] = false;
+    }
+  }
+  return valid;
+}
+
+function segmentsIntersect(a, b, c, d) {
+  const cross = (p, q, r) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+  const abC = cross(a, b, c);
+  const abD = cross(a, b, d);
+  const cdA = cross(c, d, a);
+  const cdB = cross(c, d, b);
+  const epsilon = 1e-7;
+  return ((abC > epsilon && abD < -epsilon) || (abC < -epsilon && abD > epsilon))
+    && ((cdA > epsilon && cdB < -epsilon) || (cdA < -epsilon && cdB > epsilon));
 }

@@ -9,6 +9,7 @@ function createMockCar() {
     y: 0,
     z: 999,
     lap: 1,
+    lapTimes: [62000, 60500],
     bestLapTime: Infinity,
     speed: 0,
     maxSpeed: 200,
@@ -144,6 +145,14 @@ describe('HUD3DManager', () => {
       const timeValue = document.querySelector('#hud-time .value');
       expect(timeValue).toBeTruthy();
       expect(timeValue.textContent).toBe('01:00.00');
+
+      const lapValue = document.querySelector('#hud-lap .value');
+      expect(lapValue.textContent).toBe('2 / 3');
+      const lapTimes = document.querySelector('.lap-times');
+      expect(lapTimes.textContent).toContain('LAP 1');
+      expect(lapTimes.textContent).toContain('01:02.00');
+      expect(lapTimes.textContent).toContain('LAP 2');
+      expect(lapTimes.textContent).toContain('01:00.50');
 
       manager.destroy();
     });

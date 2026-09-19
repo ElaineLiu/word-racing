@@ -52,6 +52,7 @@ export class HUD3DManager {
       raceTime: this.#game.raceTime,
       bestLapTime: playerCar.bestLapTime,
       lap: playerCar.lap,
+      lapTimes: [...playerCar.lapTimes],
       totalLaps: this.#game.totalLaps,
 
       // 分数数据

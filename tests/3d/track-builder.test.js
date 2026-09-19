@@ -118,6 +118,8 @@ describe('TrackBuilder', () => {
       }
 
       expect(barriersNearStart).toHaveLength(0);
+      const barriers = scene.children.filter(c => c.name === 'barrier');
+      expect(barriers.some(barrier => barrier.userData.skippedInvalidSegments > 0)).toBe(true);
     });
   });
 

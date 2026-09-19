@@ -128,6 +128,21 @@ describe('Car3D', () => {
     });
   });
 
+  describe('external 3D lap tracking', () => {
+    it('should not let base Car create false millisecond lap times', () => {
+      car3D.lastProgress = 0.99;
+      car3D.lapStartTime = Date.now();
+      mockTrack.externalLapTracking = true;
+      mockTrack.getProgress = () => 0.01;
+      car3D.speed = 3;
+
+      car3D.update(mockTrack, 3, 1 / 60);
+
+      expect(car3D.lapTimes).toHaveLength(0);
+      expect(car3D.bestLapTime).toBe(Infinity);
+    });
+  });
+
   describe('wheel rotation', () => {
     it('should rotate wheels based on speed', () => {
       const initialRotations = car3D.model.wheels.map(w => w.rotation.x);
