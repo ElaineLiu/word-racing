@@ -17,6 +17,11 @@ describe('Car3D Gear and RPM', () => {
       getProgress: () => 0,
       getNearestDistance: () => 10,
       getTrackNormal: () => ({ x: 0, y: 1, nearestPoint: { x: 0, y: 0 } }),
+      getBoundaryContact: () => ({
+        tangent: { x: 1, y: 0 },
+        normal: { x: 0, y: 1 },
+        nearestPoint: { x: 0, y: 0 },
+      }),
       points: [{ x: 0, y: 0 }, { x: 10, y: 0 }],
     };
   });
@@ -91,6 +96,11 @@ describe('Car3D Collision Penalty', () => {
       getProgress: () => 0,
       getNearestDistance: () => 10,
       getTrackNormal: () => ({ x: 0, y: 1, nearestPoint: { x: 0, y: 0 } }),
+      getBoundaryContact: () => ({
+        tangent: { x: 1, y: 0 },
+        normal: { x: 0, y: 1 },
+        nearestPoint: { x: 0, y: 0 },
+      }),
       points: [{ x: 0, y: 0 }, { x: 10, y: 0 }],
       checkCollision: () => false
     };
@@ -111,13 +121,15 @@ describe('Car3D Collision Penalty', () => {
       expect(car3D.speed).toBeLessThan(3.0); // Speed reduced by 30%
     });
 
-    it('should disable steering during penalty', () => {
+    it('should keep steering responsive during penalty', () => {
       mockTrack.checkCollision = () => true;
+      car3D.speed = 3;
       car3D.input.left = true;
+      const initialAngle = car3D.angle;
       car3D.update(mockTrack, 3, 1/60);
 
-      // Penalty should be set (shortened to 0.5 seconds)
-      expect(car3D.collisionPenalty).toBe(0.5);
+      expect(car3D.collisionPenalty).toBe(0.12);
+      expect(car3D.angle).not.toBe(initialAngle);
     });
 
     it('should expire penalty after duration', () => {

@@ -33,6 +33,24 @@ describe('Track3D collision and progress', () => {
     expect(track.isOnTrack(track.startPos.x, track.startPos.y)).toBe(true);
   });
 
+  it('should share the accepted Shanghai route and expanded world size', () => {
+    const track = createTrack();
+    expect(TRACK_REGISTRY['shanghai-3d'].waypoints)
+      .toBe(TRACK_REGISTRY['shanghai-2d'].waypoints);
+    expect(track.canvasSize).toEqual({ width: 3000, height: 1900 });
+    expect(track.centerline).toHaveLength(80 * 24);
+    expect(track.startPos.x).toBeCloseTo(TRACK_REGISTRY['shanghai-2d'].waypoints[0].x, 8);
+    expect(track.startPos.y).toBeCloseTo(TRACK_REGISTRY['shanghai-2d'].waypoints[0].y, 8);
+  });
+
+  it('should build the visual road from the same centerline as collision geometry', () => {
+    const track = createTrack();
+    const road = track.scene.getObjectByName('track-road');
+    const positions = road.geometry.attributes.position;
+    expect(positions.count).toBe((track.centerline.length + 1) * 2);
+    expect(Number.isFinite(road.geometry.boundingSphere?.radius ?? 0)).toBe(true);
+  });
+
   it('should accept car-like object for isOnTrack', () => {
     const track = createTrack();
     expect(track.isOnTrack({ x: track.startPos.x, y: track.startPos.y })).toBe(true);
@@ -69,5 +87,14 @@ describe('Track3D collision and progress', () => {
   it('should return true collision for car off track', () => {
     const track = createTrack();
     expect(track.checkCollision({ x: -10000, y: -10000 })).toBe(true);
+  });
+
+  it('should include car body clearance in collision checks', () => {
+    const track = createTrack();
+    const contact = track.getBoundaryContact(track.startPos.x, track.startPos.y);
+    const halfCar = 5;
+    const x = contact.nearestPoint.x + contact.normal.x * (track.trackWidth / 2 - halfCar + 0.1);
+    const y = contact.nearestPoint.y + contact.normal.y * (track.trackWidth / 2 - halfCar + 0.1);
+    expect(track.checkCollision({ x, y, width: halfCar * 2 })).toBe(true);
   });
 });

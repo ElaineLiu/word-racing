@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { createTreeModel } from '../models/tree-model.js';
+import { Track } from '../../js/track.js';
 
 const SAMPLES_PER_SEGMENT = 24;
 const KERB_ANGLE_THRESHOLD = 0.26;
@@ -15,10 +16,12 @@ export class TrackBuilder {
     this.objects = [];
   }
 
-  buildTrack(waypoints, trackWidth) {
+  buildTrack(waypoints, trackWidth, samplesPerSegment = SAMPLES_PER_SEGMENT) {
     this.waypoints = waypoints.map(wp => ({ ...wp }));
     this.trackWidth = trackWidth;
-    this.centerPoints = generateSmoothCurve(this.waypoints, SAMPLES_PER_SEGMENT);
+    // Reuse the same centripetal spline implementation as collision/progress.
+    // Clone the controls so 3D keeps its own boundary response policy.
+    this.centerPoints = new Track(this.waypoints, trackWidth, samplesPerSegment).centerline;
     this.edgePoints = buildEdgePoints(this.centerPoints, this.trackWidth);
 
     const positions = [];
@@ -58,34 +61,9 @@ export class TrackBuilder {
 
   addBarriers() {
     this._requireTrack();
-    const geometry = new THREE.BoxGeometry(8, 4, 4);
     const chevronMaterials = createBarrierChevronMaterials();
-    for (let i = 0; i < this.edgePoints.length; i += 2) {
-      if (this._isStartFinishClearZone(i)) continue;
-      const edge = this.edgePoints[i];
-      const left = this._addBox('barrier', geometry, chevronMaterials.left, edge.left.x, 2, edge.left.y);
-      const right = this._addBox('barrier', geometry, chevronMaterials.right, edge.right.x, 2, edge.right.y);
-      const prev = this.centerPoints[(i - 2 + this.centerPoints.length) % this.centerPoints.length];
-      const next = this.centerPoints[(i + 2) % this.centerPoints.length];
-      const angle = Math.atan2(next.y - prev.y, next.x - prev.x);
-
-      console.log(`[TrackBuilder] Barrier ${i}:`, {
-        angle: angle.toFixed(3),
-        leftPos: `(${edge.left.x.toFixed(1)}, ${edge.left.y.toFixed(1)})`,
-        rightPos: `(${edge.right.x.toFixed(1)}, ${edge.right.y.toFixed(1)})`,
-        leftFace1: left.material[1].userData.chevronDirection,  // -X面
-        rightFace0: right.material[0].userData.chevronDirection, // +X面
-      });
-
-      left.rotation.y = -angle;
-      right.rotation.y = -angle;
-      left.userData.chevronSide = 'left';
-      right.userData.chevronSide = 'right';
-      left.userData.trackForwardAngle = angle;
-      right.userData.trackForwardAngle = angle;
-      left.userData.chevronForwardAngle = angle;
-      right.userData.chevronForwardAngle = angle;
-    }
+    this._addBarrierInstances('left', chevronMaterials.left);
+    this._addBarrierInstances('right', chevronMaterials.right);
   }
 
   addKerbs() {
@@ -217,13 +195,20 @@ export class TrackBuilder {
   update(_deltaTime) {}
 
   dispose() {
+    const disposedGeometries = new Set();
+    const disposedMaterials = new Set();
     for (const obj of this.objects) {
       this.scene.remove(obj);
-      obj.geometry?.dispose?.();
-      if (Array.isArray(obj.material)) {
-        obj.material.forEach(m => m.dispose?.());
-      } else {
-        obj.material?.dispose?.();
+      if (obj.geometry && !disposedGeometries.has(obj.geometry)) {
+        obj.geometry.dispose?.();
+        disposedGeometries.add(obj.geometry);
+      }
+      const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+      for (const material of materials) {
+        if (!material || disposedMaterials.has(material)) continue;
+        material.map?.dispose?.();
+        material.dispose?.();
+        disposedMaterials.add(material);
       }
     }
     this.objects = [];
@@ -240,6 +225,43 @@ export class TrackBuilder {
     mesh.position.set(x, y, z);
     this._add(mesh);
     return mesh;
+  }
+
+  _addBarrierInstances(side, materials) {
+    const geometry = new THREE.BoxGeometry(1, 4, 4);
+    const mesh = new THREE.InstancedMesh(geometry, materials, this.edgePoints.length);
+    const matrix = new THREE.Matrix4();
+    const position = new THREE.Vector3();
+    const rotation = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+    const up = new THREE.Vector3(0, 1, 0);
+    let count = 0;
+
+    for (let i = 0; i < this.edgePoints.length; i++) {
+      const nextIndex = (i + 1) % this.edgePoints.length;
+      if (this._isStartFinishClearZone(i) || this._isStartFinishClearZone(nextIndex)) continue;
+      const start = this.edgePoints[i][side];
+      const end = this.edgePoints[nextIndex][side];
+      const dx = end.x - start.x;
+      const dz = end.y - start.y;
+      const length = Math.hypot(dx, dz);
+      if (length < 1e-6) continue;
+
+      position.set((start.x + end.x) / 2, 2, (start.y + end.y) / 2);
+      rotation.setFromAxisAngle(up, -Math.atan2(dz, dx));
+      // A small overlap closes floating-point cracks without protruding into
+      // the road like the old fixed-size blocks did at sharp corners.
+      scale.set(length + 0.35, 1, 1);
+      matrix.compose(position, rotation, scale);
+      mesh.setMatrixAt(count++, matrix);
+    }
+
+    mesh.count = count;
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.name = 'barrier';
+    mesh.userData.chevronSide = side;
+    mesh.userData.continuousEdgeSegments = true;
+    this._add(mesh);
   }
 
   _requireTrack() {
@@ -329,36 +351,6 @@ function createStartFinishTexture() {
 function seededRandom(seed) {
   const x = Math.sin(seed * 12.9898) * 43758.5453;
   return x - Math.floor(x);
-}
-
-function generateSmoothCurve(waypoints, samplesPerSegment) {
-  const points = [];
-  const n = waypoints.length;
-  for (let i = 0; i < n; i++) {
-    const p0 = waypoints[(i - 1 + n) % n];
-    const p1 = waypoints[i];
-    const p2 = waypoints[(i + 1) % n];
-    const p3 = waypoints[(i + 2) % n];
-    for (let j = 0; j < samplesPerSegment; j++) {
-      const t = j / samplesPerSegment;
-      points.push({
-        x: catmullRom(p0.x, p1.x, p2.x, p3.x, t),
-        y: catmullRom(p0.y, p1.y, p2.y, p3.y, t),
-      });
-    }
-  }
-  return points;
-}
-
-function catmullRom(p0, p1, p2, p3, t) {
-  const t2 = t * t;
-  const t3 = t2 * t;
-  return 0.5 * (
-    (2 * p1) +
-    (-p0 + p2) * t +
-    (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 +
-    (-p0 + 3 * p1 - 3 * p2 + p3) * t3
-  );
 }
 
 function buildEdgePoints(points, trackWidth) {

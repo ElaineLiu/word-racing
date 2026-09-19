@@ -67,7 +67,7 @@ describe('TrackBuilder', () => {
   });
 
   describe('addBarriers', () => {
-    it('should add barrier meshes', () => {
+    it('should add exactly two instanced barrier batches', () => {
       const scene = new THREE.Scene();
       const builder = new TrackBuilder(scene);
       builder.buildTrack(TEST_WAYPOINTS, TEST_TRACK_WIDTH);
@@ -76,7 +76,9 @@ describe('TrackBuilder', () => {
       const barriers = scene.children.filter(
         c => c.type === 'Mesh' && c.name === 'barrier'
       );
-      expect(barriers.length).toBeGreaterThan(0);
+      expect(barriers).toHaveLength(2);
+      expect(barriers.every(barrier => barrier.isInstancedMesh)).toBe(true);
+      expect(barriers.every(barrier => barrier.count > 0)).toBe(true);
     });
 
     it('should leave the start-finish area clear on closed tracks', () => {
@@ -87,10 +89,18 @@ describe('TrackBuilder', () => {
       builder.addBarriers();
 
       const start = new THREE.Vector2(track.waypoints[0].x, track.waypoints[0].y);
-      const barriersNearStart = scene.children.filter(c => {
-        if (c.type !== 'Mesh' || c.name !== 'barrier') return false;
-        return new THREE.Vector2(c.position.x, c.position.z).distanceTo(start) < track.trackWidth;
-      });
+      const barriersNearStart = [];
+      const matrix = new THREE.Matrix4();
+      const position = new THREE.Vector3();
+      for (const barrier of scene.children.filter(c => c.name === 'barrier')) {
+        for (let i = 0; i < barrier.count; i++) {
+          barrier.getMatrixAt(i, matrix);
+          position.setFromMatrixPosition(matrix);
+          if (new THREE.Vector2(position.x, position.z).distanceTo(start) < track.trackWidth) {
+            barriersNearStart.push(position.clone());
+          }
+        }
+      }
 
       expect(barriersNearStart).toHaveLength(0);
     });
@@ -176,8 +186,10 @@ describe('TrackBuilder', () => {
 
       expect(left).toBeDefined();
       expect(right).toBeDefined();
-      expect(left.userData.chevronForwardAngle).toBeCloseTo(left.userData.trackForwardAngle, 6);
-      expect(right.userData.chevronForwardAngle).toBeCloseTo(right.userData.trackForwardAngle, 6);
+      expect(left.isInstancedMesh).toBe(true);
+      expect(right.isInstancedMesh).toBe(true);
+      expect(left.userData.continuousEdgeSegments).toBe(true);
+      expect(right.userData.continuousEdgeSegments).toBe(true);
 
       // 护栏箭头贴在Z面上（索引4=+Z, 索引5=-Z）
       // 左侧护栏：玩家看到-Z面（索引5），应为forward

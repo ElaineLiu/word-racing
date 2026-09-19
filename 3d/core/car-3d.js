@@ -57,16 +57,11 @@ export class Car3D extends Car {
         };
 
         if (this.collisionPenalty > 0) {
-            this.collisionPenalty -= deltaTime;
-            const savedInput = { ...this.input };
-            this.input.up = false;
-            this.input.left = false;
-            this.input.right = false;
-            super.update(track, totalLaps, deltaTime);
-            this.input = savedInput;
-        } else {
-            super.update(track, totalLaps, deltaTime);
+            this.collisionPenalty = Math.max(0, this.collisionPenalty - deltaTime);
         }
+        // Collision feedback must not lock steering. The player keeps control
+        // while the boundary response removes only the outward movement.
+        super.update(track, totalLaps, deltaTime);
 
         if (track.checkCollision && track.checkCollision(this)) {
             this._handleCollision(track, previousState, deltaTime);
@@ -91,21 +86,34 @@ export class Car3D extends Car {
      */
     _handleCollision(track, previousState, deltaTime) {
         const impactSpeed = Math.abs(this.speed || previousState.speed);
-        const normal = track.getTrackNormal(this.x, this.y);
-        const reboundSpeed = Math.min(impactSpeed * 0.35, this.maxSpeed * 0.35);
+        const attemptedDx = this.x - previousState.x;
+        const attemptedDy = this.y - previousState.y;
+        const contact = track.getBoundaryContact(this.x, this.y);
+        const along = attemptedDx * contact.tangent.x + attemptedDy * contact.tangent.y;
 
-        this.x = previousState.x - normal.x * 1.5;
-        this.y = previousState.y - normal.y * 1.5;
-        this.angle = previousState.angle + Math.PI;
-        this.speed = -reboundSpeed;
+        // First preserve the component that advances along the road. This
+        // makes a glancing contact slide instead of bouncing or turning around.
+        this.x = previousState.x + contact.tangent.x * along;
+        this.y = previousState.y + contact.tangent.y * along;
 
-        if (track.checkCollision && track.checkCollision(this)) {
-            this.x = previousState.x;
-            this.y = previousState.y;
-            this.angle = previousState.angle;
+        if (track.checkCollision(this)) {
+            const corrected = track.getBoundaryContact(this.x, this.y);
+            const maxOffset = Math.max(0, track.trackWidth / 2 - this.width / 2 - 1);
+            this.x = corrected.nearestPoint.x + corrected.normal.x * maxOffset;
+            this.y = corrected.nearestPoint.y + corrected.normal.y * maxOffset;
         }
 
-        this.collisionPenalty = 0.5;
+        // Preserve heading and speed sign. A shallow scrape loses little
+        // speed; a near head-on impact loses substantially more.
+        const forwardX = Math.cos(this.angle);
+        const forwardY = Math.sin(this.angle);
+        const normalImpact = Math.min(1, Math.abs(
+            forwardX * contact.normal.x + forwardY * contact.normal.y
+        ));
+        const retainedSpeed = 0.82 - normalImpact * 0.52;
+        const speedSign = Math.sign(previousState.speed || this.speed || 1);
+        this.speed = speedSign * Math.min(impactSpeed * retainedSpeed, this.maxSpeed);
+        this.collisionPenalty = 0.12;
 
         if (this.eventBus) {
             this.eventBus.emit('car:collision', { x: this.x, y: this.y });

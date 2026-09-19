@@ -77,6 +77,29 @@ describe('RaceSession3D', () => {
     expect(session.playerRank).toBeGreaterThanOrEqual(1);
   });
 
+  it('should place the starting grid behind the player along the track tangent', () => {
+    const { session } = createSession();
+    const start = session.track.startPos;
+    const tangent = { x: Math.cos(start.angle), y: Math.sin(start.angle) };
+
+    session.aiCars.forEach((car, index) => {
+      const dx = car.x - start.x;
+      const dy = car.y - start.y;
+      const along = dx * tangent.x + dy * tangent.y;
+      const lateral = Math.abs(dx * -tangent.y + dy * tangent.x);
+      expect(along).toBeCloseTo(-(index + 1) * 20, 6);
+      expect(lateral).toBeLessThan(0.001);
+      expect(session.track.checkCollision(car)).toBe(false);
+    });
+  });
+
+  it('should keep barrier rendering to two draw-call batches', () => {
+    const { session } = createSession();
+    const barriers = session.track.scene.children.filter(child => child.name === 'barrier');
+    expect(barriers).toHaveLength(2);
+    expect(barriers.every(barrier => barrier.isInstancedMesh)).toBe(true);
+  });
+
   it('should use injected eventBus for 3D events', () => {
     const eventBus = new EventBus();
     const handler = vi.fn();

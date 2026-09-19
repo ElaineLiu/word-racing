@@ -197,29 +197,12 @@ export const TRACK_REGISTRY = {
     name: 'Shanghai International Circuit 3D',
     type: '3d',
     description: 'Immersive 3D driving experience',
-    waypoints: [
-      { x: 250, y: 90 },
-      { x: 560, y: 75 },
-      { x: 900, y: 80 },
-      { x: 1160, y: 130 },
-      { x: 1300, y: 260 },
-      { x: 1280, y: 430 },
-      { x: 1120, y: 545 },
-      { x: 880, y: 620 },
-      { x: 660, y: 620 },
-      { x: 520, y: 560 },
-      { x: 380, y: 630 },
-      { x: 230, y: 575 },
-      { x: 100, y: 650 },
-      { x: 60, y: 520 },
-      { x: 135, y: 400 },
-      { x: 300, y: 350 },
-      { x: 445, y: 455 },
-      { x: 610, y: 355 },
-      { x: 540, y: 255 },
-      { x: 370, y: 205 },
-    ],
-    trackWidth: 90,
+    // Share the accepted Shanghai driving route with 2D. Rendering,
+    // collision, progress and AI must all derive from this same source.
+    waypoints: SHANGHAI_2D_WAYPOINTS,
+    trackWidth: SHANGHAI_2D_TRACK_WIDTH,
+    canvasSize: SHANGHAI_2D_CANVAS_SIZE,
+    samplesPerSegment: 24,
     unlockRequirements: {
       quizzesCompleted: 30
     },
@@ -227,8 +210,8 @@ export const TRACK_REGISTRY = {
       camera: {
         fov: 75,
         near: 0.1,
-        far: 2000,
-        position: [700, 650, 900]
+        far: 5000,
+        position: [1500, 900, 1700]
       },
       lighting: {
         ambientColor: 0x606060,

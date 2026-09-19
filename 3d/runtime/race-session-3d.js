@@ -45,9 +45,10 @@ export class RaceSession3D {
     this.#playerCar.nitroCharges = gameState.get('nitroCharges') || 0;
 
     this.#aiCars = AI_PERSONALITIES.map((personalityName, index) => {
+      const gridGap = (index + 1) * 20;
       const car = new Car3D(
-        this.#track.startPos.x + (index + 1) * 20,
-        this.#track.startPos.y,
+        this.#track.startPos.x - Math.cos(this.#track.startPos.angle) * gridGap,
+        this.#track.startPos.y - Math.sin(this.#track.startPos.angle) * gridGap,
         this.#track.startPos.angle,
         this.#track.scene
       );

@@ -31,14 +31,20 @@ export class Track3D extends TrackInterface {
     this.#gameState = gameState;
 
     // Reuse 2D Track for geometry queries (Catmull-Rom, collision, progress)
-    this.#geometryTrack = new Track(trackData.waypoints, trackData.trackWidth);
+    this.#geometryTrack = new Track(
+      trackData.waypoints.map(point => ({ ...point })),
+      trackData.trackWidth,
+      trackData.samplesPerSegment,
+      trackData.canvasSize,
+      false,
+    );
 
     // Build 3D scene
     this.#scene3d = new Scene3D(trackData.sceneConfig || {}, { rendererFactory });
 
     // Build track geometry in the scene
     this.#builder = new TrackBuilder(this.#scene3d.scene);
-    this.#builder.buildTrack(trackData.waypoints, trackData.trackWidth);
+    this.#builder.buildTrack(trackData.waypoints, trackData.trackWidth, trackData.samplesPerSegment);
     this.#builder.addBarriers();
     this.#builder.addKerbs();
     this.#builder.addStartFinishLine();
@@ -66,6 +72,7 @@ export class Track3D extends TrackInterface {
   get waypoints() { return this.#trackData.waypoints.map(wp => ({ ...wp })); }
   get centerline() { return this.#geometryTrack.centerline; }
   get trackWidth() { return this.#trackData.trackWidth; }
+  get canvasSize() { return this.#trackData.canvasSize ? { ...this.#trackData.canvasSize } : null; }
 
   // ========== Three.js accessors ==========
 
@@ -106,8 +113,14 @@ export class Track3D extends TrackInterface {
     return this.#geometryTrack.getTrackNormal(c.x, c.y);
   }
 
+  getBoundaryContact(carOrX, y) {
+    const c = this._normalizeCoords(carOrX, y);
+    return this.#geometryTrack.getBoundaryContact(c.x, c.y);
+  }
+
   checkCollision(car) {
-    return this.getNearestDistance(car.x, car.y) >= this.trackWidth / 2;
+    const clearance = (car.width || 0) / 2;
+    return this.getNearestDistance(car.x, car.y) >= this.trackWidth / 2 - clearance;
   }
 
   dispose() {
