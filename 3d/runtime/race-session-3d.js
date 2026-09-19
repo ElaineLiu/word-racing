@@ -70,7 +70,9 @@ export class RaceSession3D {
 
     this.cars.forEach(car => {
       car.raceProgress = 0;
-      car._lastRaceProgress = this.#track.getProgress(car);
+      const initialProgress = this.#track.getProgressNear(car, null);
+      car._progressIndex = initialProgress.index;
+      car._lastRaceProgress = initialProgress.progress;
       car._lapStartedAtMs = 0;
       car.lapTimes = [];
       car.bestLapTime = Infinity;
@@ -142,20 +144,21 @@ export class RaceSession3D {
   }
 
   #updateRaceProgress(car, totalLaps) {
-    const currentProgress = this.#track.getProgress(car);
-    const previousProgress = car._lastRaceProgress ?? currentProgress;
-    let delta = currentProgress - previousProgress;
+    const sample = this.#track.getProgressNear(car, car._progressIndex);
+    const pointCount = this.#track.centerline.length;
+    let indexDelta = sample.index - car._progressIndex;
+    if (indexDelta < -pointCount / 2) indexDelta += pointCount;
+    if (indexDelta > pointCount / 2) indexDelta -= pointCount;
+    const acceptedSample = Math.abs(indexDelta) <= 36;
+    if (!acceptedSample) indexDelta = 0;
+    const delta = indexDelta / pointCount;
 
-    if (delta < -0.5) delta += 1;
-    if (delta > 0.5) delta -= 1;
-
-    // A nearby section of the circuit must never count as a sudden fraction
-    // of a lap. Real per-frame progress is far below this threshold.
-    if (Math.abs(delta) > 0.025) delta = 0;
-
-    if (delta > 0 && !car.finished) {
+    if (delta !== 0 && !car.finished) {
       const previousCompletedLaps = Math.floor(car.raceProgress || 0);
-      car.raceProgress = (car.raceProgress || 0) + delta;
+      car.raceProgress = Math.max(
+        previousCompletedLaps,
+        (car.raceProgress || 0) + delta,
+      );
       const completedLaps = Math.floor(car.raceProgress);
       if (completedLaps > previousCompletedLaps) {
         const lapTime = this.#elapsedMs - car._lapStartedAtMs;
@@ -169,7 +172,10 @@ export class RaceSession3D {
       car.lastProgress = car.raceProgress % 1;
     }
 
-    car._lastRaceProgress = currentProgress;
+    if (acceptedSample) {
+      car._progressIndex = sample.index;
+      car._lastRaceProgress = sample.progress;
+    }
 
     if ((car.raceProgress || 0) >= totalLaps && !car.finishOrder) {
       car.finished = true;

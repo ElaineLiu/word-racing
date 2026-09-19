@@ -114,6 +114,11 @@ export class Track3D extends TrackInterface {
     return this.#geometryTrack.getTrackNormal(c.x, c.y);
   }
 
+  getProgressNear(carOrX, hintIndex, windowSize = 36) {
+    const c = this._normalizeCoords(carOrX);
+    return this.#geometryTrack.getProgressNear(c.x, c.y, hintIndex, windowSize);
+  }
+
   getBoundaryContact(carOrX, y) {
     const c = this._normalizeCoords(carOrX, y);
     return this.#geometryTrack.getBoundaryContact(c.x, c.y);

@@ -104,9 +104,11 @@ describe('RaceSession3D', () => {
     const { session } = createSession();
     const player = session.playerCar;
     player.raceProgress = 0.99;
-    player._lastRaceProgress = 0.99;
-    session.track.getProgress = value => (
-      typeof value === 'object' && value === player ? 0.01 : 0
+    player._progressIndex = 1910;
+    session.track.getProgressNear = value => (
+      typeof value === 'object' && value === player
+        ? { index: 10, progress: 10 / 1920, distance: 0 }
+        : { index: value?._progressIndex || 0, progress: 0, distance: 0 }
     );
 
     session.update({ up: false, down: false, left: false, right: false, nitro: false }, 1, 3);
@@ -115,14 +117,41 @@ describe('RaceSession3D', () => {
     expect(player.lapTimes).toEqual([1000]);
     expect(player.bestLapTime).toBe(1000);
 
-    session.track.getProgress = value => (
-      typeof value === 'object' && value === player ? 0.5 : 0
+    session.track.getProgressNear = value => (
+      typeof value === 'object' && value === player
+        ? { index: 960, progress: 0.5, distance: 0 }
+        : { index: value?._progressIndex || 0, progress: 0, distance: 0 }
     );
     session.update({ up: false, down: false, left: false, right: false, nitro: false }, 1 / 60, 3);
 
     expect(player.lap).toBe(1);
     expect(player.lapTimes).toHaveLength(1);
     expect(player.bestLapTime).toBe(1000);
+  });
+
+  it('should not finish by accumulating forward movement from repeated backtracking', () => {
+    const { session } = createSession();
+    const player = session.playerCar;
+    player.raceProgress = 0;
+    player._progressIndex = 100;
+    let forward = true;
+    session.track.getProgressNear = value => {
+      if (typeof value === 'object' && value === player) {
+        const index = forward ? 110 : 100;
+        forward = !forward;
+        return { index, progress: index / 1920, distance: 0 };
+      }
+      return { index: value?._progressIndex || 0, progress: 0, distance: 0 };
+    };
+
+    for (let i = 0; i < 100; i++) {
+      session.update({ up: false, down: false, left: false, right: false, nitro: false }, 1 / 60, 1);
+    }
+
+    expect(player.raceProgress).toBeCloseTo(0, 8);
+    expect(player.lap).toBe(0);
+    expect(player.finished).toBe(false);
+    expect(player.lapTimes).toHaveLength(0);
   });
 
   it('should use injected eventBus for 3D events', () => {

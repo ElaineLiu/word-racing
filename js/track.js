@@ -227,6 +227,41 @@ export class Track {
     }
 
     /**
+     * Find progress near a previous centerline index. This prevents a vehicle
+     * on one arm of a close hairpin from snapping to another nearby arm.
+     */
+    getProgressNear(x, y, hintIndex, windowSize = 36) {
+        const count = this.points.length;
+        if (!Number.isInteger(hintIndex)) {
+            const contact = this.getBoundaryContact(x, y);
+            return {
+                index: contact.nearestIndex,
+                progress: contact.nearestIndex / count,
+                distance: contact.distance,
+            };
+        }
+
+        let nearestIndex = hintIndex;
+        let minimumDistanceSquared = Infinity;
+        for (let offset = -windowSize; offset <= windowSize; offset++) {
+            const index = (hintIndex + offset + count) % count;
+            const point = this.points[index];
+            const dx = x - point.x;
+            const dy = y - point.y;
+            const distanceSquared = dx * dx + dy * dy;
+            if (distanceSquared < minimumDistanceSquared) {
+                minimumDistanceSquared = distanceSquared;
+                nearestIndex = index;
+            }
+        }
+        return {
+            index: nearestIndex,
+            progress: nearestIndex / count,
+            distance: Math.sqrt(minimumDistanceSquared),
+        };
+    }
+
+    /**
      * Render the track
      */
     render(ctx, scale = 1) {

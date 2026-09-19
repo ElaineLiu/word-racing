@@ -68,7 +68,8 @@ export class TrackBuilder {
 
   addKerbs() {
     this._requireTrack();
-    const geometry = new THREE.BoxGeometry(6, 1, 6);
+    // Kerbs are painted low-profile road plates, not collision blocks.
+    const geometry = new THREE.BoxGeometry(6, 0.2, 6);
     const red = new THREE.MeshStandardMaterial({ color: 0xe53935, flatShading: true });
     const white = new THREE.MeshStandardMaterial({ color: 0xffffff, flatShading: true });
     for (let i = 0; i < this.centerPoints.length; i += 4) {
@@ -83,8 +84,8 @@ export class TrackBuilder {
       if (diff <= KERB_ANGLE_THRESHOLD) continue;
       const edge = this.edgePoints[i];
       const material = Math.floor(i / 8) % 2 === 0 ? red : white;
-      this._addBox('kerb', geometry, material, edge.left.x, 0.5, edge.left.y);
-      this._addBox('kerb', geometry, material, edge.right.x, 0.5, edge.right.y);
+      this._addBox('kerb', geometry, material, edge.left.x, 0.1, edge.left.y);
+      this._addBox('kerb', geometry, material, edge.right.x, 0.1, edge.right.y);
     }
   }
 
@@ -414,7 +415,9 @@ function buildValidEdgeSegmentMask(centerPoints, edgePoints, side, trackWidth) {
 
     // An offset curve folds back when the inner radius is smaller than half
     // the road width. Do not bridge that fold with a giant crossing barrier.
-    if (directionDot < 0.15 || edgeLength > Math.max(12, centerLength * 3)) {
+    const innerBoundary = isInnerBoundary(centerPoints, side, i);
+    if (innerBoundary
+        && (directionDot < 0.15 || edgeLength > Math.max(12, centerLength * 3))) {
       valid[i] = false;
     }
   }
@@ -465,8 +468,8 @@ function buildValidEdgeSegmentMask(centerPoints, edgePoints, side, trackWidth) {
       const cyclicDistance = Math.min(Math.abs(j - i), count - Math.abs(j - i));
       if (cyclicDistance <= localExclusion) continue;
       if (segmentsIntersect(a1, a2, candidate.start, candidate.end)) {
-        valid[i] = false;
-        if (candidate.side === side) valid[j] = false;
+        if (isInnerBoundary(centerPoints, side, i)) valid[i] = false;
+        if (candidate.side === side && isInnerBoundary(centerPoints, side, j)) valid[j] = false;
       }
     }
   }
@@ -482,6 +485,20 @@ function buildValidEdgeSegmentMask(centerPoints, edgePoints, side, trackWidth) {
     }
   }
   return valid;
+}
+
+function isInnerBoundary(centerPoints, side, index) {
+  const count = centerPoints.length;
+  const previous = centerPoints[(index - 2 + count) % count];
+  const current = centerPoints[index];
+  const next = centerPoints[(index + 2) % count];
+  const incomingX = current.x - previous.x;
+  const incomingY = current.y - previous.y;
+  const outgoingX = next.x - current.x;
+  const outgoingY = next.y - current.y;
+  const turn = incomingX * outgoingY - incomingY * outgoingX;
+  if (Math.abs(turn) < 1e-6) return false;
+  return turn > 0 ? side === 'left' : side === 'right';
 }
 
 function segmentsIntersect(a, b, c, d) {

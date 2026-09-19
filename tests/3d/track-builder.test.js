@@ -134,6 +134,11 @@ describe('TrackBuilder', () => {
         c => c.type === 'Mesh' && c.name === 'kerb'
       );
       expect(kerbs.length).toBeGreaterThan(0);
+      const size = new THREE.Vector3();
+      kerbs[0].geometry.computeBoundingBox();
+      kerbs[0].geometry.boundingBox.getSize(size);
+      expect(size.y).toBeCloseTo(0.2, 6);
+      expect(kerbs[0].position.y).toBeCloseTo(0.1, 6);
     });
 
     it('should leave the start-finish area clear of kerb blocks on closed tracks', () => {
