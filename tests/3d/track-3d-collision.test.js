@@ -95,6 +95,19 @@ describe('Track3D collision and progress', () => {
     const halfCar = 5;
     const x = contact.nearestPoint.x + contact.normal.x * (track.trackWidth / 2 - halfCar + 0.1);
     const y = contact.nearestPoint.y + contact.normal.y * (track.trackWidth / 2 - halfCar + 0.1);
-    expect(track.checkCollision({ x, y, width: halfCar * 2 })).toBe(true);
+    expect(track.checkCollision({ x, y, width: 34, height: halfCar * 2 })).toBe(true);
+  });
+
+  it('should use cross-track car height rather than longitudinal length', () => {
+    const track = createTrack();
+    const contact = track.getBoundaryContact(track.startPos.x, track.startPos.y);
+    const offset = track.trackWidth / 2 - 12;
+    const car = {
+      x: contact.nearestPoint.x + contact.normal.x * offset,
+      y: contact.nearestPoint.y + contact.normal.y * offset,
+      width: 34,
+      height: 18,
+    };
+    expect(track.checkCollision(car)).toBe(false);
   });
 });

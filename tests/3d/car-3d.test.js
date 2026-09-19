@@ -120,7 +120,7 @@ describe('Car3D', () => {
       car3D.update(boundaryTrack, 3, 1 / 60);
 
       expect(car3D.x).toBeGreaterThan(100);
-      expect(car3D.y).toBeLessThan(133);
+      expect(car3D.y).toBeLessThan(136);
       expect(car3D.angle).toBe(previousAngle);
       expect(car3D.speed).toBeGreaterThan(0);
       expect(car3D.speed).toBeLessThan(20);

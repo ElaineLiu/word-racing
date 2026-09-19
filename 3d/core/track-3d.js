@@ -119,7 +119,9 @@ export class Track3D extends TrackInterface {
   }
 
   checkCollision(car) {
-    const clearance = (car.width || 0) / 2;
+    // Car.width is the longitudinal length in the shared 2D physics model.
+    // The cross-track footprint is Car.height, matching the visible 3D car.
+    const clearance = (car.collisionHalfWidth ?? ((car.height || 0) / 2));
     return this.getNearestDistance(car.x, car.y) >= this.trackWidth / 2 - clearance;
   }
 

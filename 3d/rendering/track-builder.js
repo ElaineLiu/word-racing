@@ -356,57 +356,21 @@ function seededRandom(seed) {
 function buildEdgePoints(points, trackWidth) {
   const half = trackWidth / 2;
   const n = points.length;
-  const MITER_LIMIT = 3.0; // cap miter length to avoid spikes at very sharp turns
   const edgePoints = new Array(n);
 
   for (let i = 0; i < n; i++) {
     const prev = points[(i - 1 + n) % n];
     const curr = points[i];
     const next = points[(i + 1) % n];
-
-    // Incoming segment tangent (prev→curr)
-    const tanIn = normalize(curr.x - prev.x, curr.y - prev.y);
-    const normalIn = { x: -tanIn.y, y: tanIn.x };
-
-    // Outgoing segment tangent (curr→next)
-    const tanOut = normalize(next.x - curr.x, next.y - curr.y);
-    const normalOut = { x: -tanOut.y, y: tanOut.x };
-
-    // Simple offset points for both segments
-    const leftIn  = { x: curr.x + normalIn.x  * half, y: curr.y + normalIn.y  * half };
-    const leftOut = { x: curr.x + normalOut.x * half, y: curr.y + normalOut.y * half };
-    const rightIn  = { x: curr.x - normalIn.x  * half, y: curr.y - normalIn.y  * half };
-    const rightOut = { x: curr.x - normalOut.x * half, y: curr.y - normalOut.y * half };
-
-    // Miter corner = intersection of the two offset edge lines
-    const det = tanIn.x * tanOut.y - tanIn.y * tanOut.x;
-    const sharpTurn = Math.abs(det) < 0.001;
-
-    let left = leftOut;
-    if (!sharpTurn) {
-      const dx = leftOut.x - leftIn.x;
-      const dy = leftOut.y - leftIn.y;
-      const s = (dx * tanOut.y - dy * tanOut.x) / det;
-      const mx = leftIn.x + s * tanIn.x;
-      const my = leftIn.y + s * tanIn.y;
-      if (Math.hypot(mx - curr.x, my - curr.y) <= half * MITER_LIMIT) {
-        left = { x: mx, y: my };
-      }
-    }
-
-    let right = rightOut;
-    if (!sharpTurn) {
-      const dx = rightOut.x - rightIn.x;
-      const dy = rightOut.y - rightIn.y;
-      const s = (dx * tanOut.y - dy * tanOut.x) / det;
-      const mx = rightIn.x + s * tanIn.x;
-      const my = rightIn.y + s * tanIn.y;
-      if (Math.hypot(mx - curr.x, my - curr.y) <= half * MITER_LIMIT) {
-        right = { x: mx, y: my };
-      }
-    }
-
-    edgePoints[i] = { left, right };
+    // Use the same centred tangent as Track.getBoundaryContact(). A fixed
+    // normal offset keeps both visible edges exactly half a track width from
+    // the collision centerline and cannot create miter spikes at tight bends.
+    const tangent = normalize(next.x - prev.x, next.y - prev.y);
+    const normal = { x: -tangent.y, y: tangent.x };
+    edgePoints[i] = {
+      left: { x: curr.x + normal.x * half, y: curr.y + normal.y * half },
+      right: { x: curr.x - normal.x * half, y: curr.y - normal.y * half },
+    };
   }
 
   return edgePoints;

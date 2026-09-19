@@ -98,7 +98,7 @@ export class Car3D extends Car {
 
         if (track.checkCollision(this)) {
             const corrected = track.getBoundaryContact(this.x, this.y);
-            const maxOffset = Math.max(0, track.trackWidth / 2 - this.width / 2 - 1);
+            const maxOffset = Math.max(0, track.trackWidth / 2 - this.height / 2 - 1);
             this.x = corrected.nearestPoint.x + corrected.normal.x * maxOffset;
             this.y = corrected.nearestPoint.y + corrected.normal.y * maxOffset;
         }

@@ -67,6 +67,21 @@ describe('TrackBuilder', () => {
   });
 
   describe('addBarriers', () => {
+    it('should keep every visible edge at the configured half-width', () => {
+      const scene = new THREE.Scene();
+      const builder = new TrackBuilder(scene);
+      const track = TRACK_REGISTRY['shanghai-3d'];
+      builder.buildTrack(track.waypoints, track.trackWidth, track.samplesPerSegment);
+
+      builder.edgePoints.forEach((edge, index) => {
+        const center = builder.centerPoints[index];
+        expect(Math.hypot(edge.left.x - center.x, edge.left.y - center.y))
+          .toBeCloseTo(track.trackWidth / 2, 6);
+        expect(Math.hypot(edge.right.x - center.x, edge.right.y - center.y))
+          .toBeCloseTo(track.trackWidth / 2, 6);
+      });
+    });
+
     it('should add exactly two instanced barrier batches', () => {
       const scene = new THREE.Scene();
       const builder = new TrackBuilder(scene);
