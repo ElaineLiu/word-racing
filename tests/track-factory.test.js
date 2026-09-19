@@ -61,6 +61,8 @@ describe('TrackFactory', () => {
       expect(track).toBeInstanceOf(Track);
       expect(track.trackWidth).toBe(TRACK_REGISTRY['shanghai-2d'].trackWidth);
       expect(track.samplesPerSegment).toBe(TRACK_REGISTRY['shanghai-2d'].samplesPerSegment);
+      expect(track.canvasSize).toEqual({ width: 3000, height: 1900 });
+      expect(track.strictBoundary).toBe(true);
     });
 
     it('should create monaco track with different width', () => {
@@ -68,6 +70,7 @@ describe('TrackFactory', () => {
 
       expect(track).toBeInstanceOf(Track);
       expect(track.trackWidth).toBe(50);
+      expect(track.strictBoundary).toBe(false);
     });
 
     it('should create silverstone track', () => {

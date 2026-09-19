@@ -7,7 +7,11 @@
 import { describe, it, expect } from 'vitest';
 import { TRACK_REGISTRY } from '../config/track-registry.js';
 import { TRACK } from '../config/game-config.js';
+import { Track } from '../js/track.js';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import {
+  SHANGHAI_2D_CANVAS_SIZE,
   SHANGHAI_2D_TRACK_WIDTH,
   SHANGHAI_2D_WAYPOINTS,
 } from '../config/tracks/shanghai-2d.js';
@@ -62,7 +66,7 @@ function hasCenterlineIntersection(points, waypointCount) {
   return false;
 }
 
-function getMinimumNonAdjacentSegmentDistance(points, waypointCount) {
+function getMinimumNonAdjacentSegmentDistance(points, waypointCount, adjacentSpan = 1) {
   let min = Infinity;
   for (let i = 0; i < points.length; i++) {
     const a = points[i];
@@ -73,7 +77,7 @@ function getMinimumNonAdjacentSegmentDistance(points, waypointCount) {
       const d = points[(j + 1) % points.length];
       const gap = Math.abs(a.segment - c.segment);
       const cyclicGap = Math.min(gap, waypointCount - gap);
-      if (cyclicGap <= 1) continue;
+      if (cyclicGap <= adjacentSpan) continue;
       min = Math.min(min, getSegmentDistance(a, b, c, d));
     }
   }
@@ -376,20 +380,47 @@ describe('Track Registry', () => {
       expect(getMinimumNonAdjacentSegmentDistance(points, track.waypoints.length)).toBeGreaterThan(track.trackWidth);
     });
 
-    it('shanghai-2d 应该完整使用新版70点坐标，且不改变起终点', () => {
+    it('原始70点参考文件应该完整保留用户提供的坐标顺序', () => {
+      const source = JSON.parse(readFileSync('data/tracks/shanghai-authored-waypoints-2026-09-06.json', 'utf8'));
+      const digest = createHash('sha256').update(JSON.stringify(source.map(({ x, y }) => [x, y]))).digest('hex');
+
+      expect(source).toHaveLength(70);
+      expect(source[0]).toEqual({ x: 505, y: 483 });
+      expect(source.at(-1)).toEqual({ x: 498, y: 514 });
+      expect(digest).toBe('28f02d55789caf93adde4b1c7fa96cee5c2c149a99ee8ca4bca9153044df1451');
+    });
+
+    it('shanghai-2d 应该使用扩大后的80点圆角驾驶路线和90px路宽', () => {
       const track = TRACK_REGISTRY['shanghai-2d'];
 
       expect(track.waypoints).toBe(SHANGHAI_2D_WAYPOINTS);
-      expect(track.waypoints).toHaveLength(70);
-      expect(track.waypoints[0]).toEqual({ x: 505, y: 483 });
-      expect(track.waypoints.at(-1)).toEqual({ x: 498, y: 514 });
+      expect(track.waypoints).toHaveLength(80);
+      expect(track.waypoints[0]).toEqual({ x: 1147, y: 1013 });
+      expect(track.waypoints.at(-1)).toEqual({ x: 1100, y: 1129 });
       expect(track.trackWidth).toBe(SHANGHAI_2D_TRACK_WIDTH);
+      expect(track.trackWidth).toBe(90);
+      expect(track.canvasSize).toBe(SHANGHAI_2D_CANVAS_SIZE);
       expect(track.samplesPerSegment).toBe(24);
+    });
+
+    it('shanghai-2d 非相邻路段应留出至少15px路面净空', () => {
+      const track = TRACK_REGISTRY['shanghai-2d'];
+      const runtime = new Track(track.waypoints, track.trackWidth,
+        track.samplesPerSegment, track.canvasSize, track.strictBoundary);
+      const points = runtime.points.map((point, index) => ({
+        ...point,
+        segment: Math.floor(index / track.samplesPerSegment),
+      }));
+
+      // Six adjacent controls are one deliberately sampled hairpin arc, not
+      // separate lanes. Distinct route sections still retain road clearance.
+      expect(getMinimumNonAdjacentSegmentDistance(points, track.waypoints.length, 6)).toBeGreaterThan(track.trackWidth + 15);
     });
 
     it('默认2D赛道入口应该与注册表共享同一权威配置', () => {
       expect(TRACK.WAYPOINTS).toBe(SHANGHAI_2D_WAYPOINTS);
       expect(TRACK.WIDTH).toBe(SHANGHAI_2D_TRACK_WIDTH);
+      expect(TRACK.CANVAS_SIZE).toBe(SHANGHAI_2D_CANVAS_SIZE);
       expect(TRACK.SAMPLES_PER_SEGMENT).toBe(24);
     });
 

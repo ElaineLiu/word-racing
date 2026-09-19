@@ -32,6 +32,17 @@ describe('Track', () => {
       expect(track.startPos.y).toBeDefined();
       expect(track.startPos.angle).toBeDefined();
     });
+
+    it('uses the expanded Shanghai world even through the legacy three-argument constructor', () => {
+      const legacyConstructed = new Track(TRACK.WAYPOINTS, TRACK.WIDTH, TRACK.SAMPLES_PER_SEGMENT);
+      expect(legacyConstructed.canvasSize).toEqual(TRACK.CANVAS_SIZE);
+      expect(legacyConstructed.strictBoundary).toBe(true);
+      expect(legacyConstructed.startPos.y).toBeGreaterThan(800);
+      const oldViewportPassedAsWorld = new Track(TRACK.WAYPOINTS, TRACK.WIDTH,
+        TRACK.SAMPLES_PER_SEGMENT, { width: 1400, height: 800 }, false);
+      expect(oldViewportPassedAsWorld.canvasSize).toEqual(TRACK.CANVAS_SIZE);
+      expect(oldViewportPassedAsWorld.strictBoundary).toBe(true);
+    });
   });
 
   describe('Catmull-Rom spline', () => {
@@ -49,18 +60,27 @@ describe('Track', () => {
     });
 
     it('should keep the redesigned Shanghai centerline within its point budget', () => {
-      expect(track.waypoints).toHaveLength(70);
+      expect(track.waypoints).toHaveLength(80);
       expect(track.samplesPerSegment).toBe(24);
-      expect(track.points).toHaveLength(1680);
+      expect(track.points).toHaveLength(1920);
       expect(track.points.length).toBeLessThanOrEqual(2000);
     });
 
-    it('should keep every centerline point inside the 1400x800 canvas', () => {
+    it('should keep every centerline point inside the Shanghai world canvas', () => {
       for (const point of track.points) {
         expect(point.x).toBeGreaterThanOrEqual(0);
-        expect(point.x).toBeLessThanOrEqual(1400);
+        expect(point.x).toBeLessThanOrEqual(track.canvasSize.width);
         expect(point.y).toBeGreaterThanOrEqual(0);
-        expect(point.y).toBeLessThanOrEqual(800);
+        expect(point.y).toBeLessThanOrEqual(track.canvasSize.height);
+      }
+    });
+
+    it('should keep a full road-width margin around the world bounds', () => {
+      for (const point of track.points) {
+        expect(point.x).toBeGreaterThan(track.trackWidth / 2);
+        expect(point.x).toBeLessThan(track.canvasSize.width - track.trackWidth / 2);
+        expect(point.y).toBeGreaterThan(track.trackWidth / 2);
+        expect(point.y).toBeLessThan(track.canvasSize.height - track.trackWidth / 2);
       }
     });
 
@@ -134,6 +154,18 @@ describe('Track', () => {
   });
 
   describe('rendering', () => {
+    it('draws the background through the expanded world and paints the start line at startPos', () => {
+      const fills = [];
+      const translations = [];
+      const ctx = new Proxy({
+        fillRect: (...args) => fills.push(args),
+        translate: (...args) => translations.push(args),
+      }, { get: (target, key) => target[key] ?? (() => {}) });
+      track.render(ctx, 1);
+      expect(fills[0]).toEqual([0, 0, TRACK.CANVAS_SIZE.width, TRACK.CANVAS_SIZE.height]);
+      expect(translations).toContainEqual([track.startPos.x, track.startPos.y]);
+    });
+
     it('should render without errors', () => {
       const canvas = { width: 920, height: 620 };
       const ctx = {
