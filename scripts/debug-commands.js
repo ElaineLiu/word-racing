@@ -115,6 +115,36 @@
   };
 
   /**
+   * Prepare one track for local manual testing without changing learning data.
+   * @param {string} trackId - Track ID to unlock and select
+   */
+  window.debugPrepareTrackTest = function(trackId) {
+    const allowedTracks = [
+      'shanghai-2d', 'monaco-2d', 'silverstone-2d',
+      'shanghai-3d', 'monaco-3d', 'silverstone-3d', 'night-race-3d'
+    ];
+    if (!allowedTracks.includes(trackId)) {
+      console.error(`❌ Unknown test track: ${trackId}`);
+      return false;
+    }
+
+    const userId = getCurrentUserId();
+    const key = getGameStateKey(userId);
+    const state = JSON.parse(localStorage.getItem(key) || '{}');
+    const unlockedTracks = Array.isArray(state.unlockedTracks)
+      ? state.unlockedTracks
+      : ['shanghai-2d'];
+
+    if (!unlockedTracks.includes(trackId)) unlockedTracks.push(trackId);
+    state.unlockedTracks = unlockedTracks;
+    state.selectedTrackId = trackId;
+    state.fuelCoins = Math.max(Number(state.fuelCoins) || 0, 1000);
+    localStorage.setItem(key, JSON.stringify(state));
+    console.log(`✅ Local test ready: ${trackId}`);
+    return true;
+  };
+
+  /**
    * Reset to default state (keep word progress)
    */
   window.debugResetToDefault = function() {
@@ -176,6 +206,18 @@ Example usage:
   > debugUnlockAllTracks()
     `);
   };
+
+  // One-click local test entry, for example:
+  // http://127.0.0.1:3001/index.html?debugTrack=shanghai-3d
+  const debugTrack = new URLSearchParams(location.search).get('debugTrack');
+  if (debugTrack) {
+    window.addEventListener('load', () => {
+      if (!window.debugPrepareTrackTest(debugTrack)) return;
+      const cleanUrl = new URL(location.href);
+      cleanUrl.searchParams.delete('debugTrack');
+      location.replace(cleanUrl.toString());
+    }, { once: true });
+  }
 
   // Log welcome message
   console.log(`
