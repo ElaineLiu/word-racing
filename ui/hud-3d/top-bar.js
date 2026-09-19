@@ -12,7 +12,7 @@ export class TopBar {
     this.updateRank(data.rank, data.totalCars);
     this.updateTime(data.raceTime);
     this.updateBestLap(data.bestLapTime);
-    this.updateLap(data.lap, data.totalLaps);
+    this.updateLap(data.lap, data.totalLaps, data.lapTimes);
     this.updateScore(data.score);
   }
 
@@ -34,8 +34,16 @@ export class TopBar {
     }
   }
 
-  updateLap(current, total) {
-    // 可选：显示圈数进度
+  updateLap(completed, total, lapTimes = []) {
+    const lapPanel = this.#container.querySelector('#hud-lap .value');
+    const lapList = this.#container.querySelector('.lap-times');
+    if (lapPanel) lapPanel.textContent = `${Math.min(completed + 1, total)} / ${total}`;
+    if (lapList) {
+      lapList.innerHTML = lapTimes.map((time, index) => (
+        `<div>LAP ${index + 1}&nbsp;&nbsp;${this.#formatTime(time)}</div>`
+      )).join('');
+      lapList.style.display = lapTimes.length ? 'block' : 'none';
+    }
   }
 
   updateScore(score) {
@@ -60,6 +68,11 @@ export class TopBar {
       <div class="hud-panel" id="hud-time">
         <div class="label">TIME</div>
         <div class="value">00:00.00</div>
+      </div>
+      <div class="hud-panel" id="hud-lap">
+        <div class="label">LAP</div>
+        <div class="value">1 / 1</div>
+        <div class="lap-times" style="display: none;"></div>
       </div>
       <div class="best-lap" style="display: none;">BEST  00:00.00</div>
       <div class="hud-panel" id="hud-score">

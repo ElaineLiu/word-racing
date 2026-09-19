@@ -77,6 +77,83 @@ describe('RaceSession3D', () => {
     expect(session.playerRank).toBeGreaterThanOrEqual(1);
   });
 
+  it('should place the starting grid behind the player along the track tangent', () => {
+    const { session } = createSession();
+    const start = session.track.startPos;
+    const tangent = { x: Math.cos(start.angle), y: Math.sin(start.angle) };
+
+    session.aiCars.forEach((car, index) => {
+      const dx = car.x - start.x;
+      const dy = car.y - start.y;
+      const along = dx * tangent.x + dy * tangent.y;
+      const lateral = Math.abs(dx * -tangent.y + dy * tangent.x);
+      expect(along).toBeCloseTo(-(index + 1) * 20, 6);
+      expect(lateral).toBeLessThan(0.001);
+      expect(session.track.checkCollision(car)).toBe(false);
+    });
+  });
+
+  it('should keep barrier rendering to two draw-call batches', () => {
+    const { session } = createSession();
+    const barriers = session.track.scene.children.filter(child => child.name === 'barrier');
+    expect(barriers).toHaveLength(2);
+    expect(barriers.every(barrier => barrier.isInstancedMesh)).toBe(true);
+  });
+
+  it('should record authoritative 3D lap times and reject progress jumps', () => {
+    const { session } = createSession();
+    const player = session.playerCar;
+    player.raceProgress = 0.99;
+    player._progressIndex = 1910;
+    session.track.getProgressNear = value => (
+      typeof value === 'object' && value === player
+        ? { index: 10, progress: 10 / 1920, distance: 0 }
+        : { index: value?._progressIndex || 0, progress: 0, distance: 0 }
+    );
+
+    session.update({ up: false, down: false, left: false, right: false, nitro: false }, 1, 3);
+
+    expect(player.lap).toBe(1);
+    expect(player.lapTimes).toEqual([1000]);
+    expect(player.bestLapTime).toBe(1000);
+
+    session.track.getProgressNear = value => (
+      typeof value === 'object' && value === player
+        ? { index: 960, progress: 0.5, distance: 0 }
+        : { index: value?._progressIndex || 0, progress: 0, distance: 0 }
+    );
+    session.update({ up: false, down: false, left: false, right: false, nitro: false }, 1 / 60, 3);
+
+    expect(player.lap).toBe(1);
+    expect(player.lapTimes).toHaveLength(1);
+    expect(player.bestLapTime).toBe(1000);
+  });
+
+  it('should not finish by accumulating forward movement from repeated backtracking', () => {
+    const { session } = createSession();
+    const player = session.playerCar;
+    player.raceProgress = 0;
+    player._progressIndex = 100;
+    let forward = true;
+    session.track.getProgressNear = value => {
+      if (typeof value === 'object' && value === player) {
+        const index = forward ? 110 : 100;
+        forward = !forward;
+        return { index, progress: index / 1920, distance: 0 };
+      }
+      return { index: value?._progressIndex || 0, progress: 0, distance: 0 };
+    };
+
+    for (let i = 0; i < 100; i++) {
+      session.update({ up: false, down: false, left: false, right: false, nitro: false }, 1 / 60, 1);
+    }
+
+    expect(player.raceProgress).toBeCloseTo(0, 8);
+    expect(player.lap).toBe(0);
+    expect(player.finished).toBe(false);
+    expect(player.lapTimes).toHaveLength(0);
+  });
+
   it('should use injected eventBus for 3D events', () => {
     const eventBus = new EventBus();
     const handler = vi.fn();

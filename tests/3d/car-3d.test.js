@@ -29,6 +29,11 @@ describe('Car3D', () => {
       getProgress: () => 0,
       getNearestDistance: () => 10,
       getTrackNormal: () => ({ x: 0, y: 1, nearestPoint: { x: 100, y: 100 } }),
+      getBoundaryContact: () => ({
+        tangent: { x: 1, y: 0 },
+        normal: { x: 0, y: 1 },
+        nearestPoint: { x: 100, y: 100 },
+      }),
       points: [{ x: 100, y: 100 }, { x: 110, y: 100 }],
     };
   });
@@ -89,10 +94,10 @@ describe('Car3D', () => {
     });
   });
 
-  describe('collision rebound', () => {
-    it('should rollback and bounce when movement crosses the track boundary', () => {
-      car3D.x = 137;
-      car3D.y = 100;
+  describe('collision response', () => {
+    it('should slide along the boundary without reversing the car', () => {
+      car3D.x = 100;
+      car3D.y = 137;
       car3D.angle = 0;
       car3D.speed = 20;
       car3D.input.up = true;
@@ -101,22 +106,40 @@ describe('Car3D', () => {
         trackWidth: 76,
         isOnTrack: () => true,
         getProgress: () => 0,
-        getNearestDistance: (x) => Math.abs(x - 100),
-        getTrackNormal: (x) => ({
-          x: x >= 100 ? -1 : 1,
-          y: 0,
-          nearestPoint: { x: 100, y: 100 },
+        getNearestDistance: (_x, y) => Math.abs(y - 100),
+        getBoundaryContact: (x, y) => ({
+          tangent: { x: 1, y: 0 },
+          normal: { x: 0, y: y >= 100 ? 1 : -1 },
+          nearestPoint: { x, y: 100 },
         }),
-        checkCollision: (car) => Math.abs(car.x - 100) >= 38,
+        checkCollision: (car) => Math.abs(car.y - 100) >= 33,
         points: [{ x: 100, y: 100 }, { x: 110, y: 100 }],
       };
 
+      const previousAngle = car3D.angle;
       car3D.update(boundaryTrack, 3, 1 / 60);
 
-      expect(car3D.x).toBeLessThan(138);
-      expect(car3D.speed).toBeLessThan(0);
-      expect(Math.abs(car3D.speed)).toBeLessThan(20);
+      expect(car3D.x).toBeGreaterThan(100);
+      expect(car3D.y).toBeLessThan(136);
+      expect(car3D.angle).toBe(previousAngle);
+      expect(car3D.speed).toBeGreaterThan(0);
+      expect(car3D.speed).toBeLessThan(20);
       expect(car3D.collisionPenalty).toBeGreaterThan(0);
+    });
+  });
+
+  describe('external 3D lap tracking', () => {
+    it('should not let base Car create false millisecond lap times', () => {
+      car3D.lastProgress = 0.99;
+      car3D.lapStartTime = Date.now();
+      mockTrack.externalLapTracking = true;
+      mockTrack.getProgress = () => 0.01;
+      car3D.speed = 3;
+
+      car3D.update(mockTrack, 3, 1 / 60);
+
+      expect(car3D.lapTimes).toHaveLength(0);
+      expect(car3D.bestLapTime).toBe(Infinity);
     });
   });
 

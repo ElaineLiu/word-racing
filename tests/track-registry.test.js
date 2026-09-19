@@ -373,11 +373,17 @@ describe('Track Registry', () => {
       expect(hasCenterlineIntersection(points, track.waypoints.length)).toBe(false);
     });
 
-    it('shanghai-3d 应该保持原有的中心线间距保护', () => {
+    it('shanghai-3d 应该继承2D路线的非相邻路面净空', () => {
       const track = TRACK_REGISTRY['shanghai-3d'];
-      const points = generateSmoothCurve(track.waypoints);
+      const runtime = new Track(track.waypoints, track.trackWidth,
+        track.samplesPerSegment, track.canvasSize, false);
+      const points = runtime.points.map((point, index) => ({
+        ...point,
+        segment: Math.floor(index / track.samplesPerSegment),
+      }));
 
-      expect(getMinimumNonAdjacentSegmentDistance(points, track.waypoints.length)).toBeGreaterThan(track.trackWidth);
+      expect(getMinimumNonAdjacentSegmentDistance(points, track.waypoints.length, 6))
+        .toBeGreaterThan(track.trackWidth + 15);
     });
 
     it('原始70点参考文件应该完整保留用户提供的坐标顺序', () => {
@@ -424,13 +430,13 @@ describe('Track Registry', () => {
       expect(TRACK.SAMPLES_PER_SEGMENT).toBe(24);
     });
 
-    it('shanghai-3d 应该保持旧版20点几何不变', () => {
+    it('shanghai-3d 应该与已验收的2D路线共享权威几何', () => {
       const track = TRACK_REGISTRY['shanghai-3d'];
 
-      expect(track.waypoints).toHaveLength(20);
-      expect(track.waypoints[0]).toEqual({ x: 250, y: 90 });
-      expect(track.waypoints.at(-1)).toEqual({ x: 370, y: 205 });
-      expect(track.trackWidth).toBe(90);
+      expect(track.waypoints).toBe(SHANGHAI_2D_WAYPOINTS);
+      expect(track.trackWidth).toBe(SHANGHAI_2D_TRACK_WIDTH);
+      expect(track.canvasSize).toBe(SHANGHAI_2D_CANVAS_SIZE);
+      expect(track.samplesPerSegment).toBe(24);
     });
     it.each(['shanghai-2d', 'shanghai-3d'])('%s 应该有明显左右转变化', (trackId) => {
       const track = TRACK_REGISTRY[trackId];

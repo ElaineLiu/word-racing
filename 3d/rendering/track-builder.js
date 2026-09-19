@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { createTreeModel } from '../models/tree-model.js';
+import { Track } from '../../js/track.js';
 
 const SAMPLES_PER_SEGMENT = 24;
 const KERB_ANGLE_THRESHOLD = 0.26;
@@ -15,10 +16,12 @@ export class TrackBuilder {
     this.objects = [];
   }
 
-  buildTrack(waypoints, trackWidth) {
+  buildTrack(waypoints, trackWidth, samplesPerSegment = SAMPLES_PER_SEGMENT) {
     this.waypoints = waypoints.map(wp => ({ ...wp }));
     this.trackWidth = trackWidth;
-    this.centerPoints = generateSmoothCurve(this.waypoints, SAMPLES_PER_SEGMENT);
+    // Reuse the same centripetal spline implementation as collision/progress.
+    // Clone the controls so 3D keeps its own boundary response policy.
+    this.centerPoints = new Track(this.waypoints, trackWidth, samplesPerSegment).centerline;
     this.edgePoints = buildEdgePoints(this.centerPoints, this.trackWidth);
 
     const positions = [];
@@ -58,39 +61,15 @@ export class TrackBuilder {
 
   addBarriers() {
     this._requireTrack();
-    const geometry = new THREE.BoxGeometry(8, 4, 4);
     const chevronMaterials = createBarrierChevronMaterials();
-    for (let i = 0; i < this.edgePoints.length; i += 2) {
-      if (this._isStartFinishClearZone(i)) continue;
-      const edge = this.edgePoints[i];
-      const left = this._addBox('barrier', geometry, chevronMaterials.left, edge.left.x, 2, edge.left.y);
-      const right = this._addBox('barrier', geometry, chevronMaterials.right, edge.right.x, 2, edge.right.y);
-      const prev = this.centerPoints[(i - 2 + this.centerPoints.length) % this.centerPoints.length];
-      const next = this.centerPoints[(i + 2) % this.centerPoints.length];
-      const angle = Math.atan2(next.y - prev.y, next.x - prev.x);
-
-      console.log(`[TrackBuilder] Barrier ${i}:`, {
-        angle: angle.toFixed(3),
-        leftPos: `(${edge.left.x.toFixed(1)}, ${edge.left.y.toFixed(1)})`,
-        rightPos: `(${edge.right.x.toFixed(1)}, ${edge.right.y.toFixed(1)})`,
-        leftFace1: left.material[1].userData.chevronDirection,  // -X面
-        rightFace0: right.material[0].userData.chevronDirection, // +X面
-      });
-
-      left.rotation.y = -angle;
-      right.rotation.y = -angle;
-      left.userData.chevronSide = 'left';
-      right.userData.chevronSide = 'right';
-      left.userData.trackForwardAngle = angle;
-      right.userData.trackForwardAngle = angle;
-      left.userData.chevronForwardAngle = angle;
-      right.userData.chevronForwardAngle = angle;
-    }
+    this._addBarrierInstances('left', chevronMaterials.left);
+    this._addBarrierInstances('right', chevronMaterials.right);
   }
 
   addKerbs() {
     this._requireTrack();
-    const geometry = new THREE.BoxGeometry(6, 1, 6);
+    // Kerbs are painted low-profile road plates, not collision blocks.
+    const geometry = new THREE.BoxGeometry(6, 0.2, 6);
     const red = new THREE.MeshStandardMaterial({ color: 0xe53935, flatShading: true });
     const white = new THREE.MeshStandardMaterial({ color: 0xffffff, flatShading: true });
     for (let i = 0; i < this.centerPoints.length; i += 4) {
@@ -105,8 +84,8 @@ export class TrackBuilder {
       if (diff <= KERB_ANGLE_THRESHOLD) continue;
       const edge = this.edgePoints[i];
       const material = Math.floor(i / 8) % 2 === 0 ? red : white;
-      this._addBox('kerb', geometry, material, edge.left.x, 0.5, edge.left.y);
-      this._addBox('kerb', geometry, material, edge.right.x, 0.5, edge.right.y);
+      this._addBox('kerb', geometry, material, edge.left.x, 0.1, edge.left.y);
+      this._addBox('kerb', geometry, material, edge.right.x, 0.1, edge.right.y);
     }
   }
 
@@ -217,13 +196,20 @@ export class TrackBuilder {
   update(_deltaTime) {}
 
   dispose() {
+    const disposedGeometries = new Set();
+    const disposedMaterials = new Set();
     for (const obj of this.objects) {
       this.scene.remove(obj);
-      obj.geometry?.dispose?.();
-      if (Array.isArray(obj.material)) {
-        obj.material.forEach(m => m.dispose?.());
-      } else {
-        obj.material?.dispose?.();
+      if (obj.geometry && !disposedGeometries.has(obj.geometry)) {
+        obj.geometry.dispose?.();
+        disposedGeometries.add(obj.geometry);
+      }
+      const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+      for (const material of materials) {
+        if (!material || disposedMaterials.has(material)) continue;
+        material.map?.dispose?.();
+        material.dispose?.();
+        disposedMaterials.add(material);
       }
     }
     this.objects = [];
@@ -240,6 +226,52 @@ export class TrackBuilder {
     mesh.position.set(x, y, z);
     this._add(mesh);
     return mesh;
+  }
+
+  _addBarrierInstances(side, materials) {
+    const geometry = new THREE.BoxGeometry(1, 4, 4);
+    const mesh = new THREE.InstancedMesh(geometry, materials, this.edgePoints.length);
+    const matrix = new THREE.Matrix4();
+    const position = new THREE.Vector3();
+    const rotation = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+    const up = new THREE.Vector3(0, 1, 0);
+    const validSegments = buildValidEdgeSegmentMask(
+      this.centerPoints, this.edgePoints, side, this.trackWidth
+    );
+    let count = 0;
+    let skippedInvalid = 0;
+
+    for (let i = 0; i < this.edgePoints.length; i++) {
+      const nextIndex = (i + 1) % this.edgePoints.length;
+      if (this._isStartFinishClearZone(i) || this._isStartFinishClearZone(nextIndex)) continue;
+      if (!validSegments[i]) {
+        skippedInvalid++;
+        continue;
+      }
+      const start = this.edgePoints[i][side];
+      const end = this.edgePoints[nextIndex][side];
+      const dx = end.x - start.x;
+      const dz = end.y - start.y;
+      const length = Math.hypot(dx, dz);
+      if (length < 1e-6) continue;
+
+      position.set((start.x + end.x) / 2, 2, (start.y + end.y) / 2);
+      rotation.setFromAxisAngle(up, -Math.atan2(dz, dx));
+      // A small overlap closes floating-point cracks without protruding into
+      // the road like the old fixed-size blocks did at sharp corners.
+      scale.set(length + 0.35, 1, 1);
+      matrix.compose(position, rotation, scale);
+      mesh.setMatrixAt(count++, matrix);
+    }
+
+    mesh.count = count;
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.name = 'barrier';
+    mesh.userData.chevronSide = side;
+    mesh.userData.continuousEdgeSegments = true;
+    mesh.userData.skippedInvalidSegments = skippedInvalid;
+    this._add(mesh);
   }
 
   _requireTrack() {
@@ -331,90 +363,24 @@ function seededRandom(seed) {
   return x - Math.floor(x);
 }
 
-function generateSmoothCurve(waypoints, samplesPerSegment) {
-  const points = [];
-  const n = waypoints.length;
-  for (let i = 0; i < n; i++) {
-    const p0 = waypoints[(i - 1 + n) % n];
-    const p1 = waypoints[i];
-    const p2 = waypoints[(i + 1) % n];
-    const p3 = waypoints[(i + 2) % n];
-    for (let j = 0; j < samplesPerSegment; j++) {
-      const t = j / samplesPerSegment;
-      points.push({
-        x: catmullRom(p0.x, p1.x, p2.x, p3.x, t),
-        y: catmullRom(p0.y, p1.y, p2.y, p3.y, t),
-      });
-    }
-  }
-  return points;
-}
-
-function catmullRom(p0, p1, p2, p3, t) {
-  const t2 = t * t;
-  const t3 = t2 * t;
-  return 0.5 * (
-    (2 * p1) +
-    (-p0 + p2) * t +
-    (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 +
-    (-p0 + 3 * p1 - 3 * p2 + p3) * t3
-  );
-}
-
 function buildEdgePoints(points, trackWidth) {
   const half = trackWidth / 2;
   const n = points.length;
-  const MITER_LIMIT = 3.0; // cap miter length to avoid spikes at very sharp turns
   const edgePoints = new Array(n);
 
   for (let i = 0; i < n; i++) {
     const prev = points[(i - 1 + n) % n];
     const curr = points[i];
     const next = points[(i + 1) % n];
-
-    // Incoming segment tangent (prev→curr)
-    const tanIn = normalize(curr.x - prev.x, curr.y - prev.y);
-    const normalIn = { x: -tanIn.y, y: tanIn.x };
-
-    // Outgoing segment tangent (curr→next)
-    const tanOut = normalize(next.x - curr.x, next.y - curr.y);
-    const normalOut = { x: -tanOut.y, y: tanOut.x };
-
-    // Simple offset points for both segments
-    const leftIn  = { x: curr.x + normalIn.x  * half, y: curr.y + normalIn.y  * half };
-    const leftOut = { x: curr.x + normalOut.x * half, y: curr.y + normalOut.y * half };
-    const rightIn  = { x: curr.x - normalIn.x  * half, y: curr.y - normalIn.y  * half };
-    const rightOut = { x: curr.x - normalOut.x * half, y: curr.y - normalOut.y * half };
-
-    // Miter corner = intersection of the two offset edge lines
-    const det = tanIn.x * tanOut.y - tanIn.y * tanOut.x;
-    const sharpTurn = Math.abs(det) < 0.001;
-
-    let left = leftOut;
-    if (!sharpTurn) {
-      const dx = leftOut.x - leftIn.x;
-      const dy = leftOut.y - leftIn.y;
-      const s = (dx * tanOut.y - dy * tanOut.x) / det;
-      const mx = leftIn.x + s * tanIn.x;
-      const my = leftIn.y + s * tanIn.y;
-      if (Math.hypot(mx - curr.x, my - curr.y) <= half * MITER_LIMIT) {
-        left = { x: mx, y: my };
-      }
-    }
-
-    let right = rightOut;
-    if (!sharpTurn) {
-      const dx = rightOut.x - rightIn.x;
-      const dy = rightOut.y - rightIn.y;
-      const s = (dx * tanOut.y - dy * tanOut.x) / det;
-      const mx = rightIn.x + s * tanIn.x;
-      const my = rightIn.y + s * tanIn.y;
-      if (Math.hypot(mx - curr.x, my - curr.y) <= half * MITER_LIMIT) {
-        right = { x: mx, y: my };
-      }
-    }
-
-    edgePoints[i] = { left, right };
+    // Use the same centred tangent as Track.getBoundaryContact(). A fixed
+    // normal offset keeps both visible edges exactly half a track width from
+    // the collision centerline and cannot create miter spikes at tight bends.
+    const tangent = normalize(next.x - prev.x, next.y - prev.y);
+    const normal = { x: -tangent.y, y: tangent.x };
+    edgePoints[i] = {
+      left: { x: curr.x + normal.x * half, y: curr.y + normal.y * half },
+      right: { x: curr.x - normal.x * half, y: curr.y - normal.y * half },
+    };
   }
 
   return edgePoints;
@@ -429,4 +395,119 @@ function angleDiff(a, b) {
   let diff = Math.abs(b - a);
   if (diff > Math.PI) diff = 2 * Math.PI - diff;
   return diff;
+}
+
+function buildValidEdgeSegmentMask(centerPoints, edgePoints, side, trackWidth) {
+  const count = centerPoints.length;
+  const valid = new Array(count).fill(true);
+
+  for (let i = 0; i < count; i++) {
+    const next = (i + 1) % count;
+    const centerDx = centerPoints[next].x - centerPoints[i].x;
+    const centerDy = centerPoints[next].y - centerPoints[i].y;
+    const edgeDx = edgePoints[next][side].x - edgePoints[i][side].x;
+    const edgeDy = edgePoints[next][side].y - edgePoints[i][side].y;
+    const centerLength = Math.hypot(centerDx, centerDy);
+    const edgeLength = Math.hypot(edgeDx, edgeDy);
+    const directionDot = centerLength > 1e-6 && edgeLength > 1e-6
+      ? (centerDx * edgeDx + centerDy * edgeDy) / (centerLength * edgeLength)
+      : -1;
+
+    // An offset curve folds back when the inner radius is smaller than half
+    // the road width. Do not bridge that fold with a giant crossing barrier.
+    const innerBoundary = isInnerBoundary(centerPoints, side, i);
+    if (innerBoundary
+        && (directionDot < 0.15 || edgeLength > Math.max(12, centerLength * 3))) {
+      valid[i] = false;
+    }
+  }
+
+  // Offset boundaries can also intersect a later part of the same hairpin
+  // even when each individual segment still points forward. Reject both
+  // sides of those crossings so no guardrail is drawn across the road.
+  const localExclusion = 12;
+  const cellSize = Math.max(20, trackWidth);
+  const spatialIndex = new Map();
+  for (const indexedSide of ['left', 'right']) {
+    for (let index = 0; index < count; index++) {
+      const start = edgePoints[index][indexedSide];
+      const end = edgePoints[(index + 1) % count][indexedSide];
+      const minCellX = Math.floor(Math.min(start.x, end.x) / cellSize);
+      const maxCellX = Math.floor(Math.max(start.x, end.x) / cellSize);
+      const minCellY = Math.floor(Math.min(start.y, end.y) / cellSize);
+      const maxCellY = Math.floor(Math.max(start.y, end.y) / cellSize);
+      const segment = { side: indexedSide, index, start, end };
+      for (let x = minCellX; x <= maxCellX; x++) {
+        for (let y = minCellY; y <= maxCellY; y++) {
+          const key = `${x},${y}`;
+          if (!spatialIndex.has(key)) spatialIndex.set(key, []);
+          spatialIndex.get(key).push(segment);
+        }
+      }
+    }
+  }
+
+  for (let i = 0; i < count; i++) {
+    const a1 = edgePoints[i][side];
+    const a2 = edgePoints[(i + 1) % count][side];
+    const candidates = new Map();
+    const minCellX = Math.floor(Math.min(a1.x, a2.x) / cellSize);
+    const maxCellX = Math.floor(Math.max(a1.x, a2.x) / cellSize);
+    const minCellY = Math.floor(Math.min(a1.y, a2.y) / cellSize);
+    const maxCellY = Math.floor(Math.max(a1.y, a2.y) / cellSize);
+    for (let x = minCellX; x <= maxCellX; x++) {
+      for (let y = minCellY; y <= maxCellY; y++) {
+        for (const candidate of spatialIndex.get(`${x},${y}`) || []) {
+          candidates.set(`${candidate.side}:${candidate.index}`, candidate);
+        }
+      }
+    }
+
+    for (const candidate of candidates.values()) {
+      const j = candidate.index;
+      const cyclicDistance = Math.min(Math.abs(j - i), count - Math.abs(j - i));
+      if (cyclicDistance <= localExclusion) continue;
+      if (segmentsIntersect(a1, a2, candidate.start, candidate.end)) {
+        if (isInnerBoundary(centerPoints, side, i)) valid[i] = false;
+        if (candidate.side === side && isInnerBoundary(centerPoints, side, j)) valid[j] = false;
+      }
+    }
+  }
+
+  // Give a folded cusp a short clear transition instead of leaving a fan of
+  // converging blocks around the single rejected segment.
+  const invalid = valid.map(value => !value);
+  const padding = 6;
+  for (let i = 0; i < count; i++) {
+    if (!invalid[i]) continue;
+    for (let offset = -padding; offset <= padding; offset++) {
+      valid[(i + offset + count) % count] = false;
+    }
+  }
+  return valid;
+}
+
+function isInnerBoundary(centerPoints, side, index) {
+  const count = centerPoints.length;
+  const previous = centerPoints[(index - 2 + count) % count];
+  const current = centerPoints[index];
+  const next = centerPoints[(index + 2) % count];
+  const incomingX = current.x - previous.x;
+  const incomingY = current.y - previous.y;
+  const outgoingX = next.x - current.x;
+  const outgoingY = next.y - current.y;
+  const turn = incomingX * outgoingY - incomingY * outgoingX;
+  if (Math.abs(turn) < 1e-6) return false;
+  return turn > 0 ? side === 'left' : side === 'right';
+}
+
+function segmentsIntersect(a, b, c, d) {
+  const cross = (p, q, r) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+  const abC = cross(a, b, c);
+  const abD = cross(a, b, d);
+  const cdA = cross(c, d, a);
+  const cdB = cross(c, d, b);
+  const epsilon = 1e-7;
+  return ((abC > epsilon && abD < -epsilon) || (abC < -epsilon && abD > epsilon))
+    && ((cdA > epsilon && cdB < -epsilon) || (cdA < -epsilon && cdB > epsilon));
 }

@@ -17,6 +17,7 @@ export class RaceSession3D {
   #rankingSystem;
   #cameraController;
   #finishOrder = 0;
+  #elapsedMs = 0;
   #disposed = false;
 
   constructor({ trackData, canvas, eventBus, gameState, rendererFactory } = {}) {
@@ -45,9 +46,10 @@ export class RaceSession3D {
     this.#playerCar.nitroCharges = gameState.get('nitroCharges') || 0;
 
     this.#aiCars = AI_PERSONALITIES.map((personalityName, index) => {
+      const gridGap = (index + 1) * 20;
       const car = new Car3D(
-        this.#track.startPos.x + (index + 1) * 20,
-        this.#track.startPos.y,
+        this.#track.startPos.x - Math.cos(this.#track.startPos.angle) * gridGap,
+        this.#track.startPos.y - Math.sin(this.#track.startPos.angle) * gridGap,
         this.#track.startPos.angle,
         this.#track.scene
       );
@@ -68,7 +70,12 @@ export class RaceSession3D {
 
     this.cars.forEach(car => {
       car.raceProgress = 0;
-      car._lastRaceProgress = this.#track.getProgress(car);
+      const initialProgress = this.#track.getProgressNear(car, null);
+      car._progressIndex = initialProgress.index;
+      car._lastRaceProgress = initialProgress.progress;
+      car._lapStartedAtMs = 0;
+      car.lapTimes = [];
+      car.bestLapTime = Infinity;
     });
     this.#rankingSystem.update();
   }
@@ -81,6 +88,8 @@ export class RaceSession3D {
 
   update(input, deltaTime = 1 / 60, totalLaps = 3) {
     if (this.#disposed) return;
+
+    this.#elapsedMs += deltaTime * 1000;
 
     this.#playerCar.input = { ...input };
     this.#aiControllers.forEach(controller => controller.update(deltaTime));
@@ -135,20 +144,38 @@ export class RaceSession3D {
   }
 
   #updateRaceProgress(car, totalLaps) {
-    const currentProgress = this.#track.getProgress(car);
-    const previousProgress = car._lastRaceProgress ?? currentProgress;
-    let delta = currentProgress - previousProgress;
+    const sample = this.#track.getProgressNear(car, car._progressIndex);
+    const pointCount = this.#track.centerline.length;
+    let indexDelta = sample.index - car._progressIndex;
+    if (indexDelta < -pointCount / 2) indexDelta += pointCount;
+    if (indexDelta > pointCount / 2) indexDelta -= pointCount;
+    const acceptedSample = Math.abs(indexDelta) <= 36;
+    if (!acceptedSample) indexDelta = 0;
+    const delta = indexDelta / pointCount;
 
-    if (delta < -0.5) delta += 1;
-    if (delta > 0.5) delta -= 1;
-
-    if (delta > 0 && !car.finished) {
-      car.raceProgress = (car.raceProgress || 0) + delta;
-      car.lap = Math.floor(car.raceProgress);
+    if (delta !== 0 && !car.finished) {
+      const previousCompletedLaps = Math.floor(car.raceProgress || 0);
+      car.raceProgress = Math.max(
+        previousCompletedLaps,
+        (car.raceProgress || 0) + delta,
+      );
+      const completedLaps = Math.floor(car.raceProgress);
+      if (completedLaps > previousCompletedLaps) {
+        const lapTime = this.#elapsedMs - car._lapStartedAtMs;
+        if (lapTime >= 1000) {
+          car.lapTimes.push(lapTime);
+          car.bestLapTime = Math.min(car.bestLapTime, lapTime);
+        }
+        car._lapStartedAtMs = this.#elapsedMs;
+      }
+      car.lap = completedLaps;
       car.lastProgress = car.raceProgress % 1;
     }
 
-    car._lastRaceProgress = currentProgress;
+    if (acceptedSample) {
+      car._progressIndex = sample.index;
+      car._lastRaceProgress = sample.progress;
+    }
 
     if ((car.raceProgress || 0) >= totalLaps && !car.finishOrder) {
       car.finished = true;
