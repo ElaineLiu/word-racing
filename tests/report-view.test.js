@@ -96,7 +96,7 @@ describe('ReportView', () => {
 
     const container = document.getElementById('report-mastery-stats');
     expect(container.textContent).toContain('Words Attempted');
-    expect(container.textContent).toContain('Mastered');
+    expect(container.textContent).toContain('Stable Mastery');
     expect(container.textContent).toContain('Learning');
   });
 

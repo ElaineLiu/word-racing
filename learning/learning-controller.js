@@ -22,6 +22,7 @@ import { LearningUI } from '../ui/learning-ui.js';
 import { AchievementManager } from '../systems/achievement-manager.js';
 import { LEARNING } from '../config/learning-config.js';
 import { calculateAccuracyBonus, calculateQuestionReward } from '../config/reward-policy.js';
+import { ASSESSMENT_VERSION, isQuestionSafe, localDate } from './assessment-policy.js';
 
 export class LearningController {
   #eventBus;
@@ -64,6 +65,8 @@ export class LearningController {
    */
   init(wordSet, options = {}) {
     this.#wordSet = wordSet;
+    this.#progressTracker.reconcileWordSet(wordSet);
+    this.#syncMasteredSummary();
     this.#adaptiveSelector = new AdaptiveSelector(
       this.#eventBus,
       this.#progressTracker,
@@ -130,6 +133,10 @@ export class LearningController {
    * @returns {Array} 题目数组
    */
   startNewQuiz(options = {}) {
+    // An empty verification request must preserve an unfinished quiz.
+    const verificationQuestions = options.verificationOnly
+      ? this.#adaptiveSelector.buildQuiz({ ...options, modePreference: this.#modePreference }) : null;
+    if (verificationQuestions && !verificationQuestions.length) return [];
     // 清除旧会话
     this.#sessionManager.clearSession();
 
@@ -147,7 +154,7 @@ export class LearningController {
     }
 
     // 生成题目（传递题型偏好）
-    this.#currentQuestions = this.#adaptiveSelector.buildQuiz({
+    this.#currentQuestions = verificationQuestions || this.#adaptiveSelector.buildQuiz({
       ...options,
       modePreference: this.#modePreference,
     });
@@ -207,16 +214,19 @@ export class LearningController {
     }
 
     const correct = selectedIndex === question.correctIndex;
+    const independent = !question.assisted && question.assessmentVersion === ASSESSMENT_VERSION && isQuestionSafe(question) &&
+      this.#progressTracker.getStatus(question.correctWord)?.lastAssistedDate !== localDate();
     const currentQuiz = this.#sessionManager.getCurrentSession();
 
     // 计算奖励
-    const reward = correct ? calculateQuestionReward(question) : { fuel: 0, gear: 0 };
+    const reward = correct && independent ? calculateQuestionReward(question) : { fuel: 0, gear: 0 };
     const { fuel: fuelCoins, gear: gearCoins } = reward;
 
     // 保存答案
     const result = this.#sessionManager.saveAnswer({
       questionIndex: currentQuiz.answers.length,
       correct,
+      independent,
       selectedIndex,
       mode: question.mode,
       fuelCoins,
@@ -237,8 +247,11 @@ export class LearningController {
       question.mode,
       correct,
       question.wordId,
-      question.originalMode
+      question.originalMode,
+      { assisted: !!question.assisted, valid: independent }
     );
+    // Wrong-answer feedback reveals the answer; immediate retries are practice.
+    if (!correct && independent) this.#progressTracker.markAssisted(wordText, question.wordId);
 
     // 持久化单词进度
     this.#progressTracker.save();
@@ -274,6 +287,7 @@ export class LearningController {
     return {
       correct,
       correctIndex: question.correctIndex,
+      independent,
       selectedIndex,
       combo: result.combo,
       isComplete: result.isComplete,
@@ -291,11 +305,11 @@ export class LearningController {
 
     // DailyManager.completeQuiz 已更新 learning.totalQuizzes/totalQuestions/totalCorrect
     // 这里只更新 lastPerfectQuiz（DailyManager 不负责此字段）
-    const isPerfect = result.correctCount === result.totalQuestions && result.totalQuestions > 0;
+    const isPerfect = result.independentCorrectCount === result.totalQuestions && result.totalQuestions > 0;
     this.#gameState.set('learning.lastPerfectQuiz', isPerfect);
 
     // 正确率奖励（装备币）
-    const accuracyBonus = calculateAccuracyBonus(result.correctCount, result.totalQuestions);
+    const accuracyBonus = calculateAccuracyBonus(result.independentCorrectCount, result.totalQuestions);
     if (accuracyBonus.gear > 0) {
       this.#gameState.modify('gearCoins', accuracyBonus.gear);
     }
@@ -483,6 +497,14 @@ export class LearningController {
 
   get learningUI() {
     return this.#learningUI;
+  }
+
+  markCurrentQuestionAssisted() {
+    const question = this.getCurrentQuestion();
+    if (!question || question.answered) return;
+    question.assisted = true;
+    this.#progressTracker.markAssisted(question.correctWord, question.wordId);
+    this.#sessionManager.markCurrentQuestionAssisted();
   }
 
   #syncMasteredSummary() {

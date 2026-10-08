@@ -41,6 +41,8 @@ const QUESTION_FIELDS = [
   'isCheck',
   'isNew',
   'level',
+  'assessmentVersion',
+  'assisted',
 ];
 
 function sanitizeQuestion(question) {
@@ -220,6 +222,13 @@ export class QuizSessionManager {
     return this.#session.questions[index] || null;
   }
 
+  markCurrentQuestionAssisted() {
+    const question = this.getCurrentQuestion();
+    if (!question) return;
+    question.assisted = true;
+    this.#saveSession();
+  }
+
   /**
    * 保存答题结果（每题答题后调用）
    * @param {Object} answer - 答题结果
@@ -252,6 +261,7 @@ export class QuizSessionManager {
     this.#session.answers.push({
       questionIndex: answer.questionIndex,
       correct: answer.correct,
+      independent: answer.independent === true,
       selectedIndex: answer.selectedIndex,
       mode: answer.mode,
       timestamp: Date.now(),
@@ -314,6 +324,7 @@ export class QuizSessionManager {
       quizNumber: this.#session.currentQuiz,
       totalQuestions: this.#session.questions.length,
       correctCount: this.#session.correctCount,
+      independentCorrectCount: this.#session.answers.filter(answer => answer.correct && answer.independent).length,
       wrongCount: this.#session.wrongCount,
       accuracy: this.#session.questions.length > 0
         ? Math.round((this.#session.correctCount / this.#session.questions.length) * 100)

@@ -27,6 +27,7 @@ Thumbs.db
 Desktop.ini
 
 # 本地配置文件
+word-racing-data*.json
 .env
 .config
 

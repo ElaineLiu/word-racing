@@ -15,6 +15,7 @@ import {
   LEARNING,
 } from '../config/learning-config.js';
 import { getMasteryGroup, MASTERY_GROUP } from '../config/reward-policy.js';
+import { ASSESSMENT_VERSION, localDate, migrateProgress } from './assessment-policy.js';
 
 /**
  * ProgressTracker - 单词进度追踪器
@@ -74,7 +75,8 @@ export class ProgressTracker {
    */
   isMastered(wordText) {
     const progress = this.#progress.get(wordText);
-    return progress?.status === MASTERY_STATUS.MASTERED;
+    return progress?.available !== false && progress?.status === MASTERY_STATUS.MASTERED &&
+      progress.independentDates?.simple.length >= 2 && progress.independentDates?.complex.length >= 2;
   }
 
   /**
@@ -100,9 +102,21 @@ export class ProgressTracker {
    * @param {string|null} [originalMode] - LAP_REVIEW 内部实际题型
    * @returns {Object} 更新后的状态
    */
-  updateStatus(wordText, mode, correct, wordId = null, originalMode = null) {
+  markAssisted(wordText, wordId = null) {
     let progress = this.#progress.get(wordText);
-    const today = new Date().toISOString().split('T')[0];
+    if (!progress) {
+      progress = createDefaultProgress(wordText, wordId);
+      progress.firstSeenDate = localDate();
+      this.#progress.set(wordText, progress);
+    }
+    progress.lastAssistedDate = localDate();
+    this.#dirty = true;
+    this.save();
+  }
+
+  updateStatus(wordText, mode, correct, wordId = null, originalMode = null, evidence = {}) {
+    let progress = this.#progress.get(wordText);
+    const today = localDate();
 
     // 首次出现
     if (!progress) {
@@ -115,6 +129,25 @@ export class ProgressTracker {
     }
 
     const previousStatus = progress.status;
+    progress.assessmentVersion = ASSESSMENT_VERSION;
+    progress.independentDates ??= { simple: [], complex: [] };
+    progress.assistedCompletions ??= 0;
+    const group = getMasteryGroup(mode, originalMode);
+    if (evidence.assisted || evidence.valid === false || !group || progress.lastAssistedDate === today) {
+      progress.lastAssistedDate = today;
+      progress.assistedCompletions++;
+      if (progress.status === MASTERY_STATUS.UNLEARNED) progress.status = MASTERY_STATUS.EXPOSED;
+      this.#dirty = true;
+      return progress;
+    }
+    if (correct) {
+      if (!progress.independentDates[group].includes(today)) progress.independentDates[group].push(today);
+      progress.independentDates[group] = progress.independentDates[group].slice(-2);
+    } else {
+      progress.independentDates[group] = [];
+    }
+    progress.pendingVerification = !!progress.legacyEvidence &&
+      (!progress.independentDates.simple.length || !progress.independentDates.complex.length);
 
     // 更新答对/答错计数
     if (correct) {
@@ -200,8 +233,9 @@ export class ProgressTracker {
 
     // 如果两种题型都通过了 → mastered
     if (simpleCorrect && complexCorrect) {
-      progress.status = MASTERY_STATUS.MASTERED;
-      progress.masteryDate = today;
+      const stable = progress.independentDates.simple.length >= 2 && progress.independentDates.complex.length >= 2;
+      progress.status = stable ? MASTERY_STATUS.MASTERED : MASTERY_STATUS.INDEPENDENT_PASSED;
+      progress.masteryDate = stable ? today : null;
       return;
     }
 
@@ -281,9 +315,13 @@ export class ProgressTracker {
     const needComplexCheck = [];
 
     for (const progress of this.#progress.values()) {
-      if (progress.status === MASTERY_STATUS.SIMPLE_PASSED) {
+      if (progress.available === false || progress.status === MASTERY_STATUS.MASTERED || progress.lastAssistedDate === localDate()) continue;
+      const dates = progress.independentDates || { simple: [], complex: [] };
+      const today = localDate();
+      if ((progress.pendingVerification || progress.simpleCorrect) && dates.complex.length < 2 && !dates.complex.includes(today)) {
         needComplexCheck.push(progress);
-      } else if (progress.status === MASTERY_STATUS.COMPLEX_PASSED) {
+      }
+      if ((progress.pendingVerification || progress.complexCorrect) && dates.simple.length < 2 && !dates.simple.includes(today)) {
         needSimpleCheck.push(progress);
       }
     }
@@ -298,7 +336,7 @@ export class ProgressTracker {
   getMasteredWords() {
     const result = [];
     for (const progress of this.#progress.values()) {
-      if (progress.status === MASTERY_STATUS.MASTERED) {
+      if (this.isMastered(progress.word)) {
         result.push(progress);
       }
     }
@@ -312,7 +350,7 @@ export class ProgressTracker {
   getLearningWords() {
     const result = [];
     for (const progress of this.#progress.values()) {
-      if (progress.status !== MASTERY_STATUS.UNLEARNED &&
+      if (progress.available !== false && progress.status !== MASTERY_STATUS.UNLEARNED &&
           progress.status !== MASTERY_STATUS.MASTERED) {
         result.push(progress);
       }
@@ -329,9 +367,9 @@ export class ProgressTracker {
     let learning = 0;
 
     for (const progress of this.#progress.values()) {
-      if (progress.status === MASTERY_STATUS.MASTERED) {
+      if (this.isMastered(progress.word)) {
         mastered++;
-      } else if (progress.status !== MASTERY_STATUS.UNLEARNED) {
+      } else if (progress.available !== false && progress.status !== MASTERY_STATUS.UNLEARNED) {
         learning++;
       }
     }
@@ -340,7 +378,11 @@ export class ProgressTracker {
       total: this.#progress.size,
       mastered,
       learning,
-      unlearned: Math.max(0, this.#progress.size - mastered - learning),
+      independentPassed: [...this.#progress.values()].filter(p => p.available !== false && p.independentDates?.simple.length && p.independentDates?.complex.length).length,
+      pendingVerification: [...this.#progress.values()].filter(p => p.pendingVerification && p.available !== false).length,
+      assisted: [...this.#progress.values()].filter(p => p.assistedCompletions > 0).length,
+      archived: [...this.#progress.values()].filter(p => p.available === false).length,
+      unlearned: Math.max(0, this.#progress.size - mastered - learning - [...this.#progress.values()].filter(p => p.available === false).length),
     };
   }
 
@@ -354,6 +396,15 @@ export class ProgressTracker {
       result[word] = progress;
     }
     return result;
+  }
+
+  reconcileWordSet(words) {
+    const before = JSON.stringify(this.getAllProgress());
+    const migrated = migrateProgress(this.getAllProgress(), words);
+    if (JSON.stringify(migrated) === before) return;
+    this.#progress = new Map(Object.entries(migrated));
+    this.#dirty = true;
+    this.save();
   }
 
   // ==================== 持久化 ====================

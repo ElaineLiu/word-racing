@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ProgressTracker } from '../learning/progress-tracker.js';
 import { EventBus, Events } from '../core/event-bus.js';
 import { MASTERY_STATUS } from '../config/learning-config.js';
+import { masterAcrossDates } from './helpers/mastery.js';
 
 describe('ProgressTracker', () => {
   let eventBus;
@@ -109,13 +110,15 @@ describe('ProgressTracker', () => {
       expect(status.status).toBe(MASTERY_STATUS.SIMPLE_PASSED);
     });
 
-    it('should transition to mastered when both modes correct', () => {
+    it('should require cross-date evidence after both modes pass once', () => {
       // First: simple mode correct → simple_passed
       tracker.updateStatus('accelerate', 'PIT_BOARD', true, 6);
       expect(tracker.getStatus('accelerate').status).toBe(MASTERY_STATUS.SIMPLE_PASSED);
 
       // Then: complex mode correct → mastered
       tracker.updateStatus('accelerate', 'RADIO_MSG', true, 6);
+      expect(tracker.getStatus('accelerate').status).toBe(MASTERY_STATUS.INDEPENDENT_PASSED);
+      masterAcrossDates(tracker, 'accelerate', 6);
       expect(tracker.getStatus('accelerate').status).toBe(MASTERY_STATUS.MASTERED);
     });
 
@@ -132,6 +135,7 @@ describe('ProgressTracker', () => {
       // First: master the word
       tracker.updateStatus('dangerous', 'PIT_BOARD', true, 7);
       tracker.updateStatus('dangerous', 'RADIO_MSG', true, 7);
+      masterAcrossDates(tracker, 'dangerous', 7);
       expect(tracker.getStatus('dangerous').status).toBe(MASTERY_STATUS.MASTERED);
 
       // Then: answer wrong - after wrong answer, status becomes exposed first
@@ -145,6 +149,7 @@ describe('ProgressTracker', () => {
       // Master first
       tracker.updateStatus('practice', 'PIT_BOARD', true, 8);
       tracker.updateStatus('practice', 'RADIO_MSG', true, 8);
+      masterAcrossDates(tracker, 'practice', 8);
       expect(tracker.getStatus('practice').status).toBe(MASTERY_STATUS.MASTERED);
 
       // Wrong answer
@@ -152,8 +157,7 @@ describe('ProgressTracker', () => {
       // The word now has wrongCount > 0
 
       // Re-answer correctly for both modes
-      tracker.updateStatus('practice', 'PIT_BOARD', true, 8);
-      tracker.updateStatus('practice', 'RADIO_MSG', true, 8);
+      masterAcrossDates(tracker, 'practice', 8);
       expect(tracker.getStatus('practice').status).toBe(MASTERY_STATUS.MASTERED);
     });
   });
@@ -177,6 +181,7 @@ describe('ProgressTracker', () => {
 
       tracker.updateStatus('accident', 'PIT_BOARD', true, 10);
       tracker.updateStatus('accident', 'RADIO_MSG', true, 10);
+      masterAcrossDates(tracker, 'accident', 10);
 
       expect(handler).toHaveBeenCalledWith({ word: 'accident' });
     });
@@ -188,6 +193,7 @@ describe('ProgressTracker', () => {
       // First master the word
       tracker.updateStatus('celebrate', 'PIT_BOARD', true, 11);
       tracker.updateStatus('celebrate', 'RADIO_MSG', true, 11);
+      masterAcrossDates(tracker, 'celebrate', 11);
 
       // Wrong answer triggers forgotten status
       tracker.updateStatus('celebrate', 'PIT_BOARD', false, 11);
@@ -205,6 +211,7 @@ describe('ProgressTracker', () => {
       // mastered words
       tracker.updateStatus('mastered1', 'PIT_BOARD', true, 1);
       tracker.updateStatus('mastered1', 'RADIO_MSG', true, 1);
+      masterAcrossDates(tracker, 'mastered1', 1);
 
       // wrong words (needs review)
       tracker.updateStatus('wrong1', 'PIT_BOARD', false, 2);

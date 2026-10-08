@@ -5,6 +5,7 @@
 import { BaseView } from './base-view.js';
 import { Events } from '../core/event-bus.js';
 import { LEARNING } from '../config/learning-config.js';
+import { ASSESSMENT_VERSION, isQuestionSafe } from '../learning/assessment-policy.js';
 
 export class QuizView extends BaseView {
   #game;
@@ -132,9 +133,14 @@ export class QuizView extends BaseView {
     }
 
     // Mode label and hint
+    const helpButton = this.$('#quiz-dont-know-btn');
+    if (helpButton) helpButton.disabled = false;
     const modeLabel = q.modeLabel || q.mode || 'QUIZ';
     const quizNum = this.#learningController?.getSessionStatus()?.currentQuiz || 1;
     this.setText('#quiz-progress', `Quiz ${quizNum} | Q${current + 1}/${total} | ${modeLabel} | Correct: ${correctCount}`);
+    if (q.assisted || q.assessmentVersion !== ASSESSMENT_VERSION || !isQuestionSafe(q)) {
+      this.setText('#quiz-progress', `Quiz ${quizNum} | Q${current + 1}/${total} | ${modeLabel} | Learning practice — not an independent test`);
+    }
 
     const isChallenge = this.#quiz.quizMode === 'challenge';
     const nitroHint = isChallenge
@@ -171,10 +177,13 @@ export class QuizView extends BaseView {
   }
 
   #showLearningPanel(q) {
+    this.#learningController?.markCurrentQuestionAssisted?.();
+    q.assisted = true;
+    this.setText('#quiz-nitro-hint', 'Learning with help — this answer will not certify mastery');
     this.setText('#quiz-learn-word', q.correctWord || q.word || '');
     this.setText('#quiz-learn-phonetic', q.phonetic || '');
     this.setText('#quiz-learn-meaning', `${q.correctMeaning || q.meaning || ''}  |  ${q.meaningEn || ''}`);
-    this.setText('#quiz-learn-sentence', q.sentence || '');
+    this.setText('#quiz-learn-sentence', q.sentenceOriginal || q.sentence || '');
     this.setText('#quiz-learn-sentence-cn', q.sentence_cn || '');
 
     // Add class to shift layout
@@ -210,16 +219,13 @@ export class QuizView extends BaseView {
       case 'RADIO_MSG':
         this.setText('#quiz-word', q.prompt || '');
         this.setText('#quiz-meaning-en', q.promptSub || '');
-        if (showSentence && q.sentence && q.sentence !== q.prompt) {
-          this.setText('#quiz-sentence', `"${q.sentence}"`);
-          if (sentenceEl) sentenceEl.style.fontStyle = 'italic';
-        }
+        // The original example contains the answer; only show it in the learning panel.
         break;
 
       case 'STRATEGY':
         this.setText('#quiz-word', q.prompt || '');
         this.setText('#quiz-meaning-en', q.promptSub || q.promptCn || '');
-        if (showSentence && q.sentence) {
+        if (showSentence && q.sentence && !q.sentence.includes(q.correctWord)) {
           this.setText('#quiz-sentence', `"${q.sentence}"`);
           if (sentenceEl) sentenceEl.style.fontStyle = 'italic';
         }
@@ -291,6 +297,8 @@ export class QuizView extends BaseView {
 
     // Set processing flag
     this.#isProcessingAnswer = true;
+    const helpButton = this.$('#quiz-dont-know-btn');
+    if (helpButton) helpButton.disabled = true;
 
     // Highlight buttons
     const buttons = this.$$('.quiz-option');
@@ -345,15 +353,17 @@ export class QuizView extends BaseView {
 
     // Normalize result fields (LearningController uses fuelCoins, quiz uses fuelCoinsEarned)
     const fuelCoins = results.fuelCoins ?? results.fuelCoinsEarned ?? 0;
-    const gearCoins = results.gearCoins ?? results.gearCoinsEarned ?? 0;
+    const gearCoins = (results.gearCoins ?? results.gearCoinsEarned ?? 0) + (results.accuracyBonus?.gear || 0);
 
     // Display results
-    this.setText('#quiz-result-accuracy', `Accuracy: ${results.accuracy}% (${results.correctCount}/${results.totalQuestions})`);
+    this.setText('#quiz-result-accuracy', `Accuracy: ${results.accuracy}% (${results.correctCount}/${results.totalQuestions})${results.independentCorrectCount !== undefined ? ` | Independent passes: ${results.independentCorrectCount}/${results.totalQuestions}` : ''}`);
     this.setText('#quiz-result-fuel', `Fuel Coins: +${fuelCoins}`);
     this.setText('#quiz-result-gear', `Gear Coins: +${gearCoins}`);
 
     if (results.wrongCount > 0) {
       this.setText('#quiz-result-wrong', `Wrong: ${results.wrongCount} words need review`);
+    } else if (results.independentCorrectCount !== undefined && results.independentCorrectCount < results.totalQuestions) {
+      this.setText('#quiz-result-wrong', 'Practice complete. Assisted answers still need independent verification.');
     } else {
       this.setText('#quiz-result-wrong', 'Perfect! All correct!');
     }
@@ -402,6 +412,19 @@ export class QuizView extends BaseView {
 
   #setupEventListeners() {
     // Quiz type selector
+    this.onClick('#quiz-type-auto', () => {
+      this.#learningController?.setModePreference('auto');
+      this.#syncModeButtons();
+      this.#startNewQuiz();
+    });
+    this.onClick('#quiz-type-verify', () => {
+      if (!this.#learningController) return;
+      this.#learningController.setModePreference('auto');
+      this.#syncModeButtons();
+      const questions = this.#learningController.startNewQuiz({ verificationOnly: true, useChinese: true });
+      if (questions?.length) this.showQuestion();
+      else alert(questions === null ? 'Daily quiz quota reached.' : 'No eligible verification questions are due now. Try again on another day.');
+    });
     this.onClick('#quiz-type-simple', () => {
       this.#quiz.quizMode = 'basic';
       this.#quiz.maxLevel = 3;
@@ -445,6 +468,7 @@ export class QuizView extends BaseView {
 
     // "I don't know" button
     this.onClick('#quiz-dont-know-btn', () => {
+      if (this.#isProcessingAnswer) return;
       const q = this.#learningController
         ? this.#learningController.getCurrentQuestion()
         : this.#quiz.getCurrentQuestion();
@@ -468,13 +492,12 @@ export class QuizView extends BaseView {
       const layout = this.$('#quiz-layout');
       if (layout) layout.classList.remove('has-learn-panel');
 
-      // Mark as wrong answer (submit wrong index)
+      // Complete assisted practice without inventing a wrong answer.
       const q = this.#learningController
         ? this.#learningController.getCurrentQuestion()
         : this.#quiz.getCurrentQuestion();
       if (q && !q.answered) {
-        const wrongIndex = (q.correctIndex + 1) % 4;
-        this.#handleAnswer(wrongIndex, q);
+        this.#handleAnswer(q.correctIndex, q);
       }
     });
 

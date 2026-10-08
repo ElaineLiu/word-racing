@@ -9,6 +9,7 @@
 
 import { QuizModes, getMode, getReviewMode, getBaseModes } from '../quiz/mode-registry.js';
 import { calculateQuestionReward } from '../config/reward-policy.js';
+import { ASSESSMENT_VERSION, blankSentence, isQuestionSafe } from '../learning/assessment-policy.js';
 
 export class DistractorEngine {
     /**
@@ -171,7 +172,7 @@ export class QuestionFactory {
     static createQuestion(word, mode, level, eligibleWords, useChinese = false) {
         // Handbook entries without a reliable example remain valid meaning
         // questions, but must never produce a fill-in-the-blank giveaway.
-        if (mode === 'RADIO_MSG' && !word.sentence) {
+        if (mode === 'RADIO_MSG' && !blankSentence(word)) {
             mode = 'PIT_BOARD';
         }
         const modeDef = getMode(mode);
@@ -211,10 +212,16 @@ export class QuestionFactory {
             answered: false,
             correct: false
         };
+        question.assessmentVersion = ASSESSMENT_VERSION;
 
         // Mode-specific fields (using promptType from registry)
         QuestionFactory._buildModeSpecificFields(question, word, modeDef, level, useChinese);
-
+        if (word.question_eligibility?.sentence === false || word.source2025?.needs_review) {
+            question.sentence = '';
+            question.sentenceOriginal = '';
+            question.sentence_cn = '';
+        }
+        if (!isQuestionSafe(question)) return null;
         return question;
     }
 
@@ -253,7 +260,8 @@ export class QuestionFactory {
                     }
                 }
                 // Always blank the answer word in sentence for STRATEGY mode
-                question.sentence = QuestionFactory._blankSentence(word);
+                question.sentence = blankSentence(word);
+                question.sentenceOriginal = word.sentence || '';
                 question.sentenceBlank = true;
                 break;
 
@@ -280,10 +288,7 @@ export class QuestionFactory {
      */
     static createReviewQuestion(wrongWord, allWords, level, eligibleWords, useChinese = false) {
         // Find the full word object
-        const word = allWords.find(w =>
-            w.word === wrongWord.word ||
-            w.id === wrongWord.wordId
-        );
+        const word = allWords.find(w => wrongWord.word ? w.word === wrongWord.word : w.id === wrongWord.wordId);
         if (!word) return null;
 
         // Pick a mode using the registry
@@ -292,10 +297,10 @@ export class QuestionFactory {
         const question = QuestionFactory.createQuestion(word, chosenMode, level, eligibleWords, useChinese);
         if (question) {
             // Keep original mode for rendering, mark as review for rewards
-            question.originalMode = chosenMode;  // Preserve for rendering
+            question.originalMode = question.mode;  // Preserve the actual fallback ability.
             question.isReview = true;
             question.modeLabel = '[Review] ' + question.modeLabel;
-            question.reward = calculateQuestionReward({ mode: 'LAP_REVIEW', originalMode: chosenMode });
+            question.reward = calculateQuestionReward({ mode: 'LAP_REVIEW', originalMode: question.originalMode });
         }
         return question;
     }
@@ -326,40 +331,7 @@ export class QuestionFactory {
      * Handles both exact matches and variant forms (destroyed vs destroy).
      */
     static _blankSentence(word) {
-        const sentence = word.sentence || '';
-        if (!sentence) return `______ (${word.word})`;
-
-        const target = word.word;
-
-        // Try exact match first (case-insensitive, word boundary)
-        const exactRegex = new RegExp('\\b(' + target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')\\b', 'i');
-        const exactMatch = sentence.match(exactRegex);
-        if (exactMatch) {
-            return sentence.replace(exactRegex, '______');
-        }
-
-        // Try variant forms: word + common suffixes
-        const suffixes = ['s', 'es', 'ed', 'ing', 'er', 'est', 'tion', 'ment', 'ly', 'ful', 'ness', 'ous', 'ive', 'al', 'ity'];
-        for (const suffix of suffixes) {
-            const variant = target + suffix;
-            const variantRegex = new RegExp('\\b(' + variant.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')\\b', 'i');
-            if (variantRegex.test(sentence)) {
-                return sentence.replace(variantRegex, '______');
-            }
-        }
-
-        // Try stem match (first 4+ chars)
-        if (target.length >= 4) {
-            const stem = target.slice(0, Math.min(target.length - 1, 5));
-            const stemRegex = new RegExp('\\b(' + stem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\w*)\\b', 'i');
-            const stemMatch = sentence.match(stemRegex);
-            if (stemMatch) {
-                return sentence.replace(stemRegex, '______');
-            }
-        }
-
-        // Fallback: show the word in brackets after blank
-        return sentence + '  ______ (' + target + ')';
+        return blankSentence(word);
     }
 
     /**
