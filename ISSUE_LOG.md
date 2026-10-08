@@ -13,17 +13,99 @@
 
 ## 待分析问题
 
-*（新发现的问题暂时放在这里）*
+### #022 - 2025词库例句存在OCR缺陷，复核及素材可用标记未接入出题
+**发现时间**: 2026-10-08
+**问题类型**: 数据质量 / 用例实现遗漏
+**严重程度**: 高（影响学习内容正确性）
+
+**已确认现象**:
+- 当前1,639条运行时词条中152条标记 `source2025.needs_review=true`。
+- `actor` 标记需复核，但真实浏览器默认首套题仍抽到该词；QuestionFactory也可直接为其生成题目。
+- `ability.sentence` 含 `takingaction`、`believingyou`、`toreach`，英文句尾 `goals.` 落入 `sentence_cn`。
+- `able.sentence` 为 `Lookafterpets andbe abletobringthem towork!`，存在明显粘连。
+- learning/js/quiz运行时没有读取 `needs_review`、`question_eligibility`；缺例句保护只检查非空。
+- 当前严格校验与816个测试均通过，说明现有检查没有覆盖这些质量问题。
+
+**本轮缓解**: 152条标记需复核的词及ability/able的句子素材禁用；新增134处sentence=false（其余已禁用），保留原文。题目工厂读取标记，填空回退简单题，复杂复核不拿简单回退充数；词义题与学习面板也不展示这些句子。未经源手册核对不猜写原文。
+
+**剩余人工审校**:
+1. 全量审计OCR例句、英中字段分界和目标词匹配，确认影响范围。
+2. 明确按整词或按素材门禁的规则，将 `question_eligibility` 与复核状态接入默认选题。
+3. 追溯文本规范化/运行时构建环节，不在未经源材料核对时批量猜测修正文案。
+
+**建议预防措施**:
+- 数据校验除数量和字段外，增加真实题目生成、目标词可挖空、题干无泄漏和例句质量检查。
+- 集成测试用真实词库，验证标记确实影响选题，不能只验证元数据字段存在。
+- 结构校验通过不等于内容人工审校完成。
+
+**相关文件**: `data/words-shanghai-zhongkao.json`、`js/question-factory.js`、`learning/adaptive-selector.js`、`scripts/validate-wordsets.js`、`docs/use-case-vocabulary-2025.md`。
 
 ---
 
 ## 已分析问题
 
-*（原因已找到，待解决方案）*
-
----
-
 ## 已解决问题
+
+### #023 - 导入旧进度的wordId与2025词库不一致
+**发现时间**: 2026-10-08
+**问题类型**: 数据迁移 / 复习选词
+**严重程度**: 高
+
+**证据**: 导入旧词库备份时，部分wordId不能对应当前同名词。例如alarm的旧ID39当前指向accident；adult的旧ID18在当前词库中找不到。
+
+**当前实现风险**: AdaptiveSelector.#findWordData只要有wordId便按ID返回，不验证word是否一致，也不回退词形查找。旧ID不存在会跳过复习/检查，ID指向别的词会出错词；本轮确认映射不一致和实现风险，尚未逐条跑完整复习流程衡量影响。
+
+**修复与验证**: 按精确词形重绑定ID，缺失词条保留历史并排除选题；运行时与离线脚本共用幂等迁移。旧通过保存legacyEvidence并待复核。离线核验原键、日期、错误次数、资源、会话与成就保留。真实对象回归覆盖旧ID指错词、缺词及重复迁移。
+
+**预防措施**: 已存word存在时绝不通过旧ID选择另一词；汇总掌握数必须由逐词独立证据计算。
+
+### #025 - 答题结算页面遗漏正确率装备币奖励
+**发现时间**: 2026-10-08
+**问题类型**: UI结果展示 / 数据契约
+**严重程度**: 中
+
+**复现与证据**:
+独立浏览器测试玩家完成10道简单题且全对。结果页显示 `Fuel Coins: +30`、`Gear Coins: +0`；真实GameState为30燃油币、8装备币、1套题。8装备币由正确率奖励3和首次满分成就5组成，实际到账正常。
+
+**原因**:
+QuizSessionManager的结果 `gearCoins` 只包含逐题奖励；LearningController另返回 `accuracyBonus` 并直接发放。QuizView显示 `results.gearCoins`，未合入正确率奖励。成就奖励是独立通知，应与套题收益明确区分。
+
+**修复**: 结果页装备币合入accuracyBonus.gear，显示收益而不重复发放。正确率奖励和满分成就只使用独立正确计数；辅助完成另行标识，避免学习全对显示独立满分。
+
+**预防措施**:
+结果页必须验证“显示收益”和“实际到账”一致；派生展示数据不得重复触发奖励。
+
+**相关文件**: `learning/quiz-session.js`、`learning/learning-controller.js`、`views/quiz-view.js`。
+
+
+### #026 - 提示及旧题通过被当成独立掌握证据
+**发现时间**: 2026-10-08
+**问题类型**: 评估有效性 / 数据迁移
+**严重程度**: 高
+
+**修复**: 整卡答案泄漏检查、例句素材门禁、assisted在展示提示前持久化；同词当天看过帮助后的答题仍算辅助完成。Basic和Advanced各在两个不同本地日期独立通过才能稳定掌握；答错清除对应能力的跨日证据。旧历史通过保留为待复核，旧会话未经新版审核不用于认证。新增Auto及Verify Learned Words入口；空复核保留未完成套题。
+
+**预防措施**: 奖励、满分及掌握基于独立证据；使用真实Controller、Session、Tracker、View验证全套辅助练习，并清理localStorage。题目转换后的实际能力决定奖励与认证。
+
+**相关文件**: design/assessment-validity.md、learning/assessment-policy.js、tests/assessment-validity.test.js、tests/mastery-persistence.test.js。
+
+
+### #024 - Basic模式填空题的辅助例句直接展示答案
+**发现时间**: 2026-10-08
+**问题类型**: UI渲染 / 答案泄露
+**严重程度**: 高
+
+**现象**: 题干为 `He scored and the crowd went ______!`，辅助例句却为 `He scored and the crowd went crazy!`，无需思考即可选择crazy。复习包装的填空题也受影响。
+
+**原因**: QuizView在Basic模式默认显示辅助例句，RADIO_MSG把原始完整句子和挖空题干同时展示。词义→词的STRATEGY题目工厂已对例句挖空，本轮保留该行为。
+
+**修复**: RADIO_MSG仅显示挖空题干与释义提示，不显示原始辅助例句。完整例句保留在主动请求学习的面板中。修复在渲染端生效，因此也保护恢复的旧会话。
+
+**验证**: 新增7个真实QuestionFactory + VocabularyQuiz + QuizView回归用例，覆盖Basic/Challenge、复习、词义题兼容、残留例句清理和学习面板完整句。全量61文件、823测试通过。
+
+**预防措施**: 对每种题型分别检查题干、提示、例句和选项的组合是否泄露答案；复习与存档恢复必须沿同一规则渲染。
+
+**相关文件**: `views/quiz-view.js`、`tests/quiz-answer-leak.test.js`。
 
 ### 上海2D螺旋弯路面黏连与可抄近道
 **发现时间**: 2026-09-15
@@ -883,10 +965,10 @@ OCR 规范化阶段只压缩了已有空白，没有恢复被 OCR 吞掉的词�
 
 ## 统计数据
 
-**总问题数**: 21
-**待分析**: 0
+**总问题数**: 26
+**待分析**: 1
 **已分析**: 0
-**已解决**: 21
+**已解决**: 25
 
 **问题类型分布**:
 - 测试设计缺陷: 3 (43%)

@@ -12,6 +12,8 @@
 import { Events } from '../core/event-bus.js';
 import { MASTERY_STATUS, LEARNING, DEFAULT_QUESTION_MODES } from '../config/learning-config.js';
 import { QuestionFactory } from '../js/question-factory.js';
+import { getMasteryGroup } from '../config/reward-policy.js';
+import { localDate } from './assessment-policy.js';
 
 /**
  * AdaptiveSelector - 自适应选题器
@@ -54,6 +56,7 @@ export class AdaptiveSelector {
     const useChinese = options.useChinese !== false;
     const preferredMode = options.preferredMode || 'PIT_BOARD';
     const modePreference = options.modePreference || LEARNING.MODE_PREFERENCE.AUTO;
+    const verificationOnly = options.verificationOnly === true;
 
     const questions = [];
     const usedWordIds = new Set();
@@ -67,7 +70,7 @@ export class AdaptiveSelector {
 
     // 1. 错词复习（最多 MAX_REVIEW_PER_QUIZ 题）
     const reviewQuestions = this.#selectReviewWords(
-      Math.min(LEARNING.MAX_REVIEW_PER_QUIZ, count),
+      verificationOnly ? 0 : Math.min(LEARNING.MAX_REVIEW_PER_QUIZ, count),
       eligibleWords,
       usedWordIds,
       useChinese,
@@ -78,7 +81,7 @@ export class AdaptiveSelector {
     // 2. 检查词（单题型通过，需另一题型验证）
     const remainingAfterReview = count - questions.length;
     const checkQuestions = this.#selectCheckWords(
-      Math.min(LEARNING.MAX_CHECK_WORDS_PER_QUIZ * 2, remainingAfterReview),
+      verificationOnly ? remainingAfterReview : Math.min(LEARNING.MAX_CHECK_WORDS_PER_QUIZ * 2, remainingAfterReview),
       eligibleWords,
       usedWordIds,
       useChinese,
@@ -87,7 +90,7 @@ export class AdaptiveSelector {
     questions.push(...checkQuestions);
 
     // 3. 新词填充到指定数量
-    const remainingCount = count - questions.length;
+    const remainingCount = verificationOnly ? 0 : count - questions.length;
     const newQuestions = this.#selectNewWords(
       remainingCount,
       eligibleWords,
@@ -133,7 +136,7 @@ export class AdaptiveSelector {
       return bErrors - aErrors;
     });
 
-    for (let i = 0; i < Math.min(maxCount, sorted.length); i++) {
+    for (let i = 0; i < sorted.length && questions.length < maxCount; i++) {
       const progress = sorted[i];
       const wordData = this.#findWordData(progress.word, progress.wordId);
 
@@ -191,23 +194,20 @@ export class AdaptiveSelector {
     const questions = [];
     const { needSimpleCheck, needComplexCheck } = this.#progressTracker.getCheckWords();
 
-    // 如果用户明确选择了简单题或复杂题，跳过检查词（强制按用户选择出题）
-    if (modePreference === LEARNING.MODE_PREFERENCE.SIMPLE ||
-        modePreference === LEARNING.MODE_PREFERENCE.COMPLEX) {
-      return questions;
-    }
-
-    // AUTO 模式：合并并打乱
+    // Respect the preferred ability while still verifying previously learned words.
     const allCheckWords = [
       ...needSimpleCheck.map(w => ({ ...w, needMode: 'simple' })),
       ...needComplexCheck.map(w => ({ ...w, needMode: 'complex' })),
-    ].sort(() => Math.random() - 0.5);
+    ].filter(p => modePreference === 'auto' || p.needMode === modePreference)
+    .sort((a, b) => Number(!!b.legacyEvidence?.complexCorrect) - Number(!!a.legacyEvidence?.complexCorrect) ||
+      Number(!!b.pendingVerification) - Number(!!a.pendingVerification) ||
+      String(a.lastSeenDate || '').localeCompare(String(b.lastSeenDate || '')));
 
-    for (let i = 0; i < Math.min(maxCount, allCheckWords.length); i++) {
+    for (let i = 0; i < allCheckWords.length && questions.length < maxCount; i++) {
       const progress = allCheckWords[i];
       const wordData = this.#findWordData(progress.word, progress.wordId);
 
-      if (!wordData || usedWordIds.has(wordData.id)) continue;
+      if (!wordData || progress.available === false || usedWordIds.has(wordData.id)) continue;
 
       // 根据需要检查的题型选择
       const mode = progress.needMode === 'simple'
@@ -215,7 +215,7 @@ export class AdaptiveSelector {
         : this.#getRandomMode(DEFAULT_QUESTION_MODES.COMPLEX);
 
       const question = this.#createQuestion(wordData, mode, eligibleWords, useChinese, false);
-      if (question) {
+      if (question && getMasteryGroup(question.mode) === progress.needMode) {
         question.isCheck = true;
         questions.push(question);
         usedWordIds.add(wordData.id);
@@ -243,7 +243,7 @@ export class AdaptiveSelector {
     // 按难度排序，优先低难度
     const sorted = [...unlearnedWords].sort((a, b) => a.level - b.level);
 
-    for (let i = 0; i < Math.min(count, sorted.length); i++) {
+    for (let i = 0; i < sorted.length && questions.length < count; i++) {
       const wordData = sorted[i];
 
       // 根据偏好选择题型
@@ -281,9 +281,6 @@ export class AdaptiveSelector {
    * 查找单词数据
    */
   #findWordData(wordText, wordId) {
-    if (wordId) {
-      return this.#wordSet.find(w => w.id === wordId);
-    }
     return this.#wordSet.find(w => w.word === wordText);
   }
 
@@ -300,9 +297,10 @@ export class AdaptiveSelector {
         useChinese
       );
 
+      if (question && this.#progressTracker.getStatus(wordData.word)?.lastAssistedDate === localDate()) question.assisted = true;
       if (question && isReview) {
         question.isReview = true;
-        question.originalMode = mode;
+        question.originalMode = question.mode;
       }
 
       return question;

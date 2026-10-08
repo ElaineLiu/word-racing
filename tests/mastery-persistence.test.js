@@ -1,9 +1,12 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { EventBus } from '../core/event-bus.js';
 import { LearningController } from '../learning/learning-controller.js';
 import { ProgressTracker } from '../learning/progress-tracker.js';
 import { QuizView } from '../views/quiz-view.js';
+import { masterAcrossDates } from './helpers/mastery.js';
+
+afterEach(() => vi.useRealTimers());
 
 const words = Array.from({ length: 30 }, (_, index) => ({
   id: index + 1,
@@ -48,6 +51,33 @@ describe('mastery integration and persistence', () => {
     setupDom();
   });
 
+  it('completes assisted practice through real UI without rewards, mastery or fabricated errors', () => {
+    vi.useFakeTimers();
+    const bus = new EventBus();
+    const controller = new LearningController(bus, 'child').init(words, { skipUI: true });
+    const game = { quiz: { quizMode: 'basic', maxLevel: 3 }, setLapCount() {}, onQuizComplete() {}, getMaxAffordableLaps: () => 0, getFuelCostForLaps: () => 20, selectedLaps: 1 };
+    const view = new QuizView(bus, game, controller);
+    view.mount();
+    const count = controller.getCurrentSession().questions.length;
+    for (let i = 0; i < count; i++) {
+      document.querySelector('#quiz-dont-know-btn').click();
+      expect(controller.getCurrentQuestion().assisted).toBe(true);
+      document.querySelector('#quiz-learn-continue-btn').click();
+      expect(document.querySelector('#quiz-dont-know-btn').disabled).toBe(true);
+      vi.advanceTimersByTime(900);
+    }
+    expect(controller.isQuizComplete()).toBe(true);
+    expect(document.querySelector('#quiz-result-fuel').textContent).toContain('0');
+    expect(document.querySelector('#quiz-result-gear').textContent).toContain('0');
+    expect(controller.getWordStats().mastered).toBe(0);
+    for (const p of Object.values(controller.progressTracker.getAllProgress())) {
+      expect(p.assistedCompletions).toBe(1);
+      expect(p.simpleWrongCount + p.complexWrongCount).toBe(0);
+      expect(p.independentDates).toEqual({ simple: [], complex: [] });
+    }
+    view.unmount();
+  });
+
   it('keeps auto mode on initial QuizView mount and masters words across simple/complex checks', () => {
     const eventBus = new EventBus();
     const controller = new LearningController(eventBus, 'child');
@@ -65,6 +95,17 @@ describe('mastery integration and persistence', () => {
     expect(secondModes).not.toContain('QUALIFYING');
     answerCurrentQuiz(controller);
 
+    expect(controller.getWordStats().mastered).toBe(0);
+    expect(controller.getWordStats().independentPassed).toBeGreaterThan(0);
+    vi.useFakeTimers();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    vi.setSystemTime(tomorrow);
+    for (let i = 0; i < 8; i++) {
+      controller.startNewQuiz({ verificationOnly: true });
+      if (!controller.getCurrentQuestion()) break;
+      answerCurrentQuiz(controller);
+    }
     expect(controller.getWordStats().mastered).toBeGreaterThan(0);
     expect(controller.gameState.get('learning.totalWordsMastered'))
       .toBe(controller.getWordStats().mastered);
@@ -73,8 +114,7 @@ describe('mastery integration and persistence', () => {
   it('restores mastered words and repairs a stale GameState summary after refresh', () => {
     const eventBus = new EventBus();
     const tracker = new ProgressTracker(eventBus, 'shanghai-zhongkao', 'child');
-    tracker.updateStatus('ability', 'PIT_BOARD', true, 1);
-    tracker.updateStatus('ability', 'RADIO_MSG', true, 1);
+    masterAcrossDates(tracker, 'word1', 1);
     tracker.save();
     localStorage.setItem('wr_game_state_child', JSON.stringify({
       version: 4,
@@ -84,7 +124,7 @@ describe('mastery integration and persistence', () => {
     const restored = new LearningController(new EventBus(), 'child');
     restored.init(words, { skipUI: true });
 
-    expect(restored.progressTracker.getStatus('ability').status).toBe('mastered');
+    expect(restored.progressTracker.getStatus('word1').status).toBe('mastered');
     expect(restored.gameState.get('learning.totalWordsMastered')).toBe(1);
   });
 
@@ -95,7 +135,7 @@ describe('mastery integration and persistence', () => {
     tracker.save();
 
     const restored = new ProgressTracker(new EventBus(), 'shanghai-zhongkao', 'child');
-    expect(restored.getStatus('ability').status).toBe('mastered');
+    expect(restored.getStatus('ability').status).toBe('independent_passed');
   });
 
   it('treats QUALIFYING as complex mastery without putting it in the default distribution', () => {
@@ -103,7 +143,7 @@ describe('mastery integration and persistence', () => {
     tracker.updateStatus('ability', 'PIT_BOARD', true, 1);
     tracker.updateStatus('ability', 'QUALIFYING', true, 1);
 
-    expect(tracker.getStatus('ability').status).toBe('mastered');
+    expect(tracker.getStatus('ability').status).toBe('independent_passed');
   });
 
   it('does not issue question or accuracy rewards twice', () => {

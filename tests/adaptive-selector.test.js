@@ -8,6 +8,10 @@ import { AdaptiveSelector } from '../learning/adaptive-selector.js';
 import { EventBus, Events } from '../core/event-bus.js';
 import { ProgressTracker } from '../learning/progress-tracker.js';
 import { MASTERY_STATUS, LEARNING } from '../config/learning-config.js';
+import { masterAcrossDates } from './helpers/mastery.js';
+import { afterEach } from 'vitest';
+
+afterEach(() => vi.useRealTimers());
 
 // 测试用词库
 const createTestWordSet = (count = 50) => {
@@ -182,6 +186,7 @@ describe('AdaptiveSelector', () => {
       // 已掌握的词不应该被选中
       progressTracker.updateStatus('word1', 'PIT_BOARD', true, 1);
       progressTracker.updateStatus('word1', 'RADIO_MSG', true, 1);
+      masterAcrossDates(progressTracker, 'word1', 1);
 
       const mastered = progressTracker.getMasteredWords();
       expect(mastered.length).toBe(1);
@@ -327,6 +332,7 @@ describe('AdaptiveSelector', () => {
       for (let i = 1; i <= 10; i++) {
         progressTracker.updateStatus(`word${i}`, 'PIT_BOARD', true, i);
         progressTracker.updateStatus(`word${i}`, 'RADIO_MSG', true, i);
+        masterAcrossDates(progressTracker, `word${i}`, i);
       }
 
       const questions = selector.buildQuiz({ count: 10 });
@@ -475,14 +481,16 @@ describe('AdaptiveSelector Integration', () => {
     });
 
     it('should track learning progress over multiple quizzes', () => {
-      // 模拟5套题的学习过程
-      for (let quizNum = 0; quizNum < 5; quizNum++) {
+      // Multiple days are required to accumulate both ability checks twice.
+      for (let quizNum = 0; quizNum < 12; quizNum++) {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date(2026, 9, 8 + quizNum, 12));
         const questions = selector.buildQuiz({ count: 10 });
 
         questions.forEach(q => {
           const correctWord = q.correctWord || q.word;
-          // 80%正确率
-          const correct = Math.random() < 0.8;
+          // Deterministic correct answers isolate progression from random failure.
+          const correct = true;
           progressTracker.updateStatus(correctWord, q.mode, correct, q.wordId);
         });
       }
@@ -503,14 +511,15 @@ describe('AdaptiveSelector Integration', () => {
 
       // 模拟30套题（相当于10天的学习）
       for (let quizNum = 0; quizNum < 30; quizNum++) {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date(2026, 9, 8 + Math.floor(quizNum / 3), 12));
         const questions = selector.buildQuiz({ count: 10 });
 
         const results = questions.map(q => {
           const correctWord = q.correctWord || q.word;
           // 正确率随学习进度提高
           const progress = progressTracker.getStatus(correctWord);
-          const baseAccuracy = progress ? 0.7 : 0.5;
-          const correct = Math.random() < baseAccuracy;
+          const correct = quizNum % 4 !== 0;
 
           progressTracker.updateStatus(correctWord, q.mode, correct, q.wordId);
 

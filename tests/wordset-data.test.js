@@ -71,7 +71,11 @@ describe('runtime wordset data contract', () => {
       expect(word.source2025.page).toBeGreaterThanOrEqual(7);
       expect(word.source2025.page).toBeLessThanOrEqual(284);
       expect(word.question_eligibility.meaning).toBe(true);
-      expect(word.question_eligibility.sentence).toBe(Boolean(word.sentence));
+      expect(typeof word.question_eligibility.sentence).toBe('boolean');
+      if (word.question_eligibility.sentence) expect(Boolean(word.sentence)).toBe(true);
+      if (word.source2025.needs_review || ['ability', 'able'].includes(word.word)) {
+        expect(word.question_eligibility.sentence).toBe(false);
+      }
     }
   });
 

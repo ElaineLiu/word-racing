@@ -10,7 +10,9 @@ const STATUS_LABELS = {
   simple_passed: 'Basic Passed',
   complex_passed: 'Advanced Passed',
   mastered: 'Mastered',
-  forgotten: 'Needs Review'
+  forgotten: 'Needs Review',
+  independent_passed: 'Independently Passed',
+  pending_verification: 'Pending Verification'
 };
 
 export class ReportView extends BaseView {
@@ -47,7 +49,7 @@ export class ReportView extends BaseView {
       <div class="stat-row"><span>Quizzes Completed</span><strong>${stats.totalQuizzes || 0}</strong></div>
       <div class="stat-row"><span>Total Questions</span><strong>${stats.totalQuestions || 0}</strong></div>
       <div class="stat-row"><span>Correct Answers</span><strong>${stats.totalCorrect || 0}</strong></div>
-      <div class="stat-row"><span>Accuracy</span><strong>${accuracy}%</strong></div>
+      <div class="stat-row"><span>Practice Accuracy (includes historical answers)</span><strong>${accuracy}%</strong></div>
     `;
   }
 
@@ -79,8 +81,12 @@ export class ReportView extends BaseView {
 
     container.innerHTML = `
       <div class="stat-row"><span>Words Attempted</span><strong>${stats.total || 0}</strong></div>
-      <div class="stat-row"><span>✅ Mastered</span><strong class="text-success">${stats.mastered || 0} <small>(${masteredPercent}%)</small></strong></div>
+      <div class="stat-row"><span>✅ Stable Mastery</span><strong class="text-success">${stats.mastered || 0} <small>(${masteredPercent}%)</small></strong></div>
       <div class="stat-row"><span>📖 Learning</span><strong class="text-warning">${stats.learning || 0} <small>(${learningPercent}%)</small></strong></div>
+      <div class="stat-row"><span>Both Abilities Independently Passed</span><strong>${stats.independentPassed || 0}</strong></div>
+      <div class="stat-row"><span>Historical Passes Awaiting Verification</span><strong>${stats.pendingVerification || 0}</strong></div>
+      <div class="stat-row"><span>Words Completed with Help</span><strong>${stats.assisted || 0}</strong></div>
+      <div class="stat-row"><span>Archived Words (not in current wordset)</span><strong>${stats.archived || 0}</strong></div>
     `;
   }
 
@@ -144,9 +150,9 @@ export class ReportView extends BaseView {
           ${words.map(w => `
             <tr>
               <td><strong>${w.word}</strong></td>
-              <td class="status-${w.status}">${STATUS_LABELS[w.status] || w.status}</td>
-              <td>${w.simpleCorrect ? '✓' : '✗'} (${w.simpleWrongCount} misses)</td>
-              <td>${w.complexCorrect ? '✓' : '✗'} (${w.complexWrongCount} misses)</td>
+              <td class="status-${w.status}">${w.available === false ? 'Archived' : (STATUS_LABELS[w.status] || w.status)}</td>
+              <td>${w.simpleCorrect ? '✓' : '✗'} (${w.independentDates?.simple.length || 0}/2 dates; ${w.simpleWrongCount} misses)</td>
+              <td>${w.complexCorrect ? '✓' : '✗'} (${w.independentDates?.complex.length || 0}/2 dates; ${w.complexWrongCount} misses)</td>
               <td>${w.firstSeenDate || '-'}</td>
             </tr>
           `).join('')}

@@ -38,7 +38,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -88,7 +88,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -582,7 +582,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -642,7 +642,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -1656,7 +1656,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -2059,7 +2059,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -2316,7 +2316,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -2744,7 +2744,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -3010,7 +3010,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -4104,7 +4104,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -4509,7 +4509,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -4885,7 +4885,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -5165,7 +5165,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -5480,7 +5480,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -5573,7 +5573,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -5599,7 +5599,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -6086,7 +6086,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -6279,7 +6279,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -6372,7 +6372,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -6555,7 +6555,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -6870,7 +6870,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -6899,7 +6899,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -8482,7 +8482,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -8607,7 +8607,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -9307,7 +9307,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -9917,7 +9917,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -10348,7 +10348,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -10726,7 +10726,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -10809,7 +10809,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -11911,7 +11911,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -12273,7 +12273,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -12610,7 +12610,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -12706,7 +12706,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -14869,7 +14869,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -15226,7 +15226,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -15318,7 +15318,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -16300,7 +16300,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -16586,7 +16586,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -16852,7 +16852,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -16912,7 +16912,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -17472,7 +17472,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -17861,7 +17861,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -18643,7 +18643,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -19070,7 +19070,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -19131,7 +19131,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -19162,7 +19162,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -19457,7 +19457,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -20188,7 +20188,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -20887,7 +20887,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -20953,7 +20953,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -21753,7 +21753,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -22831,7 +22831,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -24134,7 +24134,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -24232,7 +24232,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -24779,7 +24779,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -25011,7 +25011,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -25189,7 +25189,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -25367,7 +25367,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -26294,7 +26294,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -26547,7 +26547,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -27245,7 +27245,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -27271,7 +27271,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -27332,7 +27332,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -27358,7 +27358,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -27961,7 +27961,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -28317,7 +28317,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -29877,7 +29877,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -30192,7 +30192,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -30742,7 +30742,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -31087,7 +31087,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -32707,7 +32707,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -33575,7 +33575,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -34330,7 +34330,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -34761,7 +34761,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -34989,7 +34989,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -35273,7 +35273,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -35625,7 +35625,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -35920,7 +35920,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -36528,7 +36528,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -36589,7 +36589,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -36744,7 +36744,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -37056,7 +37056,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -37289,7 +37289,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -37925,7 +37925,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -38110,7 +38110,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -38559,7 +38559,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -38979,7 +38979,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -39233,7 +39233,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -39557,7 +39557,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -39602,7 +39602,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -39834,7 +39834,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -40682,7 +40682,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -40720,7 +40720,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -40900,7 +40900,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -41036,7 +41036,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -41103,7 +41103,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -41520,7 +41520,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -42086,7 +42086,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -42182,7 +42182,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -42423,7 +42423,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -43580,7 +43580,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -44008,7 +44008,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -44590,7 +44590,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -45551,7 +45551,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -45721,7 +45721,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -45784,7 +45784,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -45856,7 +45856,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -47412,7 +47412,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -47639,7 +47639,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -47811,7 +47811,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -48228,7 +48228,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -48417,7 +48417,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -48933,7 +48933,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -49263,7 +49263,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -49394,7 +49394,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -49425,7 +49425,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -50142,7 +50142,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -50383,7 +50383,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -50779,7 +50779,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -51217,7 +51217,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -52013,7 +52013,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -52367,7 +52367,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -52496,7 +52496,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -53469,7 +53469,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -53736,7 +53736,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -53959,7 +53959,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -54113,7 +54113,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -54845,7 +54845,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -54940,7 +54940,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -55353,7 +55353,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },
@@ -55945,7 +55945,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -56325,7 +56325,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -56644,7 +56644,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": false
       }
     },
@@ -57113,7 +57113,7 @@
       "question_eligibility": {
         "meaning": true,
         "english_definition": true,
-        "sentence": true,
+        "sentence": false,
         "collocation": true
       }
     },

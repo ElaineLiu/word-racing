@@ -26,6 +26,8 @@ export const MASTERY_STATUS = {
   COMPLEX_PASSED: 'complex_passed', // 复杂题通过
   MASTERED: 'mastered',             // 已掌握（简单题+复杂题都通过）
   FORGOTTEN: 'forgotten',           // 遗忘（已掌握后再次答错）
+  INDEPENDENT_PASSED: 'independent_passed',
+  PENDING_VERIFICATION: 'pending_verification',
 };
 
 // ============================================================================
