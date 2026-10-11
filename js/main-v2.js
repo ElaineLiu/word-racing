@@ -64,18 +64,9 @@ function setupSettingsDropdown(game, learningController, dataManager, eventBus) 
   // ── Reset buttons ──
 
   document.querySelector('#reset-daily-btn')?.addEventListener('click', () => {
-    if (confirm('Reset daily practice limit?\n\nYour word mastery progress will stay unchanged.')) {
-      try {
-        const state = JSON.parse(localStorage.getItem('wr_game_state') || '{}');
-        state.daily = { lastActiveDate: null, todayQuizzes: 0, todayFuelCoins: 0, todayGearCoins: 0 };
-        localStorage.setItem('wr_game_state', JSON.stringify(state));
-        localStorage.removeItem('wr_quiz_session');
-        learningController.dailyManager?.reset?.();
-        learningController.sessionManager?.clearSession?.();
-        alert('Daily practice limit reset. You can continue.');
-        closeDropdown();
-      } catch (e) { alert('Reset failed: ' + e.message); }
-    }
+    learningController.startLearning({ extra: true });
+    eventBus.emit(Events.VIEW_CHANGE, { view: 'quiz' });
+    closeDropdown();
   });
 
   document.querySelector('#reset-week-btn')?.addEventListener('click', () => {
@@ -195,7 +186,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   game.init().then(() => {
     // Initialize Learning Controller with loaded wordset
-    learningController.init(game.quiz.words || []);
+    learningController.init(game.quiz.words || [], { skipUI: true });
+    learningController.initializeLearningRoute();
 
     // Update wordset when quiz loads new words
     game.quiz.onWordsLoaded = (words) => {

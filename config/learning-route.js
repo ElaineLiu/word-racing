@@ -1,0 +1,7 @@
+export const WORD_STATE = Object.freeze({ PENDING: 'pending', LEARNING: 'learning', LEARNED: 'learned' });
+export const LEARNING_ROUTE = Object.freeze({
+  VERSION: 1, DAILY_WORDS: 45, ROUND_WORDS: 10, NEW_WORDS: 15, OLD_WORDS: 30,
+  EVIDENCE_DAYS: 7, INTERVALS: [1, 3, 7, 14, 30],
+  PRACTICE_FUEL: 2, INDEPENDENT_FUEL: 2, DAILY_COMPLETION_FUEL: 10,
+  GEAR_WORDS: 5, MAX_DAILY_GEAR: 2,
+});

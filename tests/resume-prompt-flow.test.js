@@ -151,6 +151,7 @@ function createViewManagerGame(words = []) {
     selectedLaps: 1,
     state: 'MENU',
     getLeaderboard: () => [],
+    getMaxAffordableLaps: () => 0,
     setLapCount(laps) { this.selectedLaps = laps; },
     startNewQuiz() { return []; },
     continueToRace() {},
@@ -222,7 +223,7 @@ describe('断点续答提示触发时机', () => {
     expect(document.querySelector('.resume-overlay')).toBeNull();
   });
 
-  it('真实导航链路刷新后 Continue Quiz 应停在下一道未答题', () => {
+  it('真实导航链路刷新后应恢复自适应学习的同一个步骤', () => {
     setupAppDom();
     const eventBus = new EventBus();
     const controller = new LearningController();
@@ -233,7 +234,7 @@ describe('断点续答提示触发时机', () => {
 
     document.querySelector('#home-start-btn').click();
     document.querySelector('.quiz-option').click();
-    const expectedQuestion = controller.getCurrentQuestion();
+    const expectedTask = controller.getLearningTask();
 
     setupAppDom();
     const reloadedEventBus = new EventBus();
@@ -244,13 +245,11 @@ describe('断点续答提示触发时机', () => {
     reloadedViewManager.switchTo('home');
 
     reloadedViewManager.switchTo('quiz');
-    expect(document.querySelector('.resume-overlay')).not.toBeNull();
-
-    document.querySelector('.resume-btn.continue').click();
+    expect(document.querySelector('.resume-overlay')).toBeNull();
 
     expect(reloadedViewManager.getCurrentPage()).toBe('quiz');
-    expect(reloadedController.getCurrentQuestionIndex()).toBe(1);
-    expect(reloadedController.getCurrentQuestion().wordId).toBe(expectedQuestion.wordId);
-    expect(document.querySelector('#quiz-progress').textContent).toContain('Q2/10');
+    expect(reloadedController.getLearningTask()).toEqual(expectedTask);
+    expect(document.querySelector('#quiz-word').textContent).toBe('先学习，稍后练习');
+    expect(document.querySelector('#quiz-learn-panel').style.display).toBe('block');
   });
 });

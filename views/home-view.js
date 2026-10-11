@@ -40,8 +40,8 @@ export class HomeView extends BaseView {
   updateStats() {
     this.setText('#home-nitro', this.#game.nitroCharges);
 
-    const fuelCoins = this.#learningController?.getTodayEarnings()?.fuel || this.#game.fuelCoins || 0;
-    const gearCoins = this.#learningController?.getTodayEarnings()?.gear || this.#game.gearCoins || 0;
+    const fuelCoins = this.#game.fuelCoins || 0;
+    const gearCoins = this.#game.gearCoins || 0;
     this.setText('#home-fuel-coins', fuelCoins);
     this.setText('#home-gear-coins', gearCoins);
 
@@ -54,6 +54,13 @@ export class HomeView extends BaseView {
     const state = this.#game.gameState.getAll();
     const daily = state.daily || {};
     const learning = state.learning || {};
+
+    if (state.adaptive) {
+      const progress = this.#learningController.getLearningProgress();
+      this.setText('#home-quizzes-today', `${progress.completedWords}/${progress.targetWords}`);
+      this.setText('#home-words-mastered', `${learning.totalWordsMastered || 0} words`);
+      return;
+    }
 
     const todayQuizzes = daily.todayQuizzes || 0;
     const maxQuizzes = LEARNING.DAILY_QUIZ_COUNT;
@@ -93,6 +100,7 @@ export class HomeView extends BaseView {
 
   #setupEventListeners() {
     this.onClick('#home-start-btn', () => {
+      this.#learningController?.startLearning?.();
       this.emit(Events.QUIZ_START, { source: 'home' });
     });
   }

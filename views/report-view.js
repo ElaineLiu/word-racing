@@ -29,11 +29,31 @@ export class ReportView extends BaseView {
   }
 
   render() {
+    if (this.#learningController?.getLearningWords) {
+      this.#renderAdaptive();
+      return;
+    }
     this.#renderTotalStats();
     this.#renderTodayStats();
     this.#renderMasteryStats();
     this.#renderWrongWords();
     this.#renderWordDetails();
+  }
+
+  #renderAdaptive() {
+    const c = this.#learningController;
+    const stats = c.getLearningWordStats(), daily = c.getLearningProgress();
+    const labels = { pending: '待确认', learning: '学习中', learned: '已学习' };
+    const escape = value => String(value ?? '-').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+    this.#renderTotalStats();
+    this.setHtml('#report-today-stats', `<div class="stat-row"><span>今日完成词汇</span><strong>${daily.completedWords}/${daily.targetWords}</strong></div><div class="stat-row"><span>独立通过</span><strong>${daily.independentWords}</strong></div><div class="stat-row"><span>燃油 / 装备</span><strong>${daily.fuelCoinsEarned} / ${daily.gearCoinsEarned}</strong></div>`);
+    this.setHtml('#report-mastery-stats', Object.entries({ '当前词库': stats.total, '待确认': stats.pending, '学习中': stats.learning, '已学习': stats.learned, '到期巩固': stats.due, '归档词汇': stats.archived }).map(([name, value]) => `<div class="stat-row"><span>${name}</span><strong>${value}</strong></div>`).join(''));
+    const words = Object.values(c.getLearningWords());
+    const rows = list => `<table class="report-table"><thead><tr><th>单词</th><th>状态</th><th>下次任务</th><th>词义 / 语境错误</th></tr></thead><tbody>${list.map(w => `<tr><td>${escape(w.word)}</td><td>${w.available ? labels[w.status] : '归档'}</td><td>${escape(w.nextDueDate)}</td><td>${w.meaningMisses || 0} / ${w.contextMisses || 0}</td></tr>`).join('')}</tbody></table>`;
+    const learning = words.filter(w => w.available && w.status === 'learning');
+    this.setHtml('#report-wrong-words', learning.length ? rows(learning.slice(0, 20)) : '<div class="empty-message">当前没有需要补学的词</div>');
+    const ordered = words.sort((a, b) => Number(!a.available) - Number(!b.available) || Number(a.status === 'learned') - Number(b.status === 'learned'));
+    this.setHtml('#report-word-details', rows(ordered.slice(0, 30)));
   }
 
   #renderTotalStats() {

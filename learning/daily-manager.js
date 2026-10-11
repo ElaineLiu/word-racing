@@ -11,6 +11,7 @@
 
 import { Events } from '../core/event-bus.js';
 import { LEARNING } from '../config/learning-config.js';
+import { localDate } from './assessment-policy.js';
 
 /**
  * DailyManager - 每日学习管理器
@@ -34,7 +35,7 @@ export class DailyManager {
     this.#userId = userId;
     this.#storageKey = `wr_daily_stats_${userId}`;
     this.#loadHistory();
-    this.#checkDayChange();
+    this.#checkDayChange(false);
   }
 
   // ==================== 日期工具 ====================
@@ -44,7 +45,7 @@ export class DailyManager {
    * @returns {string}
    */
   getToday() {
-    return new Date().toISOString().split('T')[0];
+    return localDate();
   }
 
   /**
@@ -61,7 +62,7 @@ export class DailyManager {
   /**
    * 检查日期变化并重置
    */
-  #checkDayChange() {
+  #checkDayChange(notify = true) {
     const today = this.getToday();
     const lastDate = this.#gameState.get('daily.lastActiveDate');
 
@@ -76,12 +77,12 @@ export class DailyManager {
 
       // 重置今日进度
       this.#todayStats = this.#createEmptyStats();
-      this.#gameState.set('daily.lastActiveDate', today);
-      this.#gameState.set('daily.todayQuizzes', 0);
-      this.#gameState.set('daily.todayFuelCoins', 0);
-      this.#gameState.set('daily.todayGearCoins', 0);
+      Object.assign(this.#gameState.get('daily'), {
+        lastActiveDate: today, todayQuizzes: 0, todayFuelCoins: 0, todayGearCoins: 0,
+      });
+      this.#gameState.commitLearningState(0, 0, notify);
 
-      this.#eventBus.emit(Events.DAILY_RESET, { date: today });
+      if (notify) this.#eventBus.emit(Events.DAILY_RESET, { date: today });
     } else {
       // 同一天，加载今日进度
       this.#todayStats = this.#loadTodayStats();
@@ -95,7 +96,7 @@ export class DailyManager {
   #getYesterday() {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    return yesterday.toISOString().split('T')[0];
+    return localDate(yesterday);
   }
 
   /**
@@ -121,6 +122,7 @@ export class DailyManager {
    * @returns {Object}
    */
   getTodayProgress() {
+    if (this.isNewDay()) this.#checkDayChange();
     if (!this.#todayStats) {
       this.#todayStats = this.#loadTodayStats();
     }

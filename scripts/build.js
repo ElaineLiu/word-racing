@@ -164,6 +164,11 @@ if (!html.includes('hud-3d.css')) {
 writeFileSync(join(DIST, 'index.html'), html);
 console.log('  index.html (importmap removed, bundle.js injected)');
 
+// End-user instructions and launcher require neither Node.js nor a server.
+for (const filename of ['README.txt', '启动游戏.bat']) {
+  cpSync(join(ROOT, 'release', filename), join(DIST, filename));
+}
+
 // ─── 7. Size summary ──────────────────────────────────────────────────
 const bundleSize = readFileSync(join(DIST, 'js', 'bundle.js')).length;
 const bundledDataNames = Object.keys(dataFiles);

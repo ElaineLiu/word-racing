@@ -386,9 +386,17 @@ html, body {
 /* --- Quiz Type Selector --- */
 #quiz-type-selector {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     gap: var(--space-sm);
     margin-bottom: var(--space-lg);
+}
+
+#learning-daily-progress {
+    flex-basis: 100%;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
 }
 
 .quiz-type-btn {
