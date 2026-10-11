@@ -1,6 +1,6 @@
 {
   "name": "word-racing",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "F1-themed English vocabulary game for kids",
   "type": "module",
   "scripts": {
@@ -17,7 +17,7 @@
     "start": "npx serve .",
     "build": "node scripts/build.js",
     "pack": "npm run build && cd dist && tar -czf word-racing.tar.gz word-racing && echo 'dist/word-racing.tar.gz created'",
-    "pack:zip": "npm run build && cd dist && powershell -Command \"Compress-Archive -Path word-racing -DestinationPath word-racing.zip -Force\" && echo 'dist/word-racing.zip created'"
+    "pack:zip": "npm run build && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-release.ps1"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.11",

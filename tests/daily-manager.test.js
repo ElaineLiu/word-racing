@@ -8,6 +8,7 @@ import { DailyManager } from '../learning/daily-manager.js';
 import { EventBus, Events } from '../core/event-bus.js';
 import { GameState } from '../core/game-state.js';
 import { LEARNING } from '../config/learning-config.js';
+import { localDate } from '../learning/assessment-policy.js';
 
 describe('DailyManager', () => {
   let eventBus;
@@ -30,7 +31,7 @@ describe('DailyManager', () => {
 
   describe('initialization', () => {
     it('should initialize with today date', () => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = localDate();
       expect(gameState.get('daily.lastActiveDate')).toBe(today);
     });
 
@@ -40,7 +41,7 @@ describe('DailyManager', () => {
       expect(gameState.get('daily.todayGearCoins')).toBe(0);
     });
 
-    it('should emit DAILY_RESET when day changes', () => {
+    it('resets silently in the constructor and emits DAILY_RESET on a later day change', () => {
       // Set lastActiveDate to yesterday to trigger reset
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
@@ -64,7 +65,7 @@ describe('DailyManager', () => {
           totalCorrect: 25,
         },
       };
-      localStorage.setItem('wr_game_state', JSON.stringify(storedData));
+      localStorage.setItem('wr_game_state_default', JSON.stringify(storedData));
 
       // Create new instances that will load the old data
       const newEventBus = new EventBus();
@@ -74,7 +75,9 @@ describe('DailyManager', () => {
       // Create new GameState which loads stored data
       const newGameState = new GameState(newEventBus);
       const newManager = new DailyManager(newEventBus, newGameState);
-
+      expect(handler).not.toHaveBeenCalled();
+      newGameState.set('daily.lastActiveDate', localDate(yesterday));
+      newManager.getTodayProgress();
       expect(handler).toHaveBeenCalled();
     });
   });

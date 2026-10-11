@@ -1,32 +1,41 @@
 # Word Racing
 
-Vocabulary learning game that combines adaptive quiz practice with F1-style racing. Built for 6th graders, works on PC and tablet.
+Vocabulary learning game that combines adaptive practice with F1-style racing, using the Shanghai exam vocabulary for learners including seventh graders. Works on PC and tablet.
 
 ## Features
 
-- **Adaptive Learning System** — Daily 3-quiz goal, word mastery tracking across 5 levels, auto-selection of words you need to practice
+- **Adaptive Learning System** — Daily 45-word goal, three long-term states, new-word learning before practice, and independent verification with scheduled review
 - **3D Racing Tracks** — Shanghai, Monaco, and Silverstone circuits rendered with Three.js
-- **Dual Currency** — Fuel Coins (quiz rewards) and Gear Coins (accuracy bonus) with separate uses
+- **Dual Currency** — Fuel Coins (completed-word rewards) and Gear Coins (independent verification rewards) with separate uses
 - **Multi-User Support** — Each player has their own progress, coins, and word data
 - **Achievement System** — 20+ milestones for words mastered, quizzes completed, tracks unlocked
 - **Progress Report** — Word-by-word mastery overview, review list, and daily summary
 - **Garage** — Buy nitro boosts and unlock new tracks
-- **Quiz Modes** — Basic (multiple choice) and Advanced (typing), with "I'm not sure" learning panel
+- **Automatic Tasks** — Bidirectional meaning questions, learning cards, and eligible context practice, selected by learning progress
 - **Touch Controls** — Mobile/tablet friendly on-screen controls for racing
 
 ## How to Play
 
-1. **Practice** — Complete daily quizzes to earn Fuel Coins and Gear Coins
-   - Correct answer: +Fuel Coins, +Gear Coins (accuracy streak)
-   - Wrong or "I'm not sure": opens learning panel with word details
-   - Wrong words come back for re-testing in the same session
+1. **Practice** — Complete 45 distinct words, in rounds of up to 10
+   - New words start with learning; previously encountered words can be independently verified
+   - Completing both directions earns 2 Fuel Coins per word; 45 completed words earn another 10, totaling 100 fuel
+   - Every 5 independently passed words earn 1 Gear Coin, capped at 2 per day
+   - Help and same-day practice do not certify a word as learned; verification happens on a later date
 2. **Garage** — Spend Gear Coins on nitro, unlock new tracks with Fuel Coins
 3. **Race** — Pick a track and race! Arrow keys or touch controls
 4. **Report** — Track your progress and review problem words
 
 ## Getting Started
 
-You need a local HTTP server because the game uses ES Modules.
+### Offline release (no installation required)
+
+Extract `word-racing-v2.2.0-offline.zip` and double-click `word-racing/index.html` in Chrome or Edge. On Windows, `启动游戏.bat` also opens the game. Vocabulary and Three.js are bundled; no server, Node.js, or network connection is required. Export your old save before upgrading and import it on the new page: file-based and localhost pages have separate browser storage.
+
+Build the Windows ZIP with `npm run pack:zip`; it creates a versioned archive and SHA256 checksum in `dist/`.
+
+### Source checkout
+
+The source checkout uses ES Modules and needs a local HTTP server.
 
 ### Option 1: Python (works everywhere)
 
@@ -60,14 +69,16 @@ word-racing/
 │   └── track-interface.js  # Track abstraction contract
 ├── learning/               # Adaptive learning system
 │   ├── learning-controller.js  # Main orchestrator
-│   ├── daily-manager.js        # Daily 3-quiz enforcement
-│   ├── progress-tracker.js     # Word mastery tracking
+│   ├── learning-route.js       # Three-state route, daily tasks and reward receipts
+│   ├── daily-manager.js        # Legacy quiz history compatibility
+│   ├── progress-tracker.js     # Historical word progress and migration
 │   ├── quiz-session.js         # Session state management
 │   └── adaptive-selector.js    # Smart word selection algorithm
 ├── views/                  # Page-level UI components
 │   ├── view-manager.js     # Page navigation coordinator
 │   ├── home-view.js        # Dashboard with daily progress
-│   ├── quiz-view.js        # Quiz interface
+│   ├── learning-view.js    # Adaptive learning interface
+│   ├── quiz-view.js        # Legacy quiz compatibility
 │   ├── shop-view.js        # Garage (items + track unlock)
 │   ├── race-view.js        # Race setup and launch
 │   ├── report-view.js      # Progress report with word details
@@ -88,11 +99,11 @@ word-racing/
 
 ## Tech Stack
 
-- **Frontend**: HTML5, CSS3, ES6 Modules (no framework, no build step)
-- **Graphics**: Canvas 2D (racing), Three.js via CDN (3D tracks)
+- **Frontend**: HTML5, CSS3, ES6 Modules (no framework), optional esbuild offline bundle
+- **Graphics**: Canvas 2D (racing), Three.js (bundled offline; CDN in source preview)
 - **Storage**: localStorage (multi-user keyed)
 - **Testing**: Vitest + jsdom
-- **Dependencies**: Three.js 0.184 (loaded via CDN, no npm install needed to play)
+- **Dependencies**: Three.js 0.184; offline releases need no npm installation
 
 ## Development
 

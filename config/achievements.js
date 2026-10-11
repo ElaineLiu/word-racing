@@ -23,7 +23,7 @@ export const ACHIEVEMENTS = {
   'first-quiz': {
     id: 'first-quiz',
     name: 'First Pit Stop',
-    description: 'Complete your first quiz.',
+    description: 'Complete your first learning round.',
     check: (state) => (state.learning?.totalQuizzes || 0) >= 1,
     reward: { track: 'shanghai-2d' }
   },
@@ -34,7 +34,7 @@ export const ACHIEVEMENTS = {
   'quiz-master-10': {
     id: 'quiz-master-10',
     name: 'Quiz Streak 10',
-    description: 'Complete 10 quizzes.',
+    description: 'Complete 10 learning rounds.',
     check: (state) => (state.learning?.totalQuizzes || 0) >= 10,
     reward: { track: 'monaco-2d' }
   },
@@ -46,7 +46,7 @@ export const ACHIEVEMENTS = {
   'quiz-master-20': {
     id: 'quiz-master-20',
     name: 'Quiz Streak 20',
-    description: 'Complete 20 quizzes.',
+    description: 'Complete 20 learning rounds.',
     check: (state) => (state.learning?.totalQuizzes || 0) >= 20,
     reward: { track: 'silverstone-2d' }
   },
@@ -58,7 +58,7 @@ export const ACHIEVEMENTS = {
   'quiz-master-30': {
     id: 'quiz-master-30',
     name: '3D Rookie',
-    description: 'Complete 30 quizzes.',
+    description: 'Complete 30 learning rounds.',
     check: (state) => (state.learning?.totalQuizzes || 0) >= 30,
     reward: { track: 'shanghai-3d' }
   },
@@ -70,7 +70,7 @@ export const ACHIEVEMENTS = {
   'quiz-master-50': {
     id: 'quiz-master-50',
     name: 'Quiz Streak 50',
-    description: 'Complete 50 quizzes.',
+    description: 'Complete 50 learning rounds.',
     check: (state) => (state.learning?.totalQuizzes || 0) >= 50,
     reward: { track: 'monaco-3d' }
   },
@@ -82,7 +82,7 @@ export const ACHIEVEMENTS = {
   'quiz-master-100': {
     id: 'quiz-master-100',
     name: 'Legend Driver',
-    description: 'Complete 100 quizzes.',
+    description: 'Complete 100 learning rounds.',
     check: (state) => (state.learning?.totalQuizzes || 0) >= 100,
     reward: { track: 'silverstone-3d' }
   },
@@ -94,7 +94,7 @@ export const ACHIEVEMENTS = {
   'word-master-100': {
     id: 'word-master-100',
     name: 'Word Master',
-    description: 'Master 100 words.',
+    description: 'Independently verify 100 words.',
     check: (state) => (state.learning?.totalWordsMastered || 0) >= 100,
     reward: { fuelCoins: 100 }
   },
@@ -105,8 +105,8 @@ export const ACHIEVEMENTS = {
   'perfect-streak': {
     id: 'perfect-streak',
     name: 'Perfect Run',
-    description: 'Answer all 10 questions correctly in one quiz.',
-    check: (state) => state.learning?.lastPerfectQuiz === true,
+    description: 'Historical perfect quiz achievement (retired for adaptive learning).',
+    check: (state) => !state.adaptive && state.learning?.lastPerfectQuiz === true,
     reward: { gearCoins: 5 }
   }
 };

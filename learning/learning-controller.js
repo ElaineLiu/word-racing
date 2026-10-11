@@ -23,6 +23,7 @@ import { AchievementManager } from '../systems/achievement-manager.js';
 import { LEARNING } from '../config/learning-config.js';
 import { calculateAccuracyBonus, calculateQuestionReward } from '../config/reward-policy.js';
 import { ASSESSMENT_VERSION, isQuestionSafe, localDate } from './assessment-policy.js';
+import { LearningRoute } from './learning-route.js';
 
 export class LearningController {
   #eventBus;
@@ -35,6 +36,7 @@ export class LearningController {
   #achievementManager;
   #learningUI;
   #wordSet = [];
+  #route;
   #currentQuestions = [];
   #modePreference = LEARNING.MODE_PREFERENCE.AUTO; // 题型偏好
 
@@ -47,7 +49,6 @@ export class LearningController {
     this.#userId = userId;
     this.#gameState = new GameState(this.#eventBus, userId);
     this.#progressTracker = new ProgressTracker(this.#eventBus, 'shanghai-zhongkao', userId);
-    this.#syncMasteredSummary();
     this.#dailyManager = new DailyManager(this.#eventBus, this.#gameState, userId);
     this.#sessionManager = new QuizSessionManager(this.#eventBus, this.#dailyManager, this.#progressTracker, userId);
     this.#achievementManager = new AchievementManager(this.#eventBus, this.#gameState);
@@ -126,6 +127,31 @@ export class LearningController {
   }
 
   // ==================== 答题流程 ====================
+
+  // The production UI uses these adaptive APIs. Legacy quiz APIs remain for saved-history compatibility.
+  initializeLearningRoute() {
+    if (!this.#route) {
+      this.#route = new LearningRoute(this.#gameState, this.#eventBus, this.#wordSet,
+        this.#progressTracker.getAllProgress(), this.#achievementManager);
+      this.#route.init();
+      const oldSession = this.#sessionManager.getCurrentSession();
+      if (oldSession) {
+        this.#gameState.set('adaptive.legacySession', oldSession);
+        this.#sessionManager.clearSession();
+      }
+    }
+    return this.#route;
+  }
+  startLearning(options = {}) { return this.initializeLearningRoute().start(options); }
+  getLearningTask() { return this.initializeLearningRoute().task(); }
+  chooseKnown(id) { return this.initializeLearningRoute().chooseKnown(id); }
+  revealLearning(id) { return this.initializeLearningRoute().reveal(id); }
+  continueLearning(id) { return this.initializeLearningRoute().continueCard(id); }
+  answerLearning(index, id) { return this.initializeLearningRoute().answer(index, id); }
+  getLearningProgress() { return this.initializeLearningRoute().getDailyProgress(); }
+  getLearningWordStats() { return this.initializeLearningRoute().getStats(); }
+  getLearningWords() { return this.initializeLearningRoute().getAllProgress(); }
+  get learningWordSet() { return this.#wordSet; }
 
   /**
    * 开始新的套题
@@ -418,6 +444,7 @@ export class LearningController {
   setWordSet(wordSet) {
     this.#wordSet = wordSet;
     this.#adaptiveSelector?.setWordSet(wordSet);
+    if (this.#route) { this.#route.words = wordSet; this.#route.init(); }
   }
 
   /**

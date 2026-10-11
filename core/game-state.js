@@ -43,6 +43,7 @@ const DEFAULT_STATE = {
 
   // Achievement system
   achievements: [],           // 已解锁的成就ID列表
+  adaptive: null,             // Versioned adaptive route; migrated explicitly after the wordset loads.
   unlockedTracks: ['shanghai-2d'],  // 已解锁的赛道ID列表
   selectedTrackId: 'shanghai-2d',   // 当前选择的赛道ID
 
@@ -121,12 +122,25 @@ export class GameState {
     return this.#deepClone(this.#state);
   }
 
+  /** Persist the learning ledger, task progress and reward balances in one write. */
+  commitLearningState(fuel = 0, gear = 0, notify = true) {
+    this.#state.fuelCoins += fuel;
+    this.#state.gearCoins += gear;
+    this.#save();
+    if (notify) {
+      this.#emitChange('fuelCoins', this.#state.fuelCoins);
+      this.#emitChange('gearCoins', this.#state.gearCoins);
+    }
+  }
+
   /**
    * Replace entire state (for loading saves)
    * @param {Object} newState
    */
   replace(newState) {
     this.#state = { ...this.#deepClone(DEFAULT_STATE), ...this.#deepClone(newState) };
+    this.#state.learning = { ...DEFAULT_STATE.learning, ...this.#state.learning };
+    this.#state.daily = { ...DEFAULT_STATE.daily, ...this.#state.daily };
     this.#save();
     this.#eventBus.emit(Events.STATE_CHANGED, this.#state);
   }
@@ -301,6 +315,8 @@ export class GameState {
         if (parsed.learning.lastPerfectQuiz === undefined) parsed.learning.lastPerfectQuiz = false;
 
         this.#state = { ...this.#deepClone(DEFAULT_STATE), ...parsed };
+        this.#state.learning = { ...DEFAULT_STATE.learning, ...parsed.learning };
+        this.#state.daily = { ...DEFAULT_STATE.daily, ...parsed.daily };
 
         // 如果发生了迁移，立即保存到 localStorage
         if (migrated) {

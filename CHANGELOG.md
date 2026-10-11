@@ -5,6 +5,26 @@ All notable changes to Word Racing will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.2.0 - 2026-10-11
+
+### Added
+- Three-state adaptive vocabulary learning: pending confirmation, learning, and learned.
+- New-word learning cards, bidirectional practice, independent verification, and scheduled review.
+- Offline ZIP with bundled vocabulary and Three.js, launch instructions, and SHA256 checksum.
+
+### Changed
+- Replaced Basic/Advanced learning modes with automatically scheduled tasks.
+- Daily target is 45 distinct words, at most 10 per round; default introduction limits are 15 new and 30 previously encountered words.
+- Completed words earn 2 fuel each; completing 45 distinct words earns a once-daily 10-fuel bonus, totaling 100 fuel. Independent verification retains gear rewards.
+- Existing resources, achievements, and historical reward receipts are preserved.
+
+### Fixed
+- Same-day help and practice cannot certify independent knowledge; context mistakes trigger meaning review before downgrading.
+- Progress, reward receipts, and balances persist together; duplicate events and refreshes cannot repeat rewards.
+
+### Validation
+- 854 tests pass across 63 files; browser learning and refresh checks pass. Real race calls confirm 100 fuel pays for ten laps.
+
 ## [Unreleased]
 
 ### Added - Epic 4: Reset Features
