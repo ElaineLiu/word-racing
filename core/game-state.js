@@ -22,6 +22,9 @@ const DEFAULT_STATE = {
   // Settings
   maxLevel: 3,
   currentWordSetId: 'shanghai-zhongkao',
+  preferences: {
+    autoPronunciation: true,
+  },
 
   // Daily progress
   daily: {
@@ -48,7 +51,7 @@ const DEFAULT_STATE = {
   selectedTrackId: 'shanghai-2d',   // 当前选择的赛道ID
 
   // Meta
-  version: 4,
+  version: 5,
 };
 
 export class GameState {
@@ -141,6 +144,7 @@ export class GameState {
     this.#state = { ...this.#deepClone(DEFAULT_STATE), ...this.#deepClone(newState) };
     this.#state.learning = { ...DEFAULT_STATE.learning, ...this.#state.learning };
     this.#state.daily = { ...DEFAULT_STATE.daily, ...this.#state.daily };
+    this.#state.preferences = { ...DEFAULT_STATE.preferences, ...this.#state.preferences };
     this.#save();
     this.#eventBus.emit(Events.STATE_CHANGED, this.#state);
   }
@@ -307,6 +311,12 @@ export class GameState {
           console.log('[GameState] Migration to v4 completed');
         }
 
+        if (parsed.version < 5) {
+          parsed.preferences = { ...DEFAULT_STATE.preferences, ...(parsed.preferences || {}) };
+          parsed.version = 5;
+          migrated = true;
+        }
+
         // 兼容性迁移：确保新字段有默认值
         if (!parsed.achievements) parsed.achievements = [];
         if (!parsed.unlockedTracks) parsed.unlockedTracks = ['shanghai-2d'];
@@ -317,6 +327,7 @@ export class GameState {
         this.#state = { ...this.#deepClone(DEFAULT_STATE), ...parsed };
         this.#state.learning = { ...DEFAULT_STATE.learning, ...parsed.learning };
         this.#state.daily = { ...DEFAULT_STATE.daily, ...parsed.daily };
+        this.#state.preferences = { ...DEFAULT_STATE.preferences, ...parsed.preferences };
 
         // 如果发生了迁移，立即保存到 localStorage
         if (migrated) {

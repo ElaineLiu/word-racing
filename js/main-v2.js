@@ -15,6 +15,7 @@ import { AchievementPanel } from '../ui/achievement-panel.js';
 import { UserManager } from '../core/user-manager.js';
 import { UserSwitcher } from '../ui/user-switcher.js';
 import { DataManager } from '../core/data-manager.js';
+import { PronunciationPlayer } from '../audio/pronunciation-player.js';
 
 // ─── Settings Dropdown (全局，所有页面可见) ─────────────────────
 
@@ -51,6 +52,24 @@ function setupSettingsDropdown(game, learningController, dataManager, eventBus) 
     const btn = document.querySelector('#auto-save-btn');
     if (btn) btn.textContent = dataManager.isFileSystemMode ? 'Auto-Save: ON' : 'Auto-Save: OFF';
   }
+
+  function updatePronunciationLabel() {
+    const btn = document.querySelector('#auto-pronunciation-btn');
+    const enabled = learningController.gameState.get('preferences.autoPronunciation');
+    if (btn) {
+      btn.textContent = `自动播放发音：${enabled ? '开' : '关'}`;
+      btn.setAttribute('aria-pressed', String(enabled));
+    }
+  }
+
+  const pronunciationBtn = document.querySelector('#auto-pronunciation-btn');
+  pronunciationBtn?.addEventListener('click', () => {
+    const enabled = learningController.gameState.get('preferences.autoPronunciation');
+    learningController.gameState.set('preferences.autoPronunciation', !enabled);
+    updatePronunciationLabel();
+    closeDropdown();
+  });
+  updatePronunciationLabel();
 
   // Auto-save button visibility
   if (DataManager.isFileSystemAPISupported()) {
@@ -195,7 +214,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // Create ViewManager with Learning Controller (use shared EventBus)
-    const viewManager = new ViewManager(eventBus, game, learningController);
+    const pronunciationPlayer = new PronunciationPlayer();
+    const viewManager = new ViewManager(eventBus, game, learningController, pronunciationPlayer);
     window.viewManager = viewManager;
 
     // Initialize Achievement Toast (Phase 3.3)

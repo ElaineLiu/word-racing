@@ -467,6 +467,33 @@ html, body {
     letter-spacing: 1px;
 }
 
+.quiz-pronunciation-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 32px;
+    color: #9fb1ca;
+    font-size: 18px;
+}
+
+.pronounce-btn {
+    min-width: 42px;
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 1px solid #40516a;
+    border-radius: 9px;
+    background: #151c26;
+    color: #e8f2ff;
+    cursor: pointer;
+}
+
+.pronounce-btn:hover,
+.pronounce-btn:focus-visible {
+    border-color: #4aa3ff;
+    background: #1d2b3d;
+}
+
 #quiz-meaning-en {
     font-size: 15px;
     color: var(--text-secondary);

@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { GameState } from '../core/game-state.js';
 import { EventBus } from '../core/event-bus.js';
 
-describe('GameState v4 Migration', () => {
+describe('GameState legacy migration through v5', () => {
   let eventBus;
 
   beforeEach(() => {
@@ -15,7 +15,7 @@ describe('GameState v4 Migration', () => {
     eventBus = new EventBus();
   });
 
-  describe('DEFAULT_STATE v4', () => {
+  describe('current default state', () => {
     it('should not have fuel field', () => {
       const state = new GameState(eventBus, 'test_user');
       expect(state.get('fuel')).toBeUndefined();
@@ -26,9 +26,9 @@ describe('GameState v4 Migration', () => {
       expect(state.get('upgrades')).toBeUndefined();
     });
 
-    it('should have version 4', () => {
+    it('should have version 5', () => {
       const state = new GameState(eventBus, 'test_user');
-      expect(state.get('version')).toBe(4);
+      expect(state.get('version')).toBe(5);
     });
   });
 
@@ -47,7 +47,7 @@ describe('GameState v4 Migration', () => {
       const state = new GameState(eventBus, 'test_user');
 
       expect(state.get('fuel')).toBeUndefined();
-      expect(state.get('version')).toBe(4);
+      expect(state.get('version')).toBe(5);
       expect(state.get('fuelCoins')).toBe(100);
     });
 
@@ -63,7 +63,7 @@ describe('GameState v4 Migration', () => {
       const state = new GameState(eventBus, 'test_user');
 
       expect(state.get('upgrades')).toBeUndefined();
-      expect(state.get('version')).toBe(4);
+      expect(state.get('version')).toBe(5);
       expect(state.get('fuelCoins')).toBe(200);
     });
 
@@ -92,7 +92,7 @@ describe('GameState v4 Migration', () => {
       expect(state.get('upgrades')).toBeUndefined();
 
       // 其他字段应保留
-      expect(state.get('version')).toBe(4);
+      expect(state.get('version')).toBe(5);
       expect(state.get('fuelCoins')).toBe(500);
       expect(state.get('gearCoins')).toBe(100);
       expect(state.get('nitroCharges')).toBe(5);
@@ -160,13 +160,13 @@ describe('GameState v4 Migration', () => {
 
       // 第一次迁移
       const state1 = new GameState(eventBus, 'test_user');
-      expect(state1.get('version')).toBe(4);
+      expect(state1.get('version')).toBe(5);
       expect(state1.get('fuel')).toBeUndefined();
       expect(state1.get('upgrades')).toBeUndefined();
 
       // 第二次加载（不应再触发迁移，因为已保存到 localStorage）
       const state2 = new GameState(eventBus, 'test_user');
-      expect(state2.get('version')).toBe(4);
+      expect(state2.get('version')).toBe(5);
       expect(state2.get('fuel')).toBeUndefined();
       expect(state2.get('upgrades')).toBeUndefined();
       expect(state2.get('fuelCoins')).toBe(500);
@@ -183,7 +183,7 @@ describe('GameState v4 Migration', () => {
       const state = new GameState(eventBus, 'test_user');
 
       // 应该触发迁移
-      expect(state.get('version')).toBe(4);
+      expect(state.get('version')).toBe(5);
       expect(state.get('fuel')).toBeUndefined();
       expect(state.get('upgrades')).toBeUndefined();
       expect(state.get('fuelCoins')).toBe(200);
@@ -214,13 +214,13 @@ describe('GameState v4 Migration', () => {
       const state2 = new GameState(eventBus, 'user_002');
 
       // 验证第一个用户
-      expect(state1.get('version')).toBe(4);
+      expect(state1.get('version')).toBe(5);
       expect(state1.get('fuel')).toBeUndefined();
       expect(state1.get('upgrades')).toBeUndefined();
       expect(state1.get('fuelCoins')).toBe(500);
 
       // 验证第二个用户
-      expect(state2.get('version')).toBe(4);
+      expect(state2.get('version')).toBe(5);
       expect(state2.get('fuel')).toBeUndefined();
       expect(state2.get('upgrades')).toBeUndefined();
       expect(state2.get('fuelCoins')).toBe(300);
