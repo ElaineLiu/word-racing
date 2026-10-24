@@ -15,15 +15,17 @@ export class ViewManager {
   #eventBus;
   #game;
   #learningController;
+  #pronunciationPlayer;
   #views = new Map();
   #currentView = null;
   #currentPage = 'home';
   #navBtns = [];
 
-  constructor(eventBus, game, learningController = null) {
+  constructor(eventBus, game, learningController = null, pronunciationPlayer = null) {
     this.#eventBus = eventBus;
     this.#game = game;
     this.#learningController = learningController;
+    this.#pronunciationPlayer = pronunciationPlayer;
     this.#createViews();
     this.#setupNavigation();
     this.#setupEventListeners();
@@ -31,7 +33,7 @@ export class ViewManager {
 
   #createViews() {
     this.#views.set('home', new HomeView(this.#eventBus, this.#game, this.#learningController));
-    this.#views.set('quiz', new LearningView(this.#eventBus, this.#game, this.#learningController));
+    this.#views.set('quiz', new LearningView(this.#eventBus, this.#game, this.#learningController, this.#pronunciationPlayer));
     this.#views.set('shop', new ShopView(this.#eventBus, this.#game));
     this.#views.set('race', new RaceView(this.#eventBus, this.#game));
     this.#views.set('report', new ReportView(this.#eventBus, this.#learningController));

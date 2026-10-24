@@ -129,6 +129,12 @@ if (existsSync(debugSrc)) {
   console.log('  scripts/debug-commands.js');
 }
 
+const audioSrc = join(ROOT, 'assets', 'audio');
+if (existsSync(audioSrc)) {
+  cpSync(audioSrc, join(DIST, 'assets', 'audio'), { recursive: true });
+  console.log('  assets/audio');
+}
+
 // ─── 6. Generate index.html (非 module 版本) ──────────────────────────
 console.log('\n[html] Generating index.html...');
 

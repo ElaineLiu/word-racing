@@ -5,11 +5,14 @@ import { LEARNING_ROUTE as C } from '../config/learning-route.js';
 
 /** Production learning page. Legacy QuizView is retained only for old quiz integrations. */
 export class LearningView extends BaseView {
-  constructor(bus, game, controller) {
+  constructor(bus, game, controller, pronunciationPlayer = null) {
     super('page-quiz', bus);
     this.game = game;
     this.controller = controller;
+    this.pronunciationPlayer = pronunciationPlayer;
     this.busy = false;
+    this.lastAutoPronunciationKey = null;
+    this.currentPronunciationWord = null;
   }
 
   mount() {
@@ -33,6 +36,8 @@ export class LearningView extends BaseView {
       if (!this.task) return;
       this.controller.continueLearning(this.task.id); this.render();
     });
+    this.onClick('#quiz-pronounce-btn', () => this.playCurrentPronunciation(false));
+    this.onClick('#quiz-learn-pronounce-btn', () => this.playCurrentPronunciation(false));
     this.onEvent('#quiz-lap-select', 'click', event => {
       const button = event.target.closest('button[data-laps]');
       if (!button || button.disabled) return;
@@ -56,6 +61,44 @@ export class LearningView extends BaseView {
     this.render();
   }
 
+  unmount() {
+    this.pronunciationPlayer?.stop();
+    this.currentPronunciationWord = null;
+    this.lastAutoPronunciationKey = null;
+    super.unmount();
+  }
+
+  playCurrentPronunciation(automatic, dedupeKey = null) {
+    if (!this.currentPronunciationWord || !this.pronunciationPlayer) return;
+    if (automatic && !this.controller.gameState.get('preferences.autoPronunciation')) return;
+    void this.pronunciationPlayer.play(this.currentPronunciationWord, { automatic, dedupeKey });
+  }
+
+  showPronunciation(word, task, surface, learningCard = false) {
+    this.currentPronunciationWord = word;
+    const key = `${task.id}:${surface}`;
+    if (learningCard) {
+      this.setText('#quiz-learn-phonetic', word.phonetic || '');
+      this.show('#quiz-learn-pronounce-btn');
+    } else {
+      this.setText('#quiz-phonetic', word.phonetic || '');
+      this.show('#quiz-pronounce-btn');
+    }
+    if (this.lastAutoPronunciationKey !== key) {
+      this.pronunciationPlayer?.stop();
+      this.lastAutoPronunciationKey = key;
+      this.playCurrentPronunciation(true, key);
+    }
+  }
+
+  hidePronunciation() {
+    this.currentPronunciationWord = null;
+    this.setText('#quiz-phonetic', '');
+    this.setText('#quiz-learn-phonetic', '');
+    this.hide('#quiz-pronounce-btn');
+    this.hide('#quiz-learn-pronounce-btn');
+  }
+
   button(label, action, id, index = '') {
     const btn = document.createElement('button');
     btn.className = 'quiz-option'; btn.textContent = label;
@@ -69,11 +112,14 @@ export class LearningView extends BaseView {
     this.setText('#learning-daily-progress', `今日完成 ${daily.completedWords}/${daily.targetWords} 词 · 独立通过 ${daily.independentWords} 词 · 燃油 +${daily.fuelCoinsEarned} · 装备 +${daily.gearCoinsEarned}`);
     this.task = this.controller.getLearningTask();
     this.hide('#quiz-nav'); this.hide('#quiz-learn-panel'); this.hide('#quiz-complete');
+    this.hidePronunciation();
     this.$('#quiz-layout')?.classList.remove('has-learn-panel');
     this.setText('#quiz-sentence', ''); this.setText('#quiz-meaning-en', '');
     const options = this.$('#quiz-options');
     options?.replaceChildren();
     if (!this.task) {
+      this.pronunciationPlayer?.stop();
+      this.lastAutoPronunciationKey = null;
       this.hide('#quiz-question-area'); this.show('#quiz-complete');
       const session = this.controller.gameState.get('adaptive.session');
       this.setText('#quiz-result-accuracy', session ? `本轮完成 ${session.completed.length}/${session.assigned.length} 个词` : '点击“开始今日学习”安排任务');
@@ -85,6 +131,7 @@ export class LearningView extends BaseView {
       return;
     }
     const t = this.task;
+    const corpus = this.controller.learningWordSet.find(w => w.word === t.word);
     this.show('#quiz-question-area');
     this.setText('#quiz-progress', `${({ intro: '新词', card: '学习', 'review-card': '巩固提示', 'context-card': '用法学习' })[t.kind] || ({ practice: '练习', verify: '独立验证', review: '词义巩固', context: '语境运用' })[t.route]}`);
     this.setText('#quiz-nitro-hint', this.feedback || `双向完成一个词 +${C.PRACTICE_FUEL}燃油；完成今日${C.DAILY_WORDS}词再奖励${C.DAILY_COMPLETION_FUEL}燃油`);
@@ -92,15 +139,15 @@ export class LearningView extends BaseView {
     this.hide('#quiz-dont-know');
     if (t.kind === 'intro') {
       this.setText('#quiz-word', t.word);
+      this.showPronunciation(corpus, t, 'intro');
       options?.append(this.button('开始学习', 'learn', t.id), this.button('我认识，先验证', 'known', t.id));
     } else if (['card', 'review-card', 'context-card'].includes(t.kind)) {
       // Persist help before exposing any definition/example, including scheduled learning cards.
       this.controller.revealLearning(t.id);
       const word = this.controller.getLearningWords()[t.word];
-      const corpus = this.controller.learningWordSet.find(w => w.word === t.word);
       this.setText('#quiz-word', '先学习，稍后练习');
       this.setText('#quiz-learn-word', t.word);
-      this.setText('#quiz-learn-phonetic', corpus.phonetic || '');
+      this.showPronunciation(corpus, t, t.kind, true);
       this.setText('#quiz-learn-meaning', `${corpus.meaning_cn} ${corpus.meaning_en || ''}`);
       this.setText('#quiz-learn-sentence', blankSentence(corpus) ? corpus.sentence : '');
       this.setText('#quiz-learn-sentence-cn', blankSentence(corpus) ? corpus.sentence_cn || '' : '');
@@ -109,6 +156,11 @@ export class LearningView extends BaseView {
       this.$('#quiz-layout')?.classList.add('has-learn-panel');
     } else {
       this.setText('#quiz-word', t.question.prompt);
+      if (t.direction === 'forward') this.showPronunciation(corpus, t, `${t.route}-forward`);
+      else {
+        this.pronunciationPlayer?.stop();
+        this.lastAutoPronunciationKey = null;
+      }
       this.show('#quiz-dont-know');
       t.question.options.forEach((label, index) => options?.append(this.button(label, 'answer', t.id, index)));
     }

@@ -6,6 +6,8 @@
   "scripts": {
     "validate:data": "node scripts/validate-wordsets.js",
     "validate:data:strict": "node scripts/validate-wordsets.js --strict",
+    "validate:audio": "node scripts/validate-pronunciation-audio.js",
+    "generate:audio": "python scripts/generate-word-audio.py",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -15,7 +17,7 @@
     "test:game": "vitest run tests/game.test.js",
     "serve": "npx serve .",
     "start": "npx serve .",
-    "build": "node scripts/build.js",
+    "build": "npm run validate:audio && node scripts/build.js",
     "pack": "npm run build && cd dist && tar -czf word-racing.tar.gz word-racing && echo 'dist/word-racing.tar.gz created'",
     "pack:zip": "npm run build && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-release.ps1"
   },

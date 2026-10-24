@@ -88,6 +88,7 @@
         <button id="reset-daily-btn" class="settings-menu-item">继续加练</button>
         <button id="reset-week-btn" class="settings-menu-item">Reset This Week</button>
         <button id="reset-all-btn" class="settings-menu-item reset-danger">Reset All Data</button>
+        <button id="auto-pronunciation-btn" class="settings-menu-item" aria-pressed="true">自动播放发音：开</button>
         <hr class="settings-divider">
         <button id="export-data-btn" class="settings-menu-item">Export Data</button>
         <button id="import-data-btn" class="settings-menu-item">Import Data</button>
@@ -112,6 +113,10 @@
                 <div id="quiz-question-area">
                     <div id="quiz-progress"></div>
                     <div id="quiz-word"></div>
+                    <div class="quiz-pronunciation-row">
+                        <span id="quiz-phonetic"></span>
+                        <button id="quiz-pronounce-btn" class="pronounce-btn" type="button" aria-label="播放单词发音">🔊</button>
+                    </div>
                     <div id="quiz-meaning-en"></div>
                     <div id="quiz-sentence"></div>
                     <div id="quiz-options"></div>
@@ -129,6 +134,7 @@
                 <div id="quiz-learn-panel" style="display:none;">
                     <div id="quiz-learn-word"></div>
                     <div id="quiz-learn-phonetic"></div>
+                    <button id="quiz-learn-pronounce-btn" class="pronounce-btn" type="button" aria-label="播放学习卡单词发音">🔊 播放发音</button>
                     <div id="quiz-learn-meaning"></div>
                     <div id="quiz-learn-sentence"></div>
                     <div id="quiz-learn-sentence-cn"></div>
