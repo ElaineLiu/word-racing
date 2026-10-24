@@ -3,6 +3,8 @@ import { RaceSession3D } from '../../3d/runtime/race-session-3d.js';
 import { EventBus } from '../../core/event-bus.js';
 import { GameState } from '../../core/game-state.js';
 import { TRACK_REGISTRY } from '../../config/track-registry.js';
+import { AIController } from '../../3d/controllers/ai-controller.js';
+import { AI_CONFIG } from '../../config/ai-config.js';
 
 function createRendererFactory() {
   return vi.fn(() => ({
@@ -92,6 +94,44 @@ describe('RaceSession3D', () => {
       expect(session.track.checkCollision(car)).toBe(false);
     });
   });
+
+  it('uses the new physics for player and AI through the real race session', () => {
+    const { session } = createSession();
+    try {
+      const startX = session.playerCar.x;
+      for (let i = 0; i < 180; i++) {
+        session.update({ up: true, down: false, left: false, right: false, nitro: false }, 1 / 60, 3);
+      }
+      expect(session.playerCar.x).toBeGreaterThan(startX);
+      expect(session.playerCar.getDisplaySpeed()).toBe(100);
+      session.cars.forEach(car => {
+        expect(car.maxSpeed * 50).toBe(300);
+        expect(car.acceleration * 60 * 3 * 50).toBeCloseTo(100);
+      });
+      expect(session.aiCars.every(car => car.speed > 0)).toBe(true);
+    } finally {
+      session.dispose();
+    }
+  });
+
+  it('can complete a lap and produce results with the new physics', () => {
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    const { session } = createSession();
+    try {
+      const driver = new AIController(session.playerCar, session.track, AI_CONFIG.PERSONALITIES.balanced);
+      for (let frame = 0; frame < 18000 && !session.playerCar.finished; frame++) {
+        driver.update(1 / 60);
+        session.update(session.playerCar.input, 1 / 60, 1);
+      }
+      expect(session.playerCar.finished).toBe(true);
+      expect(session.playerCar.lapTimes).toHaveLength(1);
+      expect(session.playerCar.bestLapTime).toBeGreaterThan(1000);
+      expect(session.getResult()).toMatchObject({ trackType: '3d', finalRank: expect.any(Number) });
+    } finally {
+      random.mockRestore();
+      session.dispose();
+    }
+  }, 15000);
 
   it('should keep barrier rendering to two draw-call batches', () => {
     const { session } = createSession();

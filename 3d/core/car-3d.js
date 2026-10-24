@@ -5,10 +5,15 @@
 
 import { Car } from '../../js/car.js';
 import { CarModel } from '../models/car-model.js';
+import { DISPLAY, PHYSICS_3D } from '../../config/game-config.js';
 
 export class Car3D extends Car {
     constructor(x, y, angle, scene) {
-        super(x, y, angle);
+        super(x, y, angle, {
+            maxSpeed: PHYSICS_3D.MAX_SPEED_KMH / DISPLAY.SPEED_DISPLAY_MULTIPLIER,
+            acceleration: 100 / DISPLAY.SPEED_DISPLAY_MULTIPLIER / PHYSICS_3D.ZERO_TO_100_SECONDS / 60,
+            linearAcceleration: true,
+        });
         this.scene = scene;
         this.carModel = new CarModel();
 
@@ -169,7 +174,7 @@ export class Car3D extends Car {
      * Get display speed in km/h
      */
     getDisplaySpeed() {
-        return Math.round(Math.abs(this.speed) * 50);
+        return super.getDisplaySpeed();
     }
 
     /**

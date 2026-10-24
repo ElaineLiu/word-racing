@@ -7,14 +7,19 @@
 import { PHYSICS, DISPLAY, CAR as CAR_CONFIG, GAME } from '../config/game-config.js';
 
 export class Car {
-    constructor(x, y, angle) {
+    constructor(x, y, angle, {
+        maxSpeed = PHYSICS.BASE_MAX_SPEED,
+        acceleration = PHYSICS.BASE_ACCELERATION,
+        linearAcceleration = false,
+    } = {}) {
         this.x = x;
         this.y = y;
         this.angle = angle;
 
         this.speed = 0;
-        this.maxSpeed = PHYSICS.BASE_MAX_SPEED;
-        this.acceleration = PHYSICS.BASE_ACCELERATION;
+        this.maxSpeed = maxSpeed;
+        this.acceleration = acceleration;
+        this._linearAcceleration = linearAcceleration;
         this.brakeForce = PHYSICS.BASE_BRAKE_FORCE;
         this.friction = PHYSICS.BASE_FRICTION;
         this.offTrackFriction = PHYSICS.BASE_OFF_TRACK_FRICTION;
@@ -29,8 +34,8 @@ export class Car {
         this.nitroAccel = PHYSICS.NITRO_ACCEL;
 
         // Base physics values (for upgrade calculations)
-        this._baseMaxSpeed = PHYSICS.BASE_MAX_SPEED;
-        this._baseAcceleration = PHYSICS.BASE_ACCELERATION;
+        this._baseMaxSpeed = maxSpeed;
+        this._baseAcceleration = acceleration;
         this._baseBrakeForce = PHYSICS.BASE_BRAKE_FORCE;
         this._baseFriction = PHYSICS.BASE_FRICTION;
         this._baseOffTrackFriction = PHYSICS.BASE_OFF_TRACK_FRICTION;
@@ -157,7 +162,11 @@ export class Car {
         // Apply friction
         const onTrack = track.isOnTrack(this.x, this.y);
         const friction = onTrack ? this.friction : this.offTrackFriction;
-        this.speed *= Math.pow(friction, frameScale);
+        // 3D acceleration is a net rate: road drag must not cancel slow starts
+        // or prevent reaching the configured top speed. Coast/off-road drag stays.
+        if (!(this._linearAcceleration && onTrack && this.input.up)) {
+            this.speed *= Math.pow(friction, frameScale);
+        }
 
         // 松开方向键时强摩擦——快速停止，增强操控感
         if (!this.input.up && !this.input.down) {
@@ -166,7 +175,9 @@ export class Car {
 
         // Very slow speeds: stop completely
         const stopThreshold = PHYSICS.STOP_THRESHOLD * frameScale;
-        if (Math.abs(this.speed) < stopThreshold) this.speed = 0;
+        // A slow 3D launch is below the resting threshold for several frames.
+        const launching = this._linearAcceleration && this.input.up && !this.input.down;
+        if (!launching && Math.abs(this.speed) < stopThreshold) this.speed = 0;
 
         // Move car
         const previousX = this.x;

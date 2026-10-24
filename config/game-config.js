@@ -157,6 +157,12 @@ export const DISPLAY = {
   PARTICLE_MAX_LIFE: 35,
 };
 
+// 3D full-throttle performance on the road, without nitro or temporary boosts.
+export const PHYSICS_3D = {
+  MAX_SPEED_KMH: 300,
+  ZERO_TO_100_SECONDS: 3,
+};
+
 // ============================================================================
 // QUIZ - Question system
 // ============================================================================
