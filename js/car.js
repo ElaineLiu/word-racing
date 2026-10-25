@@ -134,50 +134,10 @@ export class Car {
 
         const maxSpd = this.nitroActive ? this.nitroMaxSpeed : this.maxSpeed;
         const accel = this.nitroActive ? this.nitroAccel : this.acceleration;
-
-        // Acceleration
-        if (this.input.up) {
-            this.speed = Math.min(this.speed + accel * frameScale, maxSpd);
-        }
-
-        // Braking
-        if (this.input.down) {
-            this.speed -= this.brakeForce * frameScale;
-            if (this.speed < PHYSICS.REVERSE_MAX_SPEED) this.speed = PHYSICS.REVERSE_MAX_SPEED;
-        }
-
-        // Steering: more responsive at low speeds
-        // The hard-edged Shanghai road can stop the car completely. Keep
-        // steering available at rest so a driver can face back into the road.
-        const turnFactor = track.strictBoundary
-            ? Math.max(0.7, Math.min(Math.abs(this.speed) / PHYSICS.TURN_FACTOR_DIVISOR, 1))
-            : Math.min(Math.abs(this.speed) / PHYSICS.TURN_FACTOR_DIVISOR, 1);
-        if (this.input.left) {
-            this.angle -= this.turnSpeed * turnFactor * frameScale;
-        }
-        if (this.input.right) {
-            this.angle += this.turnSpeed * turnFactor * frameScale;
-        }
-
-        // Apply friction
         const onTrack = track.isOnTrack(this.x, this.y);
-        const friction = onTrack ? this.friction : this.offTrackFriction;
-        // 3D acceleration is a net rate: road drag must not cancel slow starts
-        // or prevent reaching the configured top speed. Coast/off-road drag stays.
-        if (!(this._linearAcceleration && onTrack && this.input.up)) {
-            this.speed *= Math.pow(friction, frameScale);
-        }
 
-        // 松开方向键时强摩擦——快速停止，增强操控感
-        if (!this.input.up && !this.input.down) {
-            this.speed *= Math.pow(PHYSICS.IDLE_FRICTION, frameScale);
-        }
-
-        // Very slow speeds: stop completely
-        const stopThreshold = PHYSICS.STOP_THRESHOLD * frameScale;
-        // A slow 3D launch is below the resting threshold for several frames.
-        const launching = this._linearAcceleration && this.input.up && !this.input.down;
-        if (!launching && Math.abs(this.speed) < stopThreshold) this.speed = 0;
+        this._updateLongitudinalSpeed({ maxSpd, accel, onTrack, frameScale, deltaTime });
+        this._updateSteering(track, frameScale, deltaTime);
 
         // Move car
         const previousX = this.x;
@@ -305,6 +265,38 @@ export class Car {
             }
         }
         if (!track.externalLapTracking) this.lastProgress = progress;
+    }
+
+    /** Default arcade longitudinal physics. Car3D overrides this hook. */
+    _updateLongitudinalSpeed({ maxSpd, accel, onTrack, frameScale }) {
+        if (this.input.up) {
+            this.speed = Math.min(this.speed + accel * frameScale, maxSpd);
+        }
+        if (this.input.down) {
+            this.speed -= this.brakeForce * frameScale;
+            if (this.speed < PHYSICS.REVERSE_MAX_SPEED) this.speed = PHYSICS.REVERSE_MAX_SPEED;
+        }
+
+        const friction = onTrack ? this.friction : this.offTrackFriction;
+        if (!(this._linearAcceleration && onTrack && this.input.up)) {
+            this.speed *= Math.pow(friction, frameScale);
+        }
+        if (!this.input.up && !this.input.down) {
+            this.speed *= Math.pow(PHYSICS.IDLE_FRICTION, frameScale);
+        }
+
+        const stopThreshold = PHYSICS.STOP_THRESHOLD * frameScale;
+        const launching = this._linearAcceleration && this.input.up && !this.input.down;
+        if (!launching && Math.abs(this.speed) < stopThreshold) this.speed = 0;
+    }
+
+    /** Default arcade steering. Car3D overrides this hook. */
+    _updateSteering(track, frameScale) {
+        const turnFactor = track.strictBoundary
+            ? Math.max(0.7, Math.min(Math.abs(this.speed) / PHYSICS.TURN_FACTOR_DIVISOR, 1))
+            : Math.min(Math.abs(this.speed) / PHYSICS.TURN_FACTOR_DIVISOR, 1);
+        if (this.input.left) this.angle -= this.turnSpeed * turnFactor * frameScale;
+        if (this.input.right) this.angle += this.turnSpeed * turnFactor * frameScale;
     }
 
     /** Preserve the along-road part of a blocked movement instead of making

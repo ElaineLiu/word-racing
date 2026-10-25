@@ -118,6 +118,24 @@ describe('AIController', () => {
       expect(mockCar.input.left).toBe(false);
     });
 
+    it('should brake before a sharp bend when travelling quickly', () => {
+      mockTrack.waypoints = [
+        { x: 0, y: 0 },
+        { x: 50, y: 0 },
+        { x: 50, y: 50 },
+      ];
+      mockCar.x = 40;
+      mockCar.y = 0;
+      mockCar.angle = 0;
+      mockCar.speed = 270;
+
+      const controller = new AIController(mockCar, mockTrack, personality);
+      controller.update(1 / 60);
+
+      expect(mockCar.input.down).toBe(true);
+      expect(mockCar.input.up).toBe(false);
+    });
+
     it('should enter recovery state when mistake is triggered', () => {
       // Mock Math.random: 构造函数使用任意值，犯错检查返回小值
       let callCount = 0;
