@@ -157,6 +157,27 @@ export const DISPLAY = {
   PARTICLE_MAX_LIFE: 35,
 };
 
+// 3D full-throttle performance on the road, without nitro or temporary boosts.
+export const PHYSICS_3D = {
+  MAX_SPEED_KMH: 300,
+  ZERO_TO_100_SECONDS: 3,
+  FORWARD_ACCELERATION_PER_SECOND: 0.9,
+  NITRO_ACCELERATION_PER_SECOND: 2.2,
+  BOOST_ACCELERATION_MULTIPLIER: 2.5,
+  COAST_ROLLING_RESISTANCE: 0.08,
+  COAST_AERO_DRAG: 0.45,
+  BRAKE_DECELERATION_PER_SECOND: 2.5,
+  REVERSE_MAX_SPEED_KMH: 25,
+  REVERSE_ACCELERATION_PER_SECOND: 0.7,
+  THROTTLE_RESPONSE_PER_SECOND: 4,
+  THROTTLE_RELEASE_PER_SECOND: 8,
+  BRAKE_RESPONSE_PER_SECOND: 8,
+  STEERING_RESPONSE_PER_SECOND: 5,
+  STEERING_RETURN_PER_SECOND: 8,
+  MAX_STEERING_RATE_PER_SECOND: 2.4,
+  HIGH_SPEED_STEERING_LOSS: 2.8,
+};
+
 // ============================================================================
 // QUIZ - Question system
 // ============================================================================

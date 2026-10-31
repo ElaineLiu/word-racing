@@ -5,10 +5,15 @@
 
 import { Car } from '../../js/car.js';
 import { CarModel } from '../models/car-model.js';
+import { DISPLAY, PHYSICS_3D } from '../../config/game-config.js';
 
 export class Car3D extends Car {
     constructor(x, y, angle, scene) {
-        super(x, y, angle);
+        super(x, y, angle, {
+            maxSpeed: PHYSICS_3D.MAX_SPEED_KMH / DISPLAY.SPEED_DISPLAY_MULTIPLIER,
+            acceleration: 100 / DISPLAY.SPEED_DISPLAY_MULTIPLIER / PHYSICS_3D.ZERO_TO_100_SECONDS / 60,
+            linearAcceleration: true,
+        });
         this.scene = scene;
         this.carModel = new CarModel();
 
@@ -23,6 +28,11 @@ export class Car3D extends Car {
 
         // Collision penalty
         this.collisionPenalty = 0;
+
+        this._throttleLevel = 0;
+        this._brakeLevel = 0;
+        this._steeringLevel = 0;
+        this._reverseBlockedUntilRelease = false;
 
         // Sync initial position
         this.sync3DPosition();
@@ -76,6 +86,105 @@ export class Car3D extends Car {
 
         // Update wheel rotation
         this.carModel.updateWheelRotation(this.speed);
+    }
+
+    _updateLongitudinalSpeed({ maxSpd, onTrack, deltaTime }) {
+        const throttleTarget = this.input.up ? 1 : 0;
+        const brakeTarget = this.input.down ? 1 : 0;
+        const throttleRate = throttleTarget > this._throttleLevel
+            ? PHYSICS_3D.THROTTLE_RESPONSE_PER_SECOND
+            : PHYSICS_3D.THROTTLE_RELEASE_PER_SECOND;
+        this._throttleLevel = this._moveToward(
+            this._throttleLevel, throttleTarget, throttleRate * deltaTime
+        );
+        this._brakeLevel = this._moveToward(
+            this._brakeLevel, brakeTarget, PHYSICS_3D.BRAKE_RESPONSE_PER_SECOND * deltaTime
+        );
+
+        if (this.speed > 0 && this.input.down) {
+            this._reverseBlockedUntilRelease = true;
+        } else if (!this.input.down && Math.abs(this.speed) < 0.02) {
+            this._reverseBlockedUntilRelease = false;
+        }
+
+        if (this.speed > 0.02) {
+            if (this._brakeLevel > 0) {
+                this.speed = Math.max(0,
+                    this.speed - PHYSICS_3D.BRAKE_DECELERATION_PER_SECOND * this._brakeLevel * deltaTime);
+            } else if (this._throttleLevel > 0) {
+                const speedRatio = Math.min(1, this.speed / maxSpd);
+                let acceleration = this.nitroActive
+                    ? PHYSICS_3D.NITRO_ACCELERATION_PER_SECOND
+                    : PHYSICS_3D.FORWARD_ACCELERATION_PER_SECOND;
+                if (this.speedBoostTimer > 0) {
+                    acceleration *= PHYSICS_3D.BOOST_ACCELERATION_MULTIPLIER;
+                }
+                this.speed += acceleration * (1 - speedRatio) * this._throttleLevel * deltaTime;
+            } else {
+                this._applyCoastingDrag(maxSpd, deltaTime);
+            }
+        } else if (this.speed < -0.02) {
+            if (this._throttleLevel > 0) {
+                this.speed = Math.min(0,
+                    this.speed + PHYSICS_3D.BRAKE_DECELERATION_PER_SECOND * this._throttleLevel * deltaTime);
+            } else if (this._brakeLevel > 0) {
+                const reverseMax = PHYSICS_3D.REVERSE_MAX_SPEED_KMH / DISPLAY.SPEED_DISPLAY_MULTIPLIER;
+                this.speed = Math.max(-reverseMax,
+                    this.speed - PHYSICS_3D.REVERSE_ACCELERATION_PER_SECOND * this._brakeLevel * deltaTime);
+            } else {
+                this._applyCoastingDrag(maxSpd, deltaTime);
+            }
+        } else {
+            if (this._throttleLevel > 0 && !this.input.down) {
+                this.speed = Math.max(0, this.speed)
+                    + PHYSICS_3D.FORWARD_ACCELERATION_PER_SECOND
+                    * this._throttleLevel * deltaTime;
+            } else if (this.input.down && this._brakeLevel > 0 && !this._reverseBlockedUntilRelease) {
+                this.speed = Math.min(0, this.speed)
+                    - PHYSICS_3D.REVERSE_ACCELERATION_PER_SECOND
+                    * this._brakeLevel * deltaTime;
+            } else {
+                this.speed = 0;
+            }
+        }
+
+        if (!onTrack) {
+            this.speed *= Math.pow(this.offTrackFriction, deltaTime * 60);
+        }
+        this.speed = Math.max(-PHYSICS_3D.REVERSE_MAX_SPEED_KMH / DISPLAY.SPEED_DISPLAY_MULTIPLIER,
+            Math.min(maxSpd, this.speed));
+        if (Math.abs(this.speed) < 0.002 && !this.input.up && !this.input.down) this.speed = 0;
+    }
+
+    _applyCoastingDrag(maxSpd, deltaTime) {
+        const direction = Math.sign(this.speed);
+        const speedRatio = Math.min(1, Math.abs(this.speed) / maxSpd);
+        const drag = PHYSICS_3D.COAST_ROLLING_RESISTANCE
+            + PHYSICS_3D.COAST_AERO_DRAG * speedRatio * speedRatio;
+        const nextMagnitude = Math.max(0, Math.abs(this.speed) - drag * deltaTime);
+        this.speed = direction * nextMagnitude;
+    }
+
+    _updateSteering(_track, _frameScale, deltaTime) {
+        const steeringTarget = (this.input.right ? 1 : 0) - (this.input.left ? 1 : 0);
+        const steeringRate = steeringTarget === 0
+            ? PHYSICS_3D.STEERING_RETURN_PER_SECOND
+            : PHYSICS_3D.STEERING_RESPONSE_PER_SECOND;
+        this._steeringLevel = this._moveToward(
+            this._steeringLevel, steeringTarget, steeringRate * deltaTime
+        );
+
+        const speedRatio = Math.min(1, Math.abs(this.speed) / this.maxSpeed);
+        const lowSpeedAuthority = Math.min(1, Math.abs(this.speed) / 0.6);
+        const highSpeedGrip = 1 / (1 + PHYSICS_3D.HIGH_SPEED_STEERING_LOSS * speedRatio * speedRatio);
+        const brakingGrip = 1 - 0.35 * this._brakeLevel;
+        this.angle += this._steeringLevel * PHYSICS_3D.MAX_STEERING_RATE_PER_SECOND
+            * lowSpeedAuthority * highSpeedGrip * brakingGrip * deltaTime;
+    }
+
+    _moveToward(current, target, maxDelta) {
+        if (current < target) return Math.min(target, current + maxDelta);
+        return Math.max(target, current - maxDelta);
     }
 
     /**
@@ -169,7 +278,7 @@ export class Car3D extends Car {
      * Get display speed in km/h
      */
     getDisplaySpeed() {
-        return Math.round(Math.abs(this.speed) * 50);
+        return super.getDisplaySpeed();
     }
 
     /**
@@ -207,6 +316,10 @@ export class Car3D extends Car {
         super.reset(x, y, angle);
         this.speedBoostMultiplier = 1.0;
         this.speedBoostTimer = 0;
+        this._throttleLevel = 0;
+        this._brakeLevel = 0;
+        this._steeringLevel = 0;
+        this._reverseBlockedUntilRelease = false;
         this.sync3DPosition();
     }
 }

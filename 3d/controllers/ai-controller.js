@@ -113,8 +113,11 @@ export class AIController {
     if (this.#currentBehavior === 'racing') {
       const speedRatio = this.#car.maxSpeed ? Math.abs(this.#car.speed || 0) / this.#car.maxSpeed : 0;
       const steeringLoad = Math.abs(steering);
-      this.#car.input.up = steeringLoad < 0.35 || speedRatio < 0.45;
-      this.#car.input.down = steeringLoad > 0.6 && speedRatio > 0.65;
+      // PathFollower's lookahead steering is also our preview of the next bend.
+      // A tighter requested turn lowers the target entry speed progressively.
+      const targetSpeedRatio = Math.max(0.28, 0.92 - steeringLoad * 0.85);
+      this.#car.input.down = speedRatio > targetSpeedRatio + 0.05;
+      this.#car.input.up = !this.#car.input.down && speedRatio < targetSpeedRatio;
     } else {
       // 恢复期间减速（随机间断加油）
       this.#car.input.up = Math.random() > AI_CONFIG.RECOVERY.speedReduction;

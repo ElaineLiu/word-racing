@@ -16,6 +16,7 @@ describe('AIController', () => {
   let personality;
 
   beforeEach(() => {
+    localStorage.clear();
     // Mock car
     mockCar = {
       x: 0,
@@ -117,6 +118,24 @@ describe('AIController', () => {
       expect(mockCar.input.left).toBe(false);
     });
 
+    it('should brake before a sharp bend when travelling quickly', () => {
+      mockTrack.waypoints = [
+        { x: 0, y: 0 },
+        { x: 50, y: 0 },
+        { x: 50, y: 50 },
+      ];
+      mockCar.x = 40;
+      mockCar.y = 0;
+      mockCar.angle = 0;
+      mockCar.speed = 270;
+
+      const controller = new AIController(mockCar, mockTrack, personality);
+      controller.update(1 / 60);
+
+      expect(mockCar.input.down).toBe(true);
+      expect(mockCar.input.up).toBe(false);
+    });
+
     it('should enter recovery state when mistake is triggered', () => {
       // Mock Math.random: 构造函数使用任意值，犯错检查返回小值
       let callCount = 0;
@@ -201,7 +220,7 @@ describe('AIController', () => {
 
 
   describe('Closed-loop driving', () => {
-    it('should keep one AI opponent moving on track for the opening seconds', () => {
+    it('should keep one AI opponent moving on track for the first 10 seconds', () => {
       const trackData = TRACK_REGISTRY['shanghai-3d'];
       const realTrack = new Track(trackData.waypoints, trackData.trackWidth);
       realTrack.checkCollision = car => realTrack.getNearestDistance(car.x, car.y) >= realTrack.trackWidth / 2;
@@ -216,7 +235,8 @@ describe('AIController', () => {
       const mockRandom = vi.spyOn(Math, 'random').mockReturnValue(0.5);
       const controller = new AIController(aiCar, realTrack, AI_CONFIG.PERSONALITIES.balanced);
 
-      for (let frame = 0; frame < 300; frame++) {
+      // The slower launch now takes 3 seconds to reach 100 km/h.
+      for (let frame = 0; frame < 600; frame++) {
         controller.update(1 / 60);
         aiCar.update(realTrack, 3, 1 / 60);
       }
